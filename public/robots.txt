@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://oftechsolutions.com
+
+# Sitemaps
+Sitemap: https://oftechsolutions.com/sitemap.xml
