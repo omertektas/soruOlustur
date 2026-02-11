@@ -1,20 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // --- YENİ BİLEŞEN: Tekil Soru Kartı ---
-// Bu bileşen her sorunun kendi durumunu (tıklandı mı, cevap göründü mü) yönetir.
 function QuestionCard({ q, index }: { q: any; index: number }) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  // Çoktan seçmeli için şıkka tıklama işlemi
   const handleOptionClick = (option: string) => {
-    // Eğer daha önce seçim yapıldıysa tekrar tıklatmayalım
     if (selectedOption) return;
     setSelectedOption(option);
   };
 
-  // Cevap kontrolü (Şıkkın doğru olup olmadığını anlamak için)
   const isCorrect = (option: string) => option.trim().startsWith(q.dogru_cevap);
   const isSelected = (option: string) => selectedOption === option;
 
@@ -24,29 +20,19 @@ function QuestionCard({ q, index }: { q: any; index: number }) {
       <h3 className="font-bold text-lg mb-4 text-gray-800 pr-8">{q.soru}</h3>
 
       {q.secenekler ? (
-        /* --- ÇOKTAN SEÇMELİ MODU --- */
         <div className="grid grid-cols-1 gap-3">
           {q.secenekler.map((opt: string, i: number) => {
-            // Renk Mantığı:
-            // 1. Hiçbir şey seçilmediyse -> Gri (Standart)
-            // 2. Bu şık seçildiyse:
-            //    a. Doğruysa -> Yeşil
-            //    b. Yanlışsa -> Kırmızı
-            // 3. Bir seçim yapıldıysa VE bu şık doğru cevapsa (kullanıcı yanlış bilse bile doğrusunu göster) -> Yeşil
-            
-            let liClass = "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 cursor-pointer"; // Varsayılan
+            let liClass = "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 cursor-pointer";
 
             if (selectedOption) {
               if (isSelected(opt)) {
                 liClass = isCorrect(opt)
-                  ? "bg-green-100 border-green-400 text-green-800 font-bold ring-1 ring-green-400" // Doğru bildi
-                  : "bg-red-100 border-red-400 text-red-800 ring-1 ring-red-400"; // Yanlış bildi
+                  ? "bg-green-100 border-green-400 text-green-800 font-bold ring-1 ring-green-400"
+                  : "bg-red-100 border-red-400 text-red-800 ring-1 ring-red-400";
               } else if (isCorrect(opt)) {
-                // Kullanıcı yanlış seçtiyse doğru olanı yine de yeşil göster
-                liClass = "bg-green-50 border-green-300 text-green-700 font-medium"; 
+                liClass = "bg-green-50 border-green-300 text-green-700 font-medium";
               } else {
-                 // Seçilmeyen diğer şıklar sönükleşsin
-                 liClass = "opacity-50 bg-gray-50 border-gray-100";
+                liClass = "opacity-50 bg-gray-50 border-gray-100";
               }
             }
 
@@ -62,7 +48,6 @@ function QuestionCard({ q, index }: { q: any; index: number }) {
           })}
         </div>
       ) : (
-        /* --- KLASİK SORU MODU --- */
         <div className="mt-4">
           {!showAnswer ? (
             <button
@@ -86,6 +71,59 @@ function QuestionCard({ q, index }: { q: any; index: number }) {
   );
 }
 
+// --- YENİ BİLEŞEN: Sonuç Alanı (Hem Mobil Hem Desktop İçin Ortak) ---
+function ResultsArea({ 
+  questions, 
+  loading, 
+  downloadAsTxt, 
+  isMobile = false 
+}: { 
+  questions: any[], 
+  loading: boolean, 
+  downloadAsTxt: () => void,
+  isMobile?: boolean
+}) {
+  return (
+    <div className="space-y-6 h-full">
+      <div className="flex justify-between items-end border-b border-gray-200 pb-4 sticky top-0 bg-gray-50/95 backdrop-blur z-10 pt-2">
+        <div>
+           <h2 className="text-2xl font-bold text-gray-800">Sonuçlar</h2>
+           <p className="text-sm text-gray-500">Yapay zeka tarafından üretilen içerik</p>
+        </div>
+        {questions.length > 0 && (
+          <button onClick={downloadAsTxt} className="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-all shadow-md flex items-center gap-2">
+            <span>📥</span> <span className="hidden sm:inline">.TXT İndir</span>
+          </button>
+        )}
+      </div>
+
+      <div className={`${isMobile ? 'pb-24' : ''}`}> {/* Mobilde altta boşluk bırak */}
+        {questions.length === 0 && !loading && (
+           <div className="flex flex-col items-center justify-center py-20 bg-white border-2 border-dashed border-gray-200 rounded-2xl text-gray-400">
+              <div className="text-6xl mb-4 opacity-20">📝</div>
+              <p>Henüz bir sınav oluşturulmadı.</p>
+              <p className="text-sm mt-2 text-center px-4">Dosya yükleyip "Sınavı Oluştur" butonuna basın.</p>
+           </div>
+        )}
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-100 border-t-blue-600 mb-6"></div>
+            <h3 className="text-xl font-bold text-gray-800 animate-pulse">Analiz Ediliyor...</h3>
+            <p className="text-gray-500 mt-2 text-center px-4">PDF taranıyor ve sorular hazırlanıyor.</p>
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {questions.map((q, index) => (
+            <QuestionCard key={index} q={q} index={index} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- ANA SAYFA BİLEŞENİ ---
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -95,6 +133,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Responsive Panel Kontrolü
+  const [showMobileResults, setShowMobileResults] = useState(false);
 
   // Sürükle-Bırak Fonksiyonları
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
@@ -115,9 +156,13 @@ export default function Home() {
     if (!file) return alert("Lütfen bir PDF seçin!");
 
     setLoading(true);
-    // Yeni bir dosya yüklendiğinde eski soruları temizle
     setQuestions([]); 
     
+    // Mobilde yükleme başladığında paneli aç
+    if (window.innerWidth < 1024) {
+      setShowMobileResults(true);
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("difficulty", difficulty);
@@ -131,6 +176,7 @@ export default function Home() {
       setQuestions(data);
     } catch (error) {
       alert("Hata oluştu: " + error);
+      setShowMobileResults(false); // Hata varsa paneli kapat
     } finally {
       setLoading(false);
     }
@@ -155,22 +201,23 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
       
       {/* 1. BÖLÜM: Ana İşlem Alanı */}
-      <div className="flex-grow pt-10 pb-20 px-4 md:px-10">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-extrabold mb-4 text-center text-gray-900 tracking-tight">
+      <div className="flex-grow pt-6 md:pt-10 pb-20 px-4 md:px-10">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-center text-gray-900 tracking-tight">
             Yapay Zeka ile <span className="text-blue-600">Sınav Hazırla</span>
           </h1>
-          <p className="text-center text-gray-500 mb-12 max-w-2xl mx-auto text-lg">
+          <p className="text-center text-gray-500 mb-8 md:mb-12 max-w-2xl mx-auto text-base md:text-lg px-2">
             Ders notlarınızı yükleyin, saniyeler içinde kendinizi test edin.
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* SOL TARAF: AYARLAR */}
-            <div className="space-y-6 sticky top-24">
-              <form onSubmit={handleSubmit} className="space-y-6 border border-gray-100 p-8 rounded-2xl shadow-xl bg-white relative overflow-hidden">
+            
+            {/* SOL TARAF: AYARLAR (Her zaman görünür) */}
+            <div className="space-y-6 lg:sticky lg:top-24 z-0">
+              <form onSubmit={handleSubmit} className="space-y-6 border border-gray-100 p-6 md:p-8 rounded-2xl shadow-xl bg-white relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
 
                 <h2 className="text-2xl font-bold text-gray-800">Sınav Ayarları</h2>
@@ -178,15 +225,15 @@ export default function Home() {
                 {/* Dosya Yükleme */}
                 <div
                   onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${isDragging ? "border-blue-500 bg-blue-50 scale-[1.02]" : "border-gray-300 bg-gray-50 hover:border-blue-400"}`}
+                  className={`border-2 border-dashed rounded-xl p-6 md:p-8 text-center transition-all duration-300 ${isDragging ? "border-blue-500 bg-blue-50 scale-[1.02]" : "border-gray-300 bg-gray-50 hover:border-blue-400"}`}
                 >
                   <input type="file" accept=".pdf" id="fileInput" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
                   <label htmlFor="fileInput" className="cursor-pointer flex flex-col items-center">
-                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mb-3 shadow-sm">
+                    <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl md:text-3xl mb-3 shadow-sm">
                       📄
                     </div>
-                    <p className="text-gray-700 font-semibold text-lg">{file ? file.name : "PDF Dosyasını Buraya Bırakın"}</p>
-                    <p className="text-sm text-gray-500 mt-1">veya dosya seçmek için tıklayın</p>
+                    <p className="text-gray-700 font-semibold text-base md:text-lg break-all px-2">{file ? file.name : "PDF Dosyasını Bırakın"}</p>
+                    <p className="text-xs md:text-sm text-gray-500 mt-1">veya seçmek için tıklayın</p>
                   </label>
                 </div>
 
@@ -209,111 +256,112 @@ export default function Home() {
                   <div className="col-span-1 md:col-span-2">
                     <label className="block mb-2 font-semibold text-gray-700 text-sm uppercase tracking-wide">Sınav Tipi</label>
                     <div className="grid grid-cols-2 gap-3">
-                      <div onClick={() => setExamType("coktan_secmeli")} className={`cursor-pointer border-2 rounded-lg p-3 flex items-center gap-3 transition-all ${examType === "coktan_secmeli" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${examType === "coktan_secmeli" ? "border-blue-600" : "border-gray-400"}`}>
+                      <div onClick={() => setExamType("coktan_secmeli")} className={`cursor-pointer border-2 rounded-lg p-3 flex items-center gap-2 md:gap-3 transition-all ${examType === "coktan_secmeli" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"}`}>
+                        <div className={`min-w-[1rem] h-4 rounded-full border flex items-center justify-center ${examType === "coktan_secmeli" ? "border-blue-600" : "border-gray-400"}`}>
                           {examType === "coktan_secmeli" && <div className="w-2 h-2 bg-blue-600 rounded-full"></div>}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">Test (Şıklı)</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-700">Test (Şıklı)</span>
                       </div>
-                      <div onClick={() => setExamType("klasik")} className={`cursor-pointer border-2 rounded-lg p-3 flex items-center gap-3 transition-all ${examType === "klasik" ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"}`}>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${examType === "klasik" ? "border-purple-600" : "border-gray-400"}`}>
+                      <div onClick={() => setExamType("klasik")} className={`cursor-pointer border-2 rounded-lg p-3 flex items-center gap-2 md:gap-3 transition-all ${examType === "klasik" ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"}`}>
+                        <div className={`min-w-[1rem] h-4 rounded-full border flex items-center justify-center ${examType === "klasik" ? "border-purple-600" : "border-gray-400"}`}>
                           {examType === "klasik" && <div className="w-2 h-2 bg-purple-600 rounded-full"></div>}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">Klasik (Yazılı)</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-700">Klasik</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="col-span-1 md:col-span-2">
-                     <label className="block mb-2 font-semibold text-gray-700 text-sm uppercase tracking-wide">Soru Adedi</label>
-                     <select value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+                      <label className="block mb-2 font-semibold text-gray-700 text-sm uppercase tracking-wide">Soru Adedi</label>
+                      <select value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
                         <option value="3">3 Soru</option>
                         <option value="5">5 Soru</option>
                         <option value="10">10 Soru</option>
                         <option value="20">20 Soru</option>
-                     </select>
+                      </select>
                   </div>
                 </div>
 
                 <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  {loading ? "Yapay Zeka Çalışıyor..." : "✨ Sınavı Oluştur"}
+                  {loading ? "Hazırlanıyor..." : "✨ Sınavı Oluştur"}
                 </button>
               </form>
-
-              
             </div>
 
-            {/* SAĞ TARAF: SONUÇLAR */}
-            <div className="space-y-6">
-              <div className="flex justify-between items-end border-b border-gray-200 pb-4">
-                <div>
-                   <h2 className="text-2xl font-bold text-gray-800">Sonuçlar</h2>
-                   <p className="text-sm text-gray-500">Yapay zeka tarafından üretilen içerik</p>
-                </div>
-                {questions.length > 0 && (
-                  <button onClick={downloadAsTxt} className="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-all shadow-md flex items-center gap-2">
-                    <span>📥</span> .TXT İndir
-                  </button>
-                )}
-              </div>
-
-              {questions.length === 0 && !loading && (
-                 <div className="flex flex-col items-center justify-center py-20 bg-white border-2 border-dashed border-gray-200 rounded-2xl text-gray-400">
-                    <div className="text-6xl mb-4 opacity-20">📝</div>
-                    <p>Henüz bir sınav oluşturulmadı.</p>
-                    <p className="text-sm mt-2">Sol taraftan dosya yükleyerek başlayın.</p>
-                 </div>
-              )}
-
-              {loading && (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-100 border-t-blue-600 mb-6"></div>
-                  <h3 className="text-xl font-bold text-gray-800 animate-pulse">Analiz Ediliyor...</h3>
-                  <p className="text-gray-500 mt-2">Bu işlem dosya boyutuna göre 5-10 saniye sürebilir.</p>
-                </div>
-              )}
-
-              <div className="space-y-6">
-                {/* BURASI DEĞİŞTİ: Artık her soru için QuestionCard bileşenini kullanıyoruz */}
-                {questions.map((q, index) => (
-                  <QuestionCard key={index} q={q} index={index} />
-                ))}
-              </div>
+            {/* SAĞ TARAF: SONUÇLAR (DESKTOP İÇİN) */}
+            <div className="hidden lg:block">
+              <ResultsArea 
+                questions={questions} 
+                loading={loading} 
+                downloadAsTxt={downloadAsTxt} 
+              />
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* 2. BÖLÜM: NASIL ÇALIŞIR? */}
-      <div className="relative bg-white pt-24 pb-24" id="nasil-calisir">
-        <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0]">
-           <svg className="relative block w-[calc(100%+1.3px)] h-[50px] md:h-[100px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-gray-50"></path>
-           </svg>
+      {/* --- MOBİL/TABLET SONUÇ PANELİ (MODAL/DRAWER) --- */}
+      {/* Sadece ekran küçükse ve panel açık ise gösterilir */}
+      <div 
+        className={`fixed inset-0 z-50 bg-gray-50 lg:hidden transform transition-transform duration-300 ease-in-out flex flex-col ${showMobileResults ? "translate-y-0" : "translate-y-full"}`}
+      >
+        {/* Panel Header */}
+        <div className="bg-white px-4 py-3 border-b flex justify-between items-center shadow-sm">
+            <h3 className="font-bold text-lg text-gray-800">📝 Sınav Kağıdı</h3>
+            <button 
+              onClick={() => setShowMobileResults(false)}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+            >
+              Kapat ✕
+            </button>
         </div>
 
+        {/* Panel Content (Scrollable) */}
+        <div className="flex-1 overflow-y-auto p-4">
+           <ResultsArea 
+              questions={questions} 
+              loading={loading} 
+              downloadAsTxt={downloadAsTxt}
+              isMobile={true} 
+            />
+        </div>
+      </div>
+
+      {/* MOBİL İÇİN YÜZEN BUTON: Eğer sonuçlar varsa ama panel kapalıysa göster */}
+      {!showMobileResults && questions.length > 0 && (
+         <button 
+           onClick={() => setShowMobileResults(true)}
+           className="lg:hidden fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl hover:bg-blue-700 transition-all z-40 animate-bounce"
+         >
+           <span className="text-xl">📝</span>
+         </button>
+      )}
+
+      {/* 2. BÖLÜM: NASIL ÇALIŞIR? */}
+      <div className="relative bg-white pt-24 pb-24 border-t" id="nasil-calisir">
+        {/* Dekoratif SVG vb. buraya gelebilir, kod kısalığı için sade bırakıldı */}
         <div className="max-w-6xl mx-auto px-4 md:px-10 relative z-10">
           <div className="text-center mb-16">
             <span className="text-blue-600 font-bold tracking-wider uppercase text-sm">Kolay Kullanım</span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">Sadece 3 Adımda Hazır</h2>
-            <div className="w-24 h-1 bg-blue-600 mx-auto mt-6 rounded-full"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="flex flex-col items-center text-center group">
-              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">📤</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-800">1. Dosyanı Yükle</h3>
-              <p className="text-gray-500 leading-relaxed px-4">Sınav yapmak istediğin PDF formatındaki ders notlarını sisteme yükle.</p>
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-6 shadow-sm">📤</div>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">1. Dosyanı Yükle</h3>
+              <p className="text-gray-500 px-4">PDF notlarını sisteme yükle.</p>
             </div>
             <div className="flex flex-col items-center text-center group">
-              <div className="w-20 h-20 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">⚙️</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-800">2. Özelleştir</h3>
-              <p className="text-gray-500 leading-relaxed px-4">Sınavın zorluk seviyesini, soru sayısını ve tipini ayarla.</p>
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-6 shadow-sm">⚙️</div>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">2. Özelleştir</h3>
+              <p className="text-gray-500 px-4">Zorluk ve soru tipini seç.</p>
             </div>
             <div className="flex flex-col items-center text-center group">
-              <div className="w-20 h-20 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 group-hover:bg-green-600 group-hover:text-white transition-all duration-300">💾</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-800">3. Çöz ve İndir</h3>
-              <p className="text-gray-500 leading-relaxed px-4">Soruları interaktif olarak çöz veya .TXT olarak indir.</p>
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-6 shadow-sm">💾</div>
+              <h3 className="font-bold text-xl mb-2 text-gray-800">3. Çöz ve İndir</h3>
+              <p className="text-gray-500 px-4">Soruları çöz veya kaydet.</p>
             </div>
           </div>
         </div>
