@@ -16,8 +16,7 @@ export const metadata: Metadata = {
     "pdf’den sınav oluşturma",
     "online sınav hazırlama",
     "yapay zeka soru oluşturma",
-    "öğretmenler için sınav hazırlama",
-    "öğrenciler için sınava hazırlık",
+    "sınav hazırlayıcı",
   ],
 
   metadataBase: new URL("https://www.oftechsolutions.com"),

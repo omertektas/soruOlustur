@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import ExamGenerator from "./components/ExamGenerator"; // Bileşen yolunu projene göre ayarla
 
-export const metadata: Metadata = {
-  title: "Yapay Zeka Sınav Hazırlama Aracı - PDF'ten Test ve Soru Oluştur",
-  
-};
 
 export default function Home() {
   return (
