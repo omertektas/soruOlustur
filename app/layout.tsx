@@ -1,64 +1,62 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { siteConfig } from "@/lib/site";
 import "./globals.css";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const display = Bricolage_Grotesque({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "700", "800"],
+  variable: "--font-display",
+});
+const body = IBM_Plex_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600"],
+  variable: "--font-body",
+});
+const mono = JetBrains_Mono({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600"],
+  variable: "--font-mono-face",
+});
 
 export const metadata: Metadata = {
-  title: "Yapay Zeka Destekli Sınav Hazırlayıcı | PDF’den Soru Oluştur",
-  description:
-    "PDF ders notlarınızı yükleyin, yapay zeka ile saniyeler içinde test veya klasik sınav soruları oluşturun. Öğretmenler ve öğrenciler için online sınav hazırlayıcı.",
-
-  keywords: [
-    "yapay zeka sınav hazırlayıcı",
-    "pdf’den sınav oluşturma",
-    "online sınav hazırlama",
-    "yapay zeka soru oluşturma",
-    "sınav hazırlayıcı",
-  ],
-
-  metadataBase: new URL("https://www.oftechsolutions.com"),
-
-  alternates: {
-    canonical: "/",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: `${siteConfig.name} | Yazılım ve Mühendislik Mülakat Soruları`,
+    template: `%s | ${siteConfig.name}`,
   },
-
-  robots: {
-    index: true,
-    follow: true,
-  },
-
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Yapay Zeka Destekli Sınav Hazırlayıcı",
-    description:
-      "PDF’den otomatik sınav ve test oluşturma. Yapay zeka destekli online sınav hazırlama aracı.",
-    url: "https://www.oftechsolutions.com",
-    siteName: "OFTECHSOLUTIONS",
-    locale: "tr_TR",
+    siteName: siteConfig.name,
+    locale: siteConfig.locale,
     type: "website",
   },
-
-  twitter: {
-    card: "summary_large_image",
-    title: "Yapay Zeka Destekli Sınav Hazırlayıcı",
-    description:
-      "PDF yükleyin, saniyeler içinde yapay zeka ile sınav soruları oluşturun.",
-  },
+  robots: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f5f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#111615" },
+  ],
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <Header />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+    <html lang="tr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body>
+        <a href="#icerik" className="skip-link">
+          İçeriğe geç
+        </a>
+        <SiteHeader />
+        <main id="icerik" className="container main">
+          {children}
+        </main>
+        <SiteFooter />
       </body>
     </html>
   );

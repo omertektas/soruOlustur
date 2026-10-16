@@ -1,0 +1,156 @@
+import type { ReactNode } from "react";
+
+/*
+ * Kullanıcı içeriği için küçük ve güvenli bir markdown işleyici.
+ * HTML üretmez, React elemanları üretir; bu yüzden XSS'e kapalıdır.
+ * Desteklenenler: paragraf, ### başlık, - liste, 1. liste, ```kod```, `satır içi kod`, **kalın**, [bağlantı](https://...)
+ */
+
+type Block =
+  | { type: "code"; lang: string; content: string }
+  | { type: "heading"; text: string }
+  | { type: "ul"; items: string[] }
+  | { type: "ol"; items: string[] }
+  | { type: "p"; text: string };
+
+const UL_RE = /^\s*[-*]\s+(.*)$/;
+const OL_RE = /^\s*\d+[.)]\s+(.*)$/;
+const HEADING_RE = /^#{1,4}\s+(.*)$/;
+
+export function parseMarkdown(source: string): Block[] {
+  const lines = source.replace(/\r\n?/g, "\n").split("\n");
+  const blocks: Block[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.trim() === "") {
+      i++;
+      continue;
+    }
+
+    const fence = line.match(/^\s*```\s*([\w+#-]*)\s*$/);
+    if (fence) {
+      const content: string[] = [];
+      i++;
+      while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) content.push(lines[i++]);
+      i++; // kapanış ```
+      blocks.push({ type: "code", lang: fence[1] || "text", content: content.join("\n") });
+      continue;
+    }
+
+    const heading = line.match(HEADING_RE);
+    if (heading) {
+      blocks.push({ type: "heading", text: heading[1] });
+      i++;
+      continue;
+    }
+
+    if (UL_RE.test(line) || OL_RE.test(line)) {
+      const ordered = OL_RE.test(line);
+      const re = ordered ? OL_RE : UL_RE;
+      const items: string[] = [];
+      while (i < lines.length && re.test(lines[i])) {
+        items.push(lines[i].match(re)![1]);
+        i++;
+      }
+      blocks.push({ type: ordered ? "ol" : "ul", items });
+      continue;
+    }
+
+    const para: string[] = [];
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !/^\s*```/.test(lines[i]) &&
+      !HEADING_RE.test(lines[i]) &&
+      !UL_RE.test(lines[i]) &&
+      !OL_RE.test(lines[i])
+    ) {
+      para.push(lines[i].trim());
+      i++;
+    }
+    blocks.push({ type: "p", text: para.join(" ") });
+  }
+
+  return blocks;
+}
+
+const INLINE_RE = /(`[^`]+`)|(\*\*[^*]+\*\*)|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+function renderInline(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  for (const match of text.matchAll(INLINE_RE)) {
+    const index = match.index ?? 0;
+    if (index > last) nodes.push(text.slice(last, index));
+    if (match[1]) nodes.push(<code key={key++}>{match[1].slice(1, -1)}</code>);
+    else if (match[2]) nodes.push(<strong key={key++}>{match[2].slice(2, -2)}</strong>);
+    else if (match[3] && match[4])
+      nodes.push(
+        <a key={key++} href={match[4]} rel="nofollow ugc noopener" target="_blank">
+          {match[3]}
+        </a>
+      );
+    last = index + match[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+export function Markdown({ source, className }: { source: string; className?: string }) {
+  const blocks = parseMarkdown(source);
+  return (
+    <div className={className ?? "prose"}>
+      {blocks.map((block, i) => {
+        switch (block.type) {
+          case "code":
+            return (
+              <pre key={i} data-lang={block.lang}>
+                <code>{block.content}</code>
+              </pre>
+            );
+          case "heading":
+            return <h3 key={i}>{renderInline(block.text)}</h3>;
+          case "ul":
+            return (
+              <ul key={i}>
+                {block.items.map((item, j) => (
+                  <li key={j}>{renderInline(item)}</li>
+                ))}
+              </ul>
+            );
+          case "ol":
+            return (
+              <ol key={i}>
+                {block.items.map((item, j) => (
+                  <li key={j}>{renderInline(item)}</li>
+                ))}
+              </ol>
+            );
+          default:
+            return <p key={i}>{renderInline(block.text)}</p>;
+        }
+      })}
+    </div>
+  );
+}
+
+/** Meta açıklama ve önizlemeler için düz metin özeti. */
+export function markdownToPlain(source: string, maxLength = 160): string {
+  const text = parseMarkdown(source)
+    .filter((b) => b.type !== "code")
+    .map((b) => (b.type === "ul" || b.type === "ol" ? b.items.join(", ") : b.text))
+    .join(" ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= maxLength) return text;
+  const cut = text.slice(0, maxLength - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), maxLength - 20))}…`;
+}
+

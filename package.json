@@ -1,21 +1,21 @@
 {
-  "name": "exam-preparer",
-  "version": "0.1.0",
+  "name": "mulakat-defteri",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postbuild": "next-sitemap"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "next": "16.1.6",
-    "next-sitemap": "^4.2.3",
-    "pdf-parse": "^1.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
