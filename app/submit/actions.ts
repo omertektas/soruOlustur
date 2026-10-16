@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth";
 import { insertPendingQuestion, slugExists } from "@/lib/data/questions";
+import { resolveCatalogChoice, SuggestionError } from "@/lib/data/suggestions";
 import { randomSuffix, slugify } from "@/lib/slug";
 import { internalRoutes } from "@/lib/site";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ export type SubmitState = {
 export async function submitQuestion(prev: SubmitState, formData: FormData): Promise<SubmitState> {
   const attempt = prev.attempt + 1;
   const values = Object.fromEntries(
-    ["title", "answer", "tip", "difficulty", "professionId", "topicId"].map((k) => [k, String(formData.get(k) ?? "")])
+    ["title", "answer", "tip", "difficulty", "professionId", "topicId", "newProfession", "newTopic"].map((k) => [k, String(formData.get(k) ?? "")])
   );
 
   // Honeypot: bots fill the hidden field; pretend success and drop the submission
@@ -32,10 +33,28 @@ export async function submitQuestion(prev: SubmitState, formData: FormData): Pro
   if (!parsed.ok) return { status: "error", errors: parsed.errors, message: "Lütfen işaretli alanları düzeltin.", values, attempt };
 
   const supabase = await createServerSupabase();
-  const base = slugify(parsed.data.title) || "soru";
+  const { profession, topic, ...content } = parsed.data;
+
+  let professionId: number;
+  let topicId: number;
+  try {
+    professionId = await resolveCatalogChoice(supabase, "profession", profession);
+    topicId = await resolveCatalogChoice(supabase, "topic", topic);
+  } catch (e) {
+    const code = e instanceof SuggestionError ? e.code : "UNKNOWN";
+    const message =
+      code === "SUGGESTION_LIMIT"
+        ? "Onay bekleyen 5 meslek veya konu öneriniz var. Bunlar incelendikten sonra yeni öneri yapabilirsiniz."
+        : code === "INVALID_NAME"
+          ? "Yeni meslek veya konu adı yalnızca harf, rakam ve boşluk içermeli."
+          : "Öneriniz kaydedilemedi. Lütfen biraz sonra tekrar deneyin.";
+    return { status: "error", message, values, attempt };
+  }
+
+  const base = slugify(content.title) || "soru";
   const slug = (await slugExists(supabase, base)) ? `${base}-${randomSuffix()}` : base;
 
-  const { error } = await insertPendingQuestion(supabase, user.id, slug, parsed.data);
+  const { error } = await insertPendingQuestion(supabase, { authorId: user.id, slug, professionId, topicId, content });
   if (error) {
     const message = error.message.includes("PENDING_LIMIT")
       ? "Onay bekleyen 10 sorunuz var. Bunlar incelendikten sonra yeni soru ekleyebilirsiniz."

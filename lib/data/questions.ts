@@ -2,7 +2,7 @@ import "server-only";
 import type { ServerSupabase as SupabaseClient } from "../supabase/server";
 import { createPublicSupabase } from "../supabase/public";
 import type { OwnQuestion, QuestionDetail, QuestionSummary, ReviewQuestion } from "../types";
-import type { QuestionInput } from "../validation";
+import type { QuestionContent } from "../validation";
 import {
   DETAIL_COLUMNS,
   OWN_COLUMNS,
@@ -127,21 +127,25 @@ export async function slugExists(supabase: SupabaseClient, slug: string): Promis
   return (count ?? 0) > 0;
 }
 
-export async function insertPendingQuestion(
-  supabase: SupabaseClient,
-  authorId: string,
-  slug: string,
-  input: QuestionInput
-) {
+interface NewQuestion {
+  authorId: string;
+  slug: string;
+  professionId: number;
+  topicId: number;
+  content: QuestionContent;
+}
+
+export async function insertPendingQuestion(supabase: SupabaseClient, question: NewQuestion) {
+  const { content } = question;
   return supabase.from("questions").insert({
-    slug,
-    title: input.title,
-    answer: input.answer,
-    tip: input.tip,
-    difficulty: input.difficulty,
-    profession_id: input.professionId,
-    topic_id: input.topicId,
-    author_id: authorId,
+    slug: question.slug,
+    title: content.title,
+    answer: content.answer,
+    tip: content.tip,
+    difficulty: content.difficulty,
+    profession_id: question.professionId,
+    topic_id: question.topicId,
+    author_id: question.authorId,
     status: "pending",
   });
 }
@@ -195,6 +199,8 @@ export async function reviewQuestion(
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("slug, profession:professions!inner(slug), topic:topics!inner(slug)")
+    .select(
+      "slug, profession:professions!inner(id, slug, is_published), topic:topics!inner(id, slug, is_published)"
+    )
     .single();
 }

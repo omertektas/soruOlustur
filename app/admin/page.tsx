@@ -56,6 +56,14 @@ export default async function AdminPage({ searchParams }: Props) {
                   <span>· {dateFormat.format(new Date(q.createdAt))}</span>
                 </div>
                 <h2>{q.title}</h2>
+                {(q.suggestsNewProfession || q.suggestsNewTopic) && (
+                  <p className="suggestion-note">
+                    Bu soru yeni {q.suggestsNewProfession && <strong>meslek: {q.profession.name}</strong>}
+                    {q.suggestsNewProfession && q.suggestsNewTopic && " ve "}
+                    {q.suggestsNewTopic && <strong>konu: {q.topic.name}</strong>} öneriyor. Onaylarsan bunlar da
+                    yayına alınır ve kendi sayfaları oluşur.
+                  </p>
+                )}
               </div>
               <Markdown source={q.answer} />
               {q.tip && (

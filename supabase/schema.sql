@@ -203,6 +203,94 @@ create trigger questions_limit_pending
   before insert on public.questions
   for each row execute function public.limit_pending_questions();
 
+-- ---------- Community suggestions: new professions and topics ----------
+-- Users can suggest a profession/topic together with a question. Suggestions stay
+-- unpublished until an admin approves the question that introduced them.
+
+alter table public.professions add column if not exists is_published boolean not null default true;
+alter table public.professions add column if not exists suggested_by uuid references public.profiles (id) on delete set null;
+alter table public.topics add column if not exists is_published boolean not null default true;
+alter table public.topics add column if not exists suggested_by uuid references public.profiles (id) on delete set null;
+
+drop policy if exists "professions_read" on public.professions;
+create policy "professions_read" on public.professions for select
+  using (is_published or suggested_by = auth.uid() or public.is_admin());
+
+drop policy if exists "topics_read" on public.topics;
+create policy "topics_read" on public.topics for select
+  using (is_published or suggested_by = auth.uid() or public.is_admin());
+
+-- Returns the id of an existing profession with this slug, or creates an unpublished suggestion.
+create or replace function public.suggest_profession(p_slug text, p_name text)
+returns smallint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_id smallint;
+  v_name text := btrim(p_name);
+begin
+  if v_uid is null then raise exception 'AUTH_REQUIRED' using errcode = 'P0001'; end if;
+  if char_length(v_name) not between 2 and 60
+     or char_length(p_slug) > 80
+     or p_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$' then
+    raise exception 'INVALID_NAME' using errcode = 'P0001';
+  end if;
+
+  select id into v_id from public.professions where slug = p_slug;
+  if v_id is not null then return v_id; end if;
+
+  if (select count(*) from public.professions where suggested_by = v_uid and not is_published) >= 5 then
+    raise exception 'SUGGESTION_LIMIT' using errcode = 'P0001';
+  end if;
+
+  insert into public.professions (slug, name, short_name, description, is_published, suggested_by)
+  values (p_slug, v_name, v_name, v_name || ' pozisyonu için mülakat soruları ve cevapları.', false, v_uid)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+-- Same as suggest_profession, for topics.
+create or replace function public.suggest_topic(p_slug text, p_name text)
+returns smallint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_id smallint;
+  v_name text := btrim(p_name);
+begin
+  if v_uid is null then raise exception 'AUTH_REQUIRED' using errcode = 'P0001'; end if;
+  if char_length(v_name) not between 2 and 60
+     or char_length(p_slug) > 80
+     or p_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$' then
+    raise exception 'INVALID_NAME' using errcode = 'P0001';
+  end if;
+
+  select id into v_id from public.topics where slug = p_slug;
+  if v_id is not null then return v_id; end if;
+
+  if (select count(*) from public.topics where suggested_by = v_uid and not is_published) >= 5 then
+    raise exception 'SUGGESTION_LIMIT' using errcode = 'P0001';
+  end if;
+
+  insert into public.topics (slug, name, is_published, suggested_by)
+  values (p_slug, v_name, false, v_uid)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.suggest_profession(text, text) from public, anon;
+revoke execute on function public.suggest_topic(text, text) from public, anon;
+grant execute on function public.suggest_profession(text, text) to authenticated;
+grant execute on function public.suggest_topic(text, text) to authenticated;
+
 -- =====================================================================
 -- To make yourself an admin (after signing up on the site):
 --

@@ -36,8 +36,8 @@ export interface QuestionRow {
   tip?: string | null;
   status?: QuestionStatus;
   rejection_reason?: string | null;
-  profession: { slug: string; name: string; short_name: string };
-  topic: { slug: string; name: string };
+  profession: { slug: string; name: string; short_name: string; is_published?: boolean };
+  topic: { slug: string; name: string; is_published?: boolean };
   author?: { display_name: string } | null;
 }
 
@@ -49,7 +49,9 @@ const RELATIONS =
 export const SUMMARY_COLUMNS = `id, slug, title, difficulty, created_at, ${RELATIONS}`;
 export const DETAIL_COLUMNS = `id, slug, title, difficulty, created_at, updated_at, answer, tip, ${RELATIONS}, author:profiles!questions_author_id_fkey(display_name)`;
 export const OWN_COLUMNS = `${SUMMARY_COLUMNS}, status, rejection_reason`;
-export const REVIEW_COLUMNS = `${DETAIL_COLUMNS}, status, rejection_reason`;
+const REVIEW_RELATIONS =
+  "profession:professions!inner(slug, name, short_name, is_published), topic:topics!inner(slug, name, is_published)";
+export const REVIEW_COLUMNS = `id, slug, title, difficulty, created_at, updated_at, answer, tip, status, rejection_reason, ${REVIEW_RELATIONS}, author:profiles!questions_author_id_fkey(display_name)`;
 
 export function toProfession(row: ProfessionRow): Profession {
   return {
@@ -104,6 +106,8 @@ export function toReview(row: QuestionRow): ReviewQuestion {
     ...toDetail(row),
     status: row.status ?? "pending",
     rejectionReason: row.rejection_reason ?? null,
+    suggestsNewProfession: row.profession.is_published === false,
+    suggestsNewTopic: row.topic.is_published === false,
   };
 }
 

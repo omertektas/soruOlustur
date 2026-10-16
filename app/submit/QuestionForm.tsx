@@ -7,6 +7,7 @@ import { routes } from "@/lib/site";
 import { DIFFICULTIES, DIFFICULTY_LABELS, type Profession, type Topic } from "@/lib/types";
 import { QUESTION_LIMITS } from "@/lib/validation";
 import { submitQuestion, type SubmitState } from "./actions";
+import { CatalogSelect } from "./CatalogSelect";
 
 export function QuestionForm({ professions, topics }: { professions: Profession[]; topics: Topic[] }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitQuestion, {
@@ -42,34 +43,28 @@ export function QuestionForm({ professions, topics }: { professions: Profession[
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
 
       <div className="grid-2">
-        <div className="field">
-          <label htmlFor="professionId">Meslek</label>
-          <select id="professionId" name="professionId" className="input" defaultValue={v.professionId ?? ""} required>
-            <option value="" disabled>
-              Seçin
-            </option>
-            {professions.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {err.professionId && <small className="field-error">{err.professionId}</small>}
-        </div>
-        <div className="field">
-          <label htmlFor="topicId">Konu</label>
-          <select id="topicId" name="topicId" className="input" defaultValue={v.topicId ?? ""} required>
-            <option value="" disabled>
-              Seçin
-            </option>
-            {topics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-          {err.topicId && <small className="field-error">{err.topicId}</small>}
-        </div>
+        <CatalogSelect
+          selectName="professionId"
+          newName="newProfession"
+          label="Meslek"
+          newOptionLabel="+ Listede yok, yeni meslek öner"
+          newPlaceholder="Örn: Veri Bilimci"
+          options={professions}
+          defaultValue={v.professionId}
+          defaultNewName={v.newProfession}
+          error={err.profession}
+        />
+        <CatalogSelect
+          selectName="topicId"
+          newName="newTopic"
+          label="Konu"
+          newOptionLabel="+ Listede yok, yeni konu öner"
+          newPlaceholder="Örn: Makine Öğrenmesi"
+          options={topics}
+          defaultValue={v.topicId}
+          defaultNewName={v.newTopic}
+          error={err.topic}
+        />
       </div>
 
       <fieldset className="field">

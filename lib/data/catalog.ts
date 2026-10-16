@@ -17,6 +17,7 @@ export async function getProfessions(): Promise<Profession[]> {
   const { data, error } = await createPublicSupabase()
     .from("professions")
     .select(PROFESSION_COLUMNS)
+    .eq("is_published", true)
     .order("sort_order");
   if (error) throw error;
   return rows<ProfessionRow>(data).map(toProfession);
@@ -41,6 +42,7 @@ export async function getProfessionBySlug(slug: string): Promise<Profession | nu
   const { data, error } = await createPublicSupabase()
     .from("professions")
     .select(PROFESSION_COLUMNS)
+    .eq("is_published", true)
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -48,7 +50,11 @@ export async function getProfessionBySlug(slug: string): Promise<Profession | nu
 }
 
 export async function getTopics(): Promise<Topic[]> {
-  const { data, error } = await createPublicSupabase().from("topics").select(TOPIC_COLUMNS).order("name");
+  const { data, error } = await createPublicSupabase()
+    .from("topics")
+    .select(TOPIC_COLUMNS)
+    .eq("is_published", true)
+    .order("name");
   if (error) throw error;
   return rows<TopicRow>(data).map(toTopic);
 }
@@ -57,6 +63,7 @@ export async function getTopicBySlug(slug: string): Promise<Topic | null> {
   const { data, error } = await createPublicSupabase()
     .from("topics")
     .select(TOPIC_COLUMNS)
+    .eq("is_published", true)
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;

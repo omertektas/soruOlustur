@@ -62,6 +62,10 @@ export interface OwnQuestion extends QuestionSummary {
 export interface ReviewQuestion extends QuestionDetail {
   status: QuestionStatus;
   rejectionReason: string | null;
+  /** True when the question introduced a profession that is not published yet. */
+  suggestsNewProfession: boolean;
+  /** True when the question introduced a topic that is not published yet. */
+  suggestsNewTopic: boolean;
 }
 
 export type UserRole = "user" | "admin";

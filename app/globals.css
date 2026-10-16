@@ -316,6 +316,7 @@ select.input { appearance: auto; }
 
 .review-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 14px; }
 .review-head h2 { margin: 6px 0 0; font-size: 20px; }
+.suggestion-note { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--info-bg); font-size: 14px; }
 .review-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
 .reject-form { display: flex; gap: 8px; flex: 1 1 320px; }
 .reject-form .input { min-width: 0; }
