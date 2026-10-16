@@ -28,7 +28,7 @@ export default async function SearchPage({ searchParams }: Props) {
             type="search"
             className="input input-lg"
             defaultValue={q}
-            placeholder="Örn: closure, subnet, op-amp, volatile…"
+            placeholder="Örn: closure, OSI, op-amp, volatile…"
             aria-label="Soru ara"
           />
           <button type="submit" className="btn btn-lg">

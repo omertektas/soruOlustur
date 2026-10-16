@@ -26,7 +26,7 @@ export default async function HomePage() {
           sık sorulan sorular ve kısa, net cevapları. Mesleğini seç, kendini sına.
         </p>
         <form action={routes.search()} method="get" className="hero-search" role="search">
-          <input name="q" type="search" className="input input-lg" placeholder="Örn: closure, subnet, op-amp, volatile…" aria-label="Soru ara" />
+          <input name="q" type="search" className="input input-lg" placeholder="Örn: closure, OSI, op-amp, volatile…" aria-label="Soru ara" />
           <button type="submit" className="btn btn-lg">
             Ara
           </button>
