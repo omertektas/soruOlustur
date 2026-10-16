@@ -148,9 +148,9 @@ select.input { appearance: auto; }
 .chip-radio input { accent-color: var(--accent); }
 
 .pill { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-.pill-kolay { color: var(--easy); background: var(--easy-bg); }
-.pill-orta { color: var(--mid); background: var(--mid-bg); }
-.pill-zor { color: var(--hard); background: var(--hard-bg); }
+.pill-easy { color: var(--easy); background: var(--easy-bg); }
+.pill-medium { color: var(--mid); background: var(--mid-bg); }
+.pill-hard { color: var(--hard); background: var(--hard-bg); }
 
 /* ---------- Üst bilgi ---------- */
 .site-header { background: var(--paper); border-bottom: 1px solid var(--line); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }

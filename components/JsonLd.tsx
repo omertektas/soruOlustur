@@ -1,9 +1,9 @@
-/** Yapılandırılmış veri (schema.org) — Google'ın sayfayı anlamasına yardım eder. */
+/** Renders schema.org structured data for search engines. */
 export function JsonLd({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      // JSON içinde </script> kapanışını engellemek için < karakteri kaçışlanır.
+      // Escape "<" so the JSON can never close the script tag.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
   );

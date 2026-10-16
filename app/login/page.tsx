@@ -4,7 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { pageMetadata } from "@/lib/seo";
 import { routes } from "@/lib/site";
 import { safeNextPath } from "@/lib/validation";
-import { AuthForm } from "./AuthForm";
+import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = pageMetadata({
   title: "Giriş yap",
@@ -13,10 +13,10 @@ export const metadata: Metadata = pageMetadata({
   noIndex: true,
 });
 
-type Props = { searchParams: Promise<{ next?: string; hata?: string }> };
+type Props = { searchParams: Promise<{ next?: string; error?: string }> };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { next: nextParam, hata } = await searchParams;
+  const { next: nextParam, error } = await searchParams;
   const next = safeNextPath(nextParam, routes.submit);
   if (await getSessionUser()) redirect(next);
 
@@ -26,9 +26,9 @@ export default async function LoginPage({ searchParams }: Props) {
         <h1>Hesabına giriş yap</h1>
         <p className="lede">Soru eklemek için giriş yapman gerekiyor. Eklediğin sorular onaylandıktan sonra yayına alınır.</p>
       </header>
-      <AuthForm
+      <LoginForm
         next={next}
-        initialError={hata ? "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapmayı deneyin." : undefined}
+        initialError={error ? "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapmayı deneyin." : undefined}
       />
     </div>
   );

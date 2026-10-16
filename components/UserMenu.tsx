@@ -11,7 +11,7 @@ type MenuState =
   | { status: "user"; name: string; isAdmin: boolean };
 
 /**
- * Oturum durumu tarayıcıda okunur; böylece herkese açık sayfalar statik/önbellekli kalır.
+ * Reads the session in the browser so public pages can stay static and cached.
  */
 export function UserMenu() {
   const supabase = useMemo(() => createBrowserSupabase(), []);

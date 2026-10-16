@@ -25,7 +25,7 @@ export default async function HomePage() {
           Frontend&apos;den gömülü sistemlere, network&apos;ten elektrik-elektronik mühendisliğine kadar mülakatlarda en
           sık sorulan sorular ve kısa, net cevapları. Mesleğini seç, kendini sına.
         </p>
-        <form action="/ara" method="get" className="hero-search" role="search">
+        <form action={routes.search()} method="get" className="hero-search" role="search">
           <input name="q" type="search" className="input input-lg" placeholder="Örn: closure, subnet, op-amp, volatile…" aria-label="Soru ara" />
           <button type="submit" className="btn btn-lg">
             Ara
@@ -33,8 +33,8 @@ export default async function HomePage() {
         </form>
       </section>
 
-      <section aria-labelledby="meslekler" className="section">
-        <h2 id="meslekler" className="section-title">
+      <section aria-labelledby="professions" className="section">
+        <h2 id="professions" className="section-title">
           Mesleğe göre mülakat soruları
         </h2>
         <ul className="prof-grid">
@@ -50,8 +50,8 @@ export default async function HomePage() {
         </ul>
       </section>
 
-      <section aria-labelledby="son-eklenenler" className="section">
-        <h2 id="son-eklenenler" className="section-title">
+      <section aria-labelledby="latest" className="section">
+        <h2 id="latest" className="section-title">
           Son eklenen sorular
         </h2>
         <ol className="qrows">

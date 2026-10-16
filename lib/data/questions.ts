@@ -16,7 +16,7 @@ import {
   type QuestionRow,
 } from "./mappers";
 
-/* ---------- Herkese açık okumalar (yalnızca yayındaki sorular) ---------- */
+/* ---------- Public reads (approved questions only) ---------- */
 
 interface ListOptions {
   professionId?: number;
@@ -57,7 +57,7 @@ export async function getApprovedQuestionBySlug(slug: string): Promise<QuestionD
   return data ? toDetail(data as unknown as QuestionRow) : null;
 }
 
-/** Aynı konudan, önce aynı meslekten olmak üzere ilgili sorular. */
+/** Related questions from the same topic, same profession first. */
 export async function listRelatedQuestions(question: QuestionDetail, limit = 6): Promise<QuestionSummary[]> {
   const { data, error } = await createPublicSupabase()
     .from("questions")
@@ -76,7 +76,7 @@ export async function listRelatedQuestions(question: QuestionDetail, limit = 6):
     .slice(0, limit);
 }
 
-/** PostgREST filtre sözdizimini bozabilecek karakterler temizlenir. */
+/** Strips characters that would break PostgREST filter syntax. */
 function sanitizeSearch(term: string): string {
   return term.replace(/[%_,()*\\"'.:]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
 }
@@ -114,11 +114,11 @@ export async function listQuestionsForSitemap(): Promise<SitemapQuestion[]> {
   );
 }
 
-/* ---------- Oturumlu işlemler (istemci çağıran taraftan verilir, RLS uygulanır) ---------- */
+/* ---------- Session-scoped operations (caller passes the client; RLS applies) ---------- */
 
 export async function slugExists(supabase: SupabaseClient, slug: string): Promise<boolean> {
-  // RLS başkasının bekleyen sorusunu gizler; bu yüzden yayındaki ve kendi sorularımız kontrol edilir,
-  // nadir çakışmalarda veritabanındaki unique kısıtı son güvencedir.
+  // RLS hides other users' pending questions, so this checks approved and own rows only;
+  // the unique constraint in the database is the final guard for rare collisions.
   const { count, error } = await supabase
     .from("questions")
     .select("id", { count: "exact", head: true })

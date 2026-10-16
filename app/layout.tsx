@@ -49,11 +49,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="tr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
-        <a href="#icerik" className="skip-link">
+        <a href="#main-content" className="skip-link">
           İçeriğe geç
         </a>
         <SiteHeader />
-        <main id="icerik" className="container main">
+        <main id="main-content" className="container main">
           {children}
         </main>
         <SiteFooter />

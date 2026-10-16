@@ -11,7 +11,7 @@ import {
   type TopicRow,
 } from "./mappers";
 
-/* Meslek ve konu kataloğu: herkese açık, önbelleğe alınabilir okumalar */
+/* Profession and topic catalog: public, cacheable reads */
 
 export async function getProfessions(): Promise<Profession[]> {
   const { data, error } = await createPublicSupabase()
@@ -63,7 +63,7 @@ export async function getTopicBySlug(slug: string): Promise<Topic | null> {
   return data ? toTopic(data as unknown as TopicRow) : null;
 }
 
-/** Bir meslekte yayında sorusu olan konular, soru sayısına göre sıralı. */
+/** Topics that have published questions for a profession, ordered by question count. */
 export async function getTopicsForProfession(professionId: number): Promise<TopicWithCount[]> {
   const { data, error } = await createPublicSupabase()
     .from("questions")

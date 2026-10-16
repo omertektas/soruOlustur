@@ -9,7 +9,7 @@ import type {
   Topic,
 } from "../types";
 
-/* Veritabanı satır biçimleri (snake_case) → uygulama tipleri (camelCase) */
+/* Database rows (snake_case) → domain types (camelCase) */
 
 export interface ProfessionRow {
   id: number;
@@ -107,7 +107,7 @@ export function toReview(row: QuestionRow): ReviewQuestion {
   };
 }
 
-/** Supabase istemcisi tip üretimi olmadan kullanıldığı için satırlar burada tiplenir. */
+/** The Supabase client is used without generated types, so rows are typed here. */
 export function rows<T>(data: unknown): T[] {
   return (Array.isArray(data) ? data : []) as T[];
 }

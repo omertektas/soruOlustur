@@ -3,7 +3,7 @@ const TR_MAP: Record<string, string> = {
   Ç: "c", Ğ: "g", Ö: "o", Ş: "s", Ü: "u",
 };
 
-/** "Closure nedir? Örnekle açıklayın" → "closure-nedir-ornekle-aciklayin" */
+/** Turkish-aware slug: "Closure nedir? Örnekle açıklayın" → "closure-nedir-ornekle-aciklayin" */
 export function slugify(input: string, maxLength = 80): string {
   return input
     .replace(/[çğıİöşüÇĞÖŞÜ]/g, (c) => TR_MAP[c] ?? c)

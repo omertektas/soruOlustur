@@ -22,7 +22,7 @@ export default async function SearchPage({ searchParams }: Props) {
     <>
       <header className="page-head">
         <h1>Soru ara</h1>
-        <form action="/ara" method="get" className="hero-search" role="search">
+        <form action={routes.search()} method="get" className="hero-search" role="search">
           <input
             name="q"
             type="search"

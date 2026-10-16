@@ -10,14 +10,14 @@ import { routes } from "@/lib/site";
 
 export const revalidate = 3600;
 
-type Props = { params: Promise<{ meslek: string; konu: string }> };
+type Props = { params: Promise<{ profession: string; topic: string }> };
 
 export async function generateStaticParams() {
   return [];
 }
 
-async function load(meslek: string, konu: string) {
-  const [profession, topic] = await Promise.all([getProfessionBySlug(meslek), getTopicBySlug(konu)]);
+async function loadTopicPage(professionSlug: string, topicSlug: string) {
+  const [profession, topic] = await Promise.all([getProfessionBySlug(professionSlug), getTopicBySlug(topicSlug)]);
   if (!profession || !topic) return null;
   const questions = await listApprovedQuestions({ professionId: profession.id, topicId: topic.id });
   if (questions.length === 0) return null;
@@ -25,8 +25,8 @@ async function load(meslek: string, konu: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { meslek, konu } = await params;
-  const data = await load(meslek, konu);
+  const { profession: professionSlug, topic: topicSlug } = await params;
+  const data = await loadTopicPage(professionSlug, topicSlug);
   if (!data) return {};
   const { profession, topic, questions } = data;
   return pageMetadata({
@@ -40,8 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TopicPage({ params }: Props) {
-  const { meslek, konu } = await params;
-  const data = await load(meslek, konu);
+  const { profession: professionSlug, topic: topicSlug } = await params;
+  const data = await loadTopicPage(professionSlug, topicSlug);
   if (!data) notFound();
   const { profession, topic, questions } = data;
 

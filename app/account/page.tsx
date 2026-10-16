@@ -26,7 +26,7 @@ export default async function AccountPage() {
           <h1>Merhaba, {user.displayName}</h1>
           <p className="muted">{user.email}</p>
         </div>
-        <form action="/auth/cikis" method="post">
+        <form action={routes.signOut} method="post">
           <button type="submit" className="btn btn-ghost">
             Çıkış yap
           </button>

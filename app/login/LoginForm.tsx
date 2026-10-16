@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { signIn, signUp, type AuthState } from "./actions";
 
-export function AuthForm({ next, initialError }: { next: string; initialError?: string }) {
+export function LoginForm({ next, initialError }: { next: string; initialError?: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {
     error: initialError,

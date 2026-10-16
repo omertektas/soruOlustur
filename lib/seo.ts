@@ -10,7 +10,7 @@ interface PageMetaInput {
   noIndex?: boolean;
 }
 
-/** Tüm sayfalarda tutarlı başlık, açıklama, canonical ve Open Graph etiketleri. */
+/** Consistent title, description, canonical and Open Graph tags for every page. */
 export function pageMetadata({ title, description, path, noIndex }: PageMetaInput): Metadata {
   return {
     title,

@@ -61,8 +61,8 @@ export default async function QuestionPage({ params }: Props) {
         <h1>{question.title}</h1>
       </header>
 
-      <section className="answer-card" aria-labelledby="cevap">
-        <h2 id="cevap" className="eyebrow">
+      <section className="answer-card" aria-labelledby="answer">
+        <h2 id="answer" className="eyebrow">
           Cevap
         </h2>
         <Markdown source={question.answer} />
@@ -78,8 +78,8 @@ export default async function QuestionPage({ params }: Props) {
       </section>
 
       {related.length > 0 && (
-        <section className="section" aria-labelledby="ilgili">
-          <h2 id="ilgili" className="section-title">
+        <section className="section" aria-labelledby="related">
+          <h2 id="related" className="section-title">
             İlgili {question.topic.name} soruları
           </h2>
           <ol className="qrows">

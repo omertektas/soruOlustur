@@ -56,7 +56,7 @@ export function validateQuestionInput(form: FormData): ValidationResult {
   };
 }
 
-/** Yalnızca site içi göreli yollara yönlendirmeye izin verir (open redirect koruması). */
+/** Allows only same-site relative paths (prevents open redirects). */
 export function safeNextPath(value: unknown, fallback = "/"): string {
   const path = typeof value === "string" ? value : "";
   return path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/\\") ? path : fallback;

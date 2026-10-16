@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl, siteConfig } from "@/lib/site";
+import { absoluteUrl, routes, siteConfig } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/yonetim", "/hesabim", "/soru-ekle", "/giris", "/auth/", "/ara"],
+      disallow: [routes.admin, routes.account, routes.submit, routes.login(), routes.search(), "/auth/"],
     },
     sitemap: absoluteUrl("/sitemap.xml"),
     host: siteConfig.url,

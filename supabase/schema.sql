@@ -1,13 +1,12 @@
 -- =====================================================================
--- Mülakat Defteri — veritabanı şeması
--- Supabase panelinde: SQL Editor → New query → bu dosyanın tamamını
--- yapıştırıp "Run" deyin. Ardından seed.sql dosyasını çalıştırın.
--- Dosya tekrar çalıştırılabilir (idempotent) şekilde yazıldı.
+-- Mülakat Defteri — database schema
+-- Run in Supabase: SQL Editor → New query → paste this file → Run.
+-- Then run seed.sql. This file is idempotent (safe to run again).
 -- =====================================================================
 
--- ---------- Türler ----------
+-- ---------- Types ----------
 do $$ begin
-  create type public.difficulty as enum ('kolay', 'orta', 'zor');
+  create type public.difficulty as enum ('easy', 'medium', 'hard');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
@@ -18,9 +17,9 @@ do $$ begin
   create type public.user_role as enum ('user', 'admin');
 exception when duplicate_object then null; end $$;
 
--- ---------- Tablolar ----------
+-- ---------- Tables ----------
 
--- Meslekler: Frontend Developer, Elektrik-Elektronik Mühendisi ...
+-- Professions, e.g. Frontend Developer, Electrical-Electronics Engineer
 create table if not exists public.professions (
   id           smallint generated always as identity primary key,
   slug         text not null unique,
@@ -31,7 +30,7 @@ create table if not exists public.professions (
   created_at   timestamptz not null default now()
 );
 
--- Konular: JavaScript, Devre Analizi, TCP/IP ... (meslekler arasında ortak)
+-- Topics, e.g. JavaScript, Circuit Analysis, TCP/IP (shared across professions)
 create table if not exists public.topics (
   id          smallint generated always as identity primary key,
   slug        text not null unique,
@@ -39,7 +38,7 @@ create table if not exists public.topics (
   created_at  timestamptz not null default now()
 );
 
--- Kullanıcı profilleri (auth.users ile birebir)
+-- User profiles (one-to-one with auth.users)
 create table if not exists public.profiles (
   id            uuid primary key references auth.users (id) on delete cascade,
   display_name  text not null default 'Anonim',
@@ -47,7 +46,7 @@ create table if not exists public.profiles (
   created_at    timestamptz not null default now()
 );
 
--- Sorular
+-- Questions
 create table if not exists public.questions (
   id                uuid primary key default gen_random_uuid(),
   slug              text not null unique,
@@ -71,9 +70,9 @@ create index if not exists questions_status_topic_idx on public.questions (statu
 create index if not exists questions_author_idx on public.questions (author_id);
 create index if not exists questions_created_idx on public.questions (created_at desc);
 
--- ---------- Yardımcı fonksiyonlar ----------
+-- ---------- Helper functions ----------
 
--- Oturumdaki kullanıcı yönetici mi?
+-- Is the current user an admin?
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -86,7 +85,7 @@ as $$
   );
 $$;
 
--- Yeni kayıt olan kullanıcı için profil oluştur
+-- Create a profile for every new auth user
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -109,7 +108,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- updated_at alanını otomatik güncelle
+-- Keep updated_at current
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -131,7 +130,7 @@ alter table public.topics      enable row level security;
 alter table public.profiles    enable row level security;
 alter table public.questions   enable row level security;
 
--- Meslek ve konular: herkes okur, yalnızca yönetici yazar
+-- Professions and topics: public read, admin write
 drop policy if exists "professions_read" on public.professions;
 create policy "professions_read" on public.professions for select using (true);
 drop policy if exists "professions_admin_write" on public.professions;
@@ -144,24 +143,24 @@ drop policy if exists "topics_admin_write" on public.topics;
 create policy "topics_admin_write" on public.topics for all
   using (public.is_admin()) with check (public.is_admin());
 
--- Profiller: görünen ad herkese açık; kullanıcı yalnızca kendi adını değiştirir
+-- Profiles: display names are public; users may only change their own
 drop policy if exists "profiles_read" on public.profiles;
 create policy "profiles_read" on public.profiles for select using (true);
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update
   using (auth.uid() = id) with check (auth.uid() = id);
 
--- Rol sütununu istemciden değiştirmek mümkün olmasın
+-- Clients must never be able to change the role column
 revoke update on public.profiles from authenticated, anon;
 grant update (display_name) on public.profiles to authenticated;
 
--- Sorular
+-- Questions
 drop policy if exists "questions_read" on public.questions;
 create policy "questions_read" on public.questions for select using (
   status = 'approved' or author_id = auth.uid() or public.is_admin()
 );
 
--- Giriş yapmış kullanıcı yalnızca kendi adına, "beklemede" durumunda soru ekler
+-- Signed-in users may only insert their own questions, always as pending
 drop policy if exists "questions_insert_own_pending" on public.questions;
 create policy "questions_insert_own_pending" on public.questions for insert
   to authenticated
@@ -172,7 +171,7 @@ create policy "questions_insert_own_pending" on public.questions for insert
     and reviewed_at is null
   );
 
--- Onay / ret / düzenleme / silme yalnızca yönetici
+-- Approve / reject / edit / delete: admins only
 drop policy if exists "questions_admin_update" on public.questions;
 create policy "questions_admin_update" on public.questions for update
   using (public.is_admin()) with check (public.is_admin());
@@ -181,7 +180,7 @@ drop policy if exists "questions_admin_delete" on public.questions;
 create policy "questions_admin_delete" on public.questions for delete
   using (public.is_admin());
 
--- Bir kullanıcının aynı anda en fazla 10 bekleyen sorusu olabilir (spam koruması)
+-- Spam guard: at most 10 pending questions per user
 create or replace function public.limit_pending_questions()
 returns trigger
 language plpgsql
@@ -205,7 +204,7 @@ create trigger questions_limit_pending
   for each row execute function public.limit_pending_questions();
 
 -- =====================================================================
--- Kendinizi yönetici yapmak için (sitede kayıt olduktan sonra):
+-- To make yourself an admin (after signing up on the site):
 --
 --   update public.profiles set role = 'admin'
 --   where id = (select id from auth.users where email = 'omertektas0824@gmail.com');

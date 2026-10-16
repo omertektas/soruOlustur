@@ -1,60 +1,73 @@
 # Mülakat Defteri
 
-Yazılım ve mühendislik adayları için topluluk destekli, Türkçe mülakat soru platformu.
-Yayında: https://www.oftechsolutions.com
+Community-driven interview question platform for software and engineering candidates (Turkish UI).
+Live: https://www.oftechsolutions.com
 
-**Teknolojiler:** Next.js 16 (App Router) · React 19 · TypeScript · Supabase (PostgreSQL + Auth) · Vercel
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Supabase (PostgreSQL + Auth) · Vercel
 
-Kurulum adımları için **[KURULUM.md](./KURULUM.md)** dosyasına bakın.
+Step-by-step setup guide (Turkish): **[SETUP.md](./SETUP.md)**
 
-## Özellikler
+## Features
 
-- Meslek → konu → soru hiyerarşisi (Frontend, Backend, Full Stack, Game Dev, Network, Embedded, Elektrik-Elektronik…)
-- Kullanıcı kaydı / girişi, soru ekleme, eklenen soruların durum takibi
-- Yönetici onay paneli (onayla, reddet, yayından kaldır)
-- SEO: sunucu tarafı render + ISR, her soruya ayrı URL, canonical, Open Graph, JSON-LD (QAPage, BreadcrumbList, WebSite), otomatik sitemap.xml ve robots.txt
+- Profession → topic → question hierarchy (Frontend, Backend, Full Stack, Game Dev, Network, Embedded, Electrical-Electronics…)
+- Sign up / sign in, question submission, submission status tracking
+- Admin review panel (approve, reject, unpublish)
+- SEO: server rendering + ISR, one URL per question, canonical tags, Open Graph, JSON-LD (QAPage, BreadcrumbList, WebSite), generated `sitemap.xml` and `robots.txt`
 
-## Klasör yapısı
+## Project structure
 
 ```
-app/                         Sayfalar (Next.js App Router)
-  page.tsx                   Ana sayfa
-  mulakat-sorulari/[meslek]/ Meslek sayfası  → /mulakat-sorulari/frontend-developer
-    [konu]/                  Konu sayfası    → /mulakat-sorulari/frontend-developer/react
-  soru/[slug]/               Soru sayfası    → /soru/closure-nedir-bir-ornekle-aciklayin
-  ara/                       Arama
-  giris/                     Giriş / kayıt (+ server actions)
-  soru-ekle/                 Soru ekleme formu (+ server action)
-  hesabim/                   Kullanıcının soruları
-  yonetim/                   Yönetici onay paneli (+ server actions)
-  auth/                      E-posta doğrulama ve çıkış uç noktaları
-  sitemap.ts, robots.ts      Arama motoru dosyaları
-components/                  Paylaşılan arayüz bileşenleri
+app/                                  Routes (English folder names)
+  page.tsx                            Home
+  interview-questions/[profession]/   Profession page
+    [topic]/                          Topic page
+  questions/[slug]/                   Question page
+  search/                             Search
+  login/                              Sign in / sign up (+ server actions)
+  submit/                             Question submission (+ server action)
+  account/                            The user's own questions
+  admin/                              Review panel (+ server actions)
+  auth/callback, auth/sign-out        Auth endpoints
+  sitemap.ts, robots.ts               Search engine files
+components/                           Shared UI components
 lib/
-  data/                      Veri erişim katmanı (tüm veritabanı sorguları burada)
-  supabase/                  Supabase istemcileri (public / server / browser / session)
-  auth.ts                    Oturum yardımcıları (requireUser, requireAdmin)
-  markdown.tsx               Güvenli markdown işleyici (HTML üretmez)
-  seo.ts                     Metadata ve yapılandırılmış veri üreticileri
-  validation.ts              Form doğrulama
-  site.ts                    Site ayarları ve URL'ler
-  types.ts                   Uygulama tipleri
+  data/                               Data access layer (all database queries)
+  supabase/                           Supabase clients (public / server / browser / session)
+  auth.ts                             Session helpers (requireUser, requireAdmin)
+  markdown.tsx                        Safe markdown renderer (no raw HTML)
+  route-map.ts                        Public Turkish URL ↔ internal route mapping
+  seo.ts                              Metadata and structured data builders
+  site.ts                             Site config and URL builders
+  slug.ts, validation.ts, types.ts
 supabase/
-  schema.sql                 Tablolar + güvenlik kuralları (RLS)
-  seed.sql                   Başlangıç meslek, konu ve soruları
-proxy.ts                     Oturum yenileme (Next.js proxy)
+  schema.sql                          Tables + Row Level Security policies
+  seed.sql                            Initial professions, topics and questions
+proxy.ts                              Session refresh (Next.js proxy)
 ```
 
-## Mimari kararlar
+## Public URLs
 
-- **Güvenlik veritabanında:** Yetkiler Supabase Row Level Security ile uygulanır. Kullanıcı yalnızca kendi adına ve "beklemede" durumunda soru ekleyebilir; onay/ret yalnızca `admin` rolündedir. Sunucu kodundaki kontroller ikinci katmandır.
-- **Hızlı herkese açık sayfalar:** Herkese açık sayfalar çerezsiz istemciyle okunur ve saatlik ISR ile önbelleğe alınır. Bir soru onaylandığında ilgili sayfalar anında yenilenir (`revalidatePath`). Oturum bilgisi üst menüde tarayıcıda okunur.
-- **Katmanlar:** Sayfalar veritabanına doğrudan değil, `lib/data` fonksiyonları üzerinden erişir.
+Folder names are English; visitors and search engines see Turkish, keyword-rich URLs.
+`lib/route-map.ts` is the single source of truth, and `next.config.ts` turns it into rewrites
+(public → internal) and permanent redirects (internal → public).
 
-## Geliştirme
+| Public URL | Route folder |
+| --- | --- |
+| `/mulakat-sorulari/frontend-developer` | `app/interview-questions/[profession]` |
+| `/mulakat-sorulari/frontend-developer/react` | `app/interview-questions/[profession]/[topic]` |
+| `/soru/closure-nedir-bir-ornekle-aciklayin` | `app/questions/[slug]` |
+| `/ara`, `/giris`, `/soru-ekle`, `/hesabim`, `/yonetim` | `search`, `login`, `submit`, `account`, `admin` |
+
+## Architecture notes
+
+- **Security lives in the database.** Permissions are enforced with Supabase Row Level Security: users can only insert their own questions as `pending`; only the `admin` role can approve or reject. Server-side checks are a second layer.
+- **Fast public pages.** Public pages read through a cookie-less client and are cached with hourly ISR. Approving a question revalidates the affected pages immediately. The header reads the session in the browser so public pages stay static.
+- **Layering.** Pages never query the database directly; they call functions in `lib/data`.
+
+## Development
 
 ```bash
-cp .env.example .env.local   # değerleri doldurun
+cp .env.example .env.local   # fill in the values
 npm install
 npm run dev                  # http://localhost:3000
 npm run typecheck

@@ -1,9 +1,10 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { routes } from "@/lib/site";
 import { safeNextPath } from "@/lib/validation";
 
-/** E-posta doğrulama bağlantısının döndüğü adres. */
+/** Landing endpoint for email confirmation links. */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const next = safeNextPath(searchParams.get("next"), "/");
@@ -21,5 +22,5 @@ export async function GET(request: NextRequest) {
     if (!error) return NextResponse.redirect(`${origin}${next}`);
   }
 
-  return NextResponse.redirect(`${origin}/giris?hata=dogrulama`);
+  return NextResponse.redirect(`${origin}${routes.login()}?error=verification`);
 }

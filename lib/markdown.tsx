@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
 /*
- * Kullanıcı içeriği için küçük ve güvenli bir markdown işleyici.
- * HTML üretmez, React elemanları üretir; bu yüzden XSS'e kapalıdır.
- * Desteklenenler: paragraf, ### başlık, - liste, 1. liste, ```kod```, `satır içi kod`, **kalın**, [bağlantı](https://...)
+ * Small, safe markdown renderer for user content.
+ * It never produces raw HTML, only React elements, so it is not exposed to XSS.
+ * Supports: paragraphs, ### headings, - lists, 1. lists, ```code```, `inline code`, **bold**, [links](https://...)
  */
 
 type Block =
@@ -35,7 +35,7 @@ export function parseMarkdown(source: string): Block[] {
       const content: string[] = [];
       i++;
       while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) content.push(lines[i++]);
-      i++; // kapanış ```
+      i++; // closing ```
       blocks.push({ type: "code", lang: fence[1] || "text", content: content.join("\n") });
       continue;
     }
@@ -138,7 +138,7 @@ export function Markdown({ source, className }: { source: string; className?: st
   );
 }
 
-/** Meta açıklama ve önizlemeler için düz metin özeti. */
+/** Plain-text excerpt for meta descriptions and previews. */
 export function markdownToPlain(source: string, maxLength = 160): string {
   const text = parseMarkdown(source)
     .filter((b) => b.type !== "code")

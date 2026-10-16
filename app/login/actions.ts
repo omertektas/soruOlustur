@@ -49,7 +49,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: absoluteUrl(`/auth/callback?next=${encodeURIComponent(next)}`),
+      emailRedirectTo: absoluteUrl(`${routes.authCallback}?next=${encodeURIComponent(next)}`),
     },
   });
   if (error) {
@@ -61,7 +61,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     };
   }
 
-  // E-posta doğrulaması kapalıysa oturum hemen açılır.
+  // When email confirmation is disabled, Supabase returns a session right away.
   if (data.session) redirect(next);
 
   return {

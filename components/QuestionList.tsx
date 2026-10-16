@@ -7,7 +7,7 @@ import { QuestionRow } from "./QuestionRow";
 const normalize = (s: string) =>
   s.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ı/g, "i");
 
-/** Sunucuda tamamı render edilen listeyi tarayıcıda filtreler (içerik Google için HTML'de hazırdır). */
+/** Client-side filter over a list that is fully server-rendered (so crawlers see every item). */
 export function QuestionList({
   questions,
   showProfession = false,

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth";
 import { insertPendingQuestion, slugExists } from "@/lib/data/questions";
 import { randomSuffix, slugify } from "@/lib/slug";
-import { routes } from "@/lib/site";
+import { internalRoutes } from "@/lib/site";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { validateQuestionInput, type QuestionField } from "@/lib/validation";
 
@@ -22,7 +22,7 @@ export async function submitQuestion(prev: SubmitState, formData: FormData): Pro
     ["title", "answer", "tip", "difficulty", "professionId", "topicId"].map((k) => [k, String(formData.get(k) ?? "")])
   );
 
-  // Botlar için görünmez alan doluysa sessizce başarılı say
+  // Honeypot: bots fill the hidden field; pretend success and drop the submission
   if (String(formData.get("website") ?? "") !== "") return { status: "success", attempt };
 
   const user = await getSessionUser();
@@ -45,7 +45,7 @@ export async function submitQuestion(prev: SubmitState, formData: FormData): Pro
     return { status: "error", message, values, attempt };
   }
 
-  revalidatePath(routes.account);
-  revalidatePath(routes.admin);
+  revalidatePath(internalRoutes.account);
+  revalidatePath(internalRoutes.admin);
   return { status: "success", attempt };
 }

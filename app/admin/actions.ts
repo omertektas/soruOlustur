@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { reviewQuestion } from "@/lib/data/questions";
-import { routes } from "@/lib/site";
+import { internalRoutes } from "@/lib/site";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 async function review(formData: FormData, decision: "approved" | "rejected") {
@@ -21,14 +21,14 @@ async function review(formData: FormData, decision: "approved" | "rejected") {
   );
   if (error) throw new Error(`İnceleme kaydedilemedi: ${error.message}`);
 
-  // Yayına giren veya kaldırılan sorunun göründüğü tüm sayfaları yenile
+  // Refresh every cached page that lists or shows this question
   const row = data as unknown as { slug: string; profession: { slug: string }; topic: { slug: string } };
-  revalidatePath(routes.home);
-  revalidatePath(routes.question(row.slug));
-  revalidatePath(routes.profession(row.profession.slug));
-  revalidatePath(routes.topic(row.profession.slug, row.topic.slug));
+  revalidatePath(internalRoutes.home);
+  revalidatePath(internalRoutes.question(row.slug));
+  revalidatePath(internalRoutes.profession(row.profession.slug));
+  revalidatePath(internalRoutes.topic(row.profession.slug, row.topic.slug));
   revalidatePath("/sitemap.xml");
-  revalidatePath(routes.admin);
+  revalidatePath(internalRoutes.admin);
 }
 
 export async function approveQuestion(formData: FormData) {

@@ -1,10 +1,10 @@
-export const DIFFICULTIES = ["kolay", "orta", "zor"] as const;
+export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  kolay: "Kolay",
-  orta: "Orta",
-  zor: "Zor",
+  easy: "Kolay",
+  medium: "Orta",
+  hard: "Zor",
 };
 
 export type QuestionStatus = "pending" | "approved" | "rejected";

@@ -20,12 +20,12 @@ export const metadata: Metadata = pageMetadata({
 const TABS: QuestionStatus[] = ["pending", "approved", "rejected"];
 const dateFormat = new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" });
 
-type Props = { searchParams: Promise<{ durum?: string }> };
+type Props = { searchParams: Promise<{ status?: string }> };
 
 export default async function AdminPage({ searchParams }: Props) {
   await requireAdmin();
-  const { durum } = await searchParams;
-  const status: QuestionStatus = TABS.includes(durum as QuestionStatus) ? (durum as QuestionStatus) : "pending";
+  const { status: statusParam } = await searchParams;
+  const status: QuestionStatus = TABS.includes(statusParam as QuestionStatus) ? (statusParam as QuestionStatus) : "pending";
   const questions = await listQuestionsByStatus(await createServerSupabase(), status);
 
   return (
@@ -34,7 +34,7 @@ export default async function AdminPage({ searchParams }: Props) {
         <h1>Soru onay paneli</h1>
         <nav className="chips" aria-label="Durum">
           {TABS.map((t) => (
-            <Link key={t} href={`${routes.admin}?durum=${t}`} className="chip" aria-pressed={t === status}>
+            <Link key={t} href={`${routes.admin}?status=${t}`} className="chip" aria-pressed={t === status}>
               {STATUS_LABELS[t]}
             </Link>
           ))}

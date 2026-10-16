@@ -9,7 +9,7 @@ export function SiteHeader() {
         <Link href={routes.home} className="logo">
           Mülakat <mark>Defteri</mark>
         </Link>
-        <form action="/ara" method="get" className="header-search" role="search">
+        <form action={routes.search()} method="get" className="header-search" role="search">
           <input name="q" type="search" className="input" placeholder="Soru ara…" aria-label="Soru ara" />
         </form>
         <UserMenu />

@@ -1,3 +1,5 @@
+import { INTERNAL_PREFIX, PUBLIC_PREFIX } from "./route-map";
+
 export const siteConfig = {
   name: "Mülakat Defteri",
   shortDescription: "Yazılım ve mühendislik mülakat soruları",
@@ -12,14 +14,24 @@ export function absoluteUrl(path = "/"): string {
   return `${siteConfig.url}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export const routes = {
-  home: "/",
-  profession: (slug: string) => `/mulakat-sorulari/${slug}`,
-  topic: (professionSlug: string, topicSlug: string) => `/mulakat-sorulari/${professionSlug}/${topicSlug}`,
-  question: (slug: string) => `/soru/${slug}`,
-  search: (q?: string) => (q ? `/ara?q=${encodeURIComponent(q)}` : "/ara"),
-  login: (next?: string) => (next ? `/giris?next=${encodeURIComponent(next)}` : "/giris"),
-  submit: "/soru-ekle",
-  account: "/hesabim",
-  admin: "/yonetim",
-} as const;
+function buildRoutes(prefix: typeof PUBLIC_PREFIX) {
+  return {
+    home: "/",
+    profession: (slug: string) => `${prefix.interviewQuestions}/${slug}`,
+    topic: (professionSlug: string, topicSlug: string) => `${prefix.interviewQuestions}/${professionSlug}/${topicSlug}`,
+    question: (slug: string) => `${prefix.question}/${slug}`,
+    search: (q?: string) => (q ? `${prefix.search}?q=${encodeURIComponent(q)}` : prefix.search),
+    login: (next?: string) => (next ? `${prefix.login}?next=${encodeURIComponent(next)}` : prefix.login),
+    submit: prefix.submit,
+    account: prefix.account,
+    admin: prefix.admin,
+    authCallback: "/auth/callback",
+    signOut: "/auth/sign-out",
+  };
+}
+
+/** URLs shown to users and search engines (links, canonical tags, sitemap). */
+export const routes = buildRoutes(PUBLIC_PREFIX);
+
+/** Route folder paths, used for cache revalidation. */
+export const internalRoutes = buildRoutes(INTERNAL_PREFIX);

@@ -10,15 +10,15 @@ import { routes } from "@/lib/site";
 
 export const revalidate = 3600;
 
-type Props = { params: Promise<{ meslek: string }> };
+type Props = { params: Promise<{ profession: string }> };
 
 export async function generateStaticParams() {
-  return []; // İlk ziyarette üretilir, sonra önbellekten sunulur (ISR)
+  return []; // Rendered on first request, then served from the ISR cache
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { meslek } = await params;
-  const profession = await getProfessionBySlug(meslek);
+  const { profession: professionSlug } = await params;
+  const profession = await getProfessionBySlug(professionSlug);
   if (!profession) return {};
   return pageMetadata({
     title: `${profession.name} Mülakat Soruları ve Cevapları`,
@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfessionPage({ params }: Props) {
-  const { meslek } = await params;
-  const profession = await getProfessionBySlug(meslek);
+  const { profession: professionSlug } = await params;
+  const profession = await getProfessionBySlug(professionSlug);
   if (!profession) notFound();
 
   const [topics, questions] = await Promise.all([

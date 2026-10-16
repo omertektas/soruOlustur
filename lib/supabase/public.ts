@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { getSupabaseEnv } from "./env";
 
 /**
- * Çerez kullanmayan, yalnızca herkese açık veriyi okuyan istemci.
- * Statik / ISR sayfalarda kullanılır; böylece sayfalar önbelleğe alınabilir.
+ * Cookie-less client for reading public data.
+ * Used by static / ISR pages so they remain cacheable.
  */
 export function createPublicSupabase() {
   const { url, anonKey } = getSupabaseEnv();

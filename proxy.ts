@@ -5,7 +5,8 @@ export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 
-// Herkese açık sayfalar önbellekten hızlı sunulsun diye yalnızca oturum gereken yollarda çalışır.
+// Runs only on routes that need a session, so public pages stay fully cacheable.
+// Matchers use the public (Turkish) URLs because the proxy runs before rewrites.
 export const config = {
   matcher: ["/giris", "/soru-ekle", "/hesabim", "/yonetim/:path*", "/auth/:path*"],
 };

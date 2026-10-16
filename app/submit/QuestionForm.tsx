@@ -37,7 +37,7 @@ export function QuestionForm({ professions, topics }: { professions: Profession[
   const err = state.errors ?? {};
 
   return (
-    // key: hata sonrası form, gönderilen değerlerle yeniden doldurulur
+    // Re-mount after each attempt so the fields are refilled with the submitted values
     <form action={action} className="form" key={state.attempt}>
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
 
