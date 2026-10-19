@@ -1,28 +1,30 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   Mülakat Defteri — tasarım sistemi
-   Defter metaforu: kâğıt yüzeyler, fosforlu kalem vurgusu, koyu yeşil mürekkep.
+   Mülakat Defteri design system
+   One fixed dark theme on every device (it does not follow the OS light/dark setting).
+   Notebook metaphor: paper surfaces, highlighter accent, teal ink.
    ===================================================================== */
 
 :root {
-  --bg: #f3f5f4;
-  --paper: #ffffff;
-  --ink: #18201e;
-  --muted: #5d6a66;
-  --line: #dde3e1;
-  --accent: #0f6e63;
-  --accent-ink: #ffffff;
-  --accent-soft: #e2f0ed;
-  --marker: #f6dc6b;
-  --code-bg: #f0f3f2;
-  --easy: #1f7a3f;
-  --easy-bg: #e3f3e8;
-  --mid: #9a5b00;
-  --mid-bg: #fbefd9;
-  --hard: #b3261e;
-  --hard-bg: #fbe4e1;
-  --info-bg: #e7f0fb;
+  --bg: #111615;
+  --paper: #182020;
+  --ink: #e6ecea;
+  --muted: #94a39e;
+  --line: #2a3533;
+  --accent: #4fc3b0;
+  --accent-ink: #0b1514;
+  --accent-soft: #1d3330;
+  --marker: #8a7520;
+  --code-bg: #0e1312;
+  --easy: #6fd194;
+  --easy-bg: #1a3324;
+  --mid: #f0b75a;
+  --mid-bg: #382a14;
+  --hard: #f2877e;
+  --hard-bg: #3b1d1a;
+  --info-bg: #17263a;
+  --glow: rgb(79 195 176 / 0.09);
 
   --f-display: var(--font-display), "Segoe UI", system-ui, sans-serif;
   --f-body: var(--font-body), "Segoe UI", system-ui, sans-serif;
@@ -31,34 +33,16 @@
   --radius: 12px;
   --radius-sm: 8px;
   --max: 1120px;
+
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111615;
-    --paper: #182020;
-    --ink: #e6ecea;
-    --muted: #94a39e;
-    --line: #2a3533;
-    --accent: #4fc3b0;
-    --accent-ink: #0b1514;
-    --accent-soft: #1d3330;
-    --marker: #8a7520;
-    --code-bg: #0e1312;
-    --easy: #6fd194;
-    --easy-bg: #1a3324;
-    --mid: #f0b75a;
-    --mid-bg: #382a14;
-    --hard: #f2877e;
-    --hard-bg: #3b1d1a;
-    --info-bg: #17263a;
-    color-scheme: dark;
-  }
-}
+html { background: var(--bg); }
 
-/* ---------- Temel ---------- */
+/* ---------- Base ---------- */
 body {
-  background: var(--bg);
+  /* A soft teal glow behind the header, fading into the page background */
+  background: radial-gradient(1100px 520px at 50% -160px, var(--glow), transparent 70%) no-repeat, var(--bg);
   color: var(--ink);
   font: 16px/1.65 var(--f-body);
   min-height: 100vh;
@@ -89,7 +73,7 @@ code { font-family: var(--f-mono); font-size: 0.875em; background: var(--code-bg
 .skip-link { position: absolute; left: -9999px; }
 .skip-link:focus { left: 16px; top: 16px; z-index: 50; background: var(--paper); padding: 8px 12px; border-radius: var(--radius-sm); }
 
-/* ---------- Form öğeleri ---------- */
+/* ---------- Form controls ---------- */
 .input {
   width: 100%;
   font: inherit;
@@ -152,7 +136,7 @@ select.input { appearance: auto; }
 .pill-medium { color: var(--mid); background: var(--mid-bg); }
 .pill-hard { color: var(--hard); background: var(--hard-bg); }
 
-/* ---------- Üst bilgi ---------- */
+/* ---------- Header ---------- */
 .site-header { background: var(--paper); border-bottom: 1px solid var(--line); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
 .site-header-inner { display: flex; align-items: center; gap: 16px; padding-block: 12px; }
 .logo { font-family: var(--f-display); font-weight: 800; font-size: 21px; color: var(--ink); text-decoration: none; white-space: nowrap; }
@@ -162,7 +146,7 @@ select.input { appearance: auto; }
 .usermenu { display: flex; gap: 10px; align-items: center; min-height: 38px; min-width: 120px; justify-content: flex-end; }
 .navlink { color: var(--ink); font-size: 14px; font-weight: 500; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- Ana sayfa ---------- */
+/* ---------- Home page ---------- */
 .hero { padding-block: 32px 12px; display: grid; gap: 14px; }
 .hero h1 { font-weight: 800; font-size: clamp(32px, 5.4vw, 54px); line-height: 1.05; margin: 0; }
 .lede { color: var(--muted); max-width: 64ch; margin: 0; font-size: 17px; }
@@ -204,7 +188,7 @@ select.input { appearance: auto; }
 .cta h2 { margin: 0 0 4px; font-size: 22px; }
 .cta p { margin: 0; }
 
-/* ---------- Soru listeleri ---------- */
+/* ---------- Question lists ---------- */
 .qrows { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .qrow-link {
   display: grid;
@@ -251,7 +235,7 @@ select.input { appearance: auto; }
 
 .empty { color: var(--muted); padding: 40px 16px; text-align: center; background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius); display: grid; gap: 12px; justify-items: center; }
 
-/* ---------- Soru sayfası ---------- */
+/* ---------- Question page ---------- */
 .question { max-width: 820px; }
 .question-head { display: grid; gap: 10px; margin-bottom: 18px; }
 .question-head h1 { font-weight: 800; font-size: clamp(28px, 4.4vw, 42px); line-height: 1.12; margin: 0; }
@@ -262,7 +246,7 @@ select.input { appearance: auto; }
 .tip { border-left: 3px solid var(--marker); padding: 6px 0 6px 14px; color: var(--muted); }
 .tip strong { color: var(--ink); }
 
-/* Markdown içeriği */
+/* Markdown content */
 .prose { display: grid; gap: 14px; min-width: 0; }
 .prose p, .prose ul, .prose ol { margin: 0; max-width: 70ch; }
 .prose ul { list-style: disc; padding-left: 22px; display: grid; gap: 6px; }
@@ -281,7 +265,7 @@ select.input { appearance: auto; }
 }
 .prose pre code { background: none; padding: 0; font-size: inherit; }
 
-/* ---------- Formlar ---------- */
+/* ---------- Forms ---------- */
 .form { display: grid; gap: 18px; }
 .field { display: grid; gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
 .field label, .field legend { font-weight: 600; font-size: 14px; }
@@ -304,7 +288,7 @@ select.input { appearance: auto; }
 .tabs-inline button { border: 0; background: transparent; padding: 8px; border-radius: 8px; font-weight: 600; font-size: 14px; color: var(--muted); cursor: pointer; }
 .tabs-inline button[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
 
-/* ---------- Hesabım & yönetim ---------- */
+/* ---------- Account & admin ---------- */
 .own-list, .review-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .own-item { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; padding: 14px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
 .own-main { display: grid; gap: 6px; min-width: 0; }
@@ -321,7 +305,7 @@ select.input { appearance: auto; }
 .reject-form { display: flex; gap: 8px; flex: 1 1 320px; }
 .reject-form .input { min-width: 0; }
 
-/* ---------- Alt bilgi ---------- */
+/* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--line); background: var(--paper); }
 .site-footer-inner { display: grid; grid-template-columns: 1.2fr 2fr 1fr; gap: 28px; padding-block: 36px 20px; }
 .footer-brand p { margin: 6px 0 0; max-width: 34ch; }
@@ -330,7 +314,7 @@ select.input { appearance: auto; }
 .footer-links a { color: var(--ink); }
 .footer-bottom { padding-block: 16px 28px; border-top: 1px solid var(--line); }
 
-/* ---------- Mobil ---------- */
+/* ---------- Mobile ---------- */
 @media (max-width: 760px) {
   .header-search { display: none; }
   .usermenu { margin-left: auto; min-width: 0; }

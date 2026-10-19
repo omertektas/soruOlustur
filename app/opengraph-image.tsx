@@ -16,16 +16,16 @@ export default function OpengraphImage() {
           flexDirection: "column",
           justifyContent: "center",
           padding: 80,
-          background: "#f3f5f4",
-          color: "#18201e",
+          background: "#111615",
+          color: "#e6ecea",
         }}
       >
         <div style={{ display: "flex", fontSize: 88, fontWeight: 800, letterSpacing: -2 }}>
           Mülakat
-          <span style={{ marginLeft: 24, background: "#f6dc6b", padding: "0 12px" }}>Defteri</span>
+          <span style={{ marginLeft: 24, background: "#8a7520", padding: "0 12px" }}>Defteri</span>
         </div>
-        <div style={{ marginTop: 32, fontSize: 40, color: "#0f6e63" }}>Yazılım ve mühendislik mülakat soruları</div>
-        <div style={{ marginTop: 24, fontSize: 28, color: "#5d6a66" }}>
+        <div style={{ marginTop: 32, fontSize: 40, color: "#4fc3b0" }}>Yazılım ve mühendislik mülakat soruları</div>
+        <div style={{ marginTop: 24, fontSize: 28, color: "#94a39e" }}>
           Frontend · Backend · Full Stack · Game Dev · Network · Embedded · Elektrik-Elektronik
         </div>
       </div>
