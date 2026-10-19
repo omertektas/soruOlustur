@@ -10,7 +10,7 @@ export async function SiteFooter() {
         <div className="footer-brand">
           <strong>{siteConfig.name}</strong>
           <p className="muted small">
-            Yazılım ve mühendislik adayları için topluluk destekli, Türkçe mülakat hazırlık platformu.
+            Yazılımcı adaylar için topluluk destekli, Türkçe mülakat hazırlık platformu.
           </p>
         </div>
         <nav aria-label="Meslekler" className="footer-links">

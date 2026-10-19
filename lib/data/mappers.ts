@@ -45,7 +45,7 @@ export const PROFESSION_COLUMNS = "id, slug, name, short_name, description";
 export const TOPIC_COLUMNS = "id, slug, name";
 
 const RELATIONS =
-  "profession:professions!inner(slug, name, short_name), topic:topics!inner(slug, name)";
+  "profession:professions!inner(slug, name, short_name, is_published), topic:topics!inner(slug, name)";
 export const SUMMARY_COLUMNS = `id, slug, title, difficulty, created_at, ${RELATIONS}`;
 export const DETAIL_COLUMNS = `id, slug, title, difficulty, created_at, updated_at, answer, tip, ${RELATIONS}, author:profiles!questions_author_id_fkey(display_name)`;
 export const OWN_COLUMNS = `${SUMMARY_COLUMNS}, status, rejection_reason`;

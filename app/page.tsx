@@ -1,15 +1,18 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
 import { QuestionRow } from "@/components/QuestionRow";
-import { getProfessionsWithCounts } from "@/lib/data/catalog";
+import { getProfessionsWithCounts, getTopics } from "@/lib/data/catalog";
 import { listLatestQuestions } from "@/lib/data/questions";
+import { formatNumber } from "@/lib/format";
+import { professionStyle } from "@/lib/profession-style";
 import { websiteJsonLd } from "@/lib/seo";
 import { routes } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const [professions, latest] = await Promise.all([getProfessionsWithCounts(), listLatestQuestions(8)]);
+  const [professions, latest, topics] = await Promise.all([getProfessionsWithCounts(), listLatestQuestions(8), getTopics()]);
   const total = professions.reduce((sum, p) => sum + p.questionCount, 0);
 
   return (
@@ -17,36 +20,56 @@ export default async function HomePage() {
       <JsonLd data={websiteJsonLd()} />
 
       <section className="hero">
-        <p className="eyebrow">{total} soru · {professions.length} meslek</p>
+        <p className="hero-badge">Ücretsiz · Türkçe · Topluluk destekli</p>
         <h1>
-          Yazılım ve mühendislik <mark>mülakat soruları</mark>
+          Yazılım mülakatlarına <mark>hazırlıklı</mark> gir
         </h1>
         <p className="lede">
-          Frontend&apos;den gömülü sistemlere, network&apos;ten elektrik-elektronik mühendisliğine kadar mülakatlarda en
-          sık sorulan sorular ve kısa, net cevapları. Mesleğini seç, kendini sına.
+          Frontend, backend, full stack, oyun geliştirme, network ve gömülü sistemler mülakatlarında sorulan sorular;
+          kod örnekleri ve mülakat ipuçlarıyla birlikte, kısa ve net cevaplar.
         </p>
         <form action={routes.search()} method="get" className="hero-search" role="search">
-          <input name="q" type="search" className="input input-lg" placeholder="Örn: closure, OSI, op-amp, volatile…" aria-label="Soru ara" />
+          <input name="q" type="search" className="input input-lg" placeholder="Örn: closure, useEffect, JWT, index, volatile…" aria-label="Soru ara" />
           <button type="submit" className="btn btn-lg">
             Ara
           </button>
         </form>
+        <ul className="hero-stats" aria-label="Site istatistikleri">
+          <li>
+            <strong>{formatNumber(total)}</strong>
+            <span>soru ve cevap</span>
+          </li>
+          <li>
+            <strong>{professions.length}</strong>
+            <span>yazılım alanı</span>
+          </li>
+          <li>
+            <strong>{topics.length}</strong>
+            <span>konu başlığı</span>
+          </li>
+        </ul>
       </section>
 
       <section aria-labelledby="professions" className="section">
         <h2 id="professions" className="section-title">
-          Mesleğe göre mülakat soruları
+          Alanına göre mülakat soruları
         </h2>
         <ul className="prof-grid">
-          {professions.map((p) => (
+          {professions.map((p) => {
+            const badge = professionStyle(p.slug, p.shortName);
+            return (
             <li key={p.slug}>
               <Link href={routes.profession(p.slug)} className="prof-card">
+                <span className="prof-badge" style={{ "--badge": badge.color } as CSSProperties} aria-hidden="true">
+                  {badge.code}
+                </span>
                 <span className="prof-name">{p.name}</span>
                 <span className="prof-desc">{p.description}</span>
                 <span className="prof-count">{p.questionCount} soru →</span>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
 

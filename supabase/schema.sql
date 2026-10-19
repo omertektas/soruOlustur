@@ -349,7 +349,9 @@ declare
 begin
   perform public.assert_admin();
   return json_build_object(
-    'questions_published', (select count(*) from public.questions where status = 'approved'),
+    'questions_published', (select count(*) from public.questions q
+                              join public.professions p on p.id = q.profession_id
+                             where q.status = 'approved' and p.is_published),
     'questions_pending',   (select count(*) from public.questions where status = 'pending'),
     'users_total',         (select count(*) from auth.users),
     'users_last_7_days',   (select count(*) from auth.users where created_at >= now() - interval '7 days'),

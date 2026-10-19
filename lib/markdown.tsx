@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /*
  * Small, safe markdown renderer for user content.
  * It never produces raw HTML, only React elements, so it is not exposed to XSS.
- * Supports: paragraphs, ### headings, - lists, 1. lists, ```code```, `inline code`, **bold**, [links](https://...)
+ * Supports: paragraphs, ### headings, - lists, 1. lists, | tables |, ```code```, `inline code`, **bold**, [links](https://...)
  */
 
 type Block =
@@ -11,11 +11,24 @@ type Block =
   | { type: "heading"; text: string }
   | { type: "ul"; items: string[] }
   | { type: "ol"; items: string[] }
+  | { type: "table"; head: string[]; rows: string[][] }
   | { type: "p"; text: string };
 
 const UL_RE = /^\s*[-*]\s+(.*)$/;
 const OL_RE = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING_RE = /^#{1,4}\s+(.*)$/;
+const TABLE_RE = /^\s*\|.*\|\s*$/;
+const TABLE_DIVIDER_RE = /^\s*\|(\s*:?-{2,}:?\s*\|)+\s*$/;
+
+/** Splits "| a | b |" into cells; `\|` keeps a literal pipe inside a cell. */
+function splitRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.trim().replace(/\\\|/g, "|"));
+}
 
 export function parseMarkdown(source: string): Block[] {
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
@@ -44,6 +57,15 @@ export function parseMarkdown(source: string): Block[] {
     if (heading) {
       blocks.push({ type: "heading", text: heading[1] });
       i++;
+      continue;
+    }
+
+    if (TABLE_RE.test(line) && i + 1 < lines.length && TABLE_DIVIDER_RE.test(lines[i + 1])) {
+      const head = splitRow(line);
+      const rows: string[][] = [];
+      i += 2;
+      while (i < lines.length && TABLE_RE.test(lines[i])) rows.push(splitRow(lines[i++]));
+      blocks.push({ type: "table", head, rows });
       continue;
     }
 
@@ -112,6 +134,29 @@ export function Markdown({ source, className }: { source: string; className?: st
                 <code>{block.content}</code>
               </pre>
             );
+          case "table":
+            return (
+              <div key={i} className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      {block.head.map((cell, j) => (
+                        <th key={j}>{renderInline(cell)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, r) => (
+                      <tr key={r}>
+                        {block.head.map((_, j) => (
+                          <td key={j}>{renderInline(row[j] ?? "")}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
           case "heading":
             return <h3 key={i}>{renderInline(block.text)}</h3>;
           case "ul":
@@ -141,8 +186,10 @@ export function Markdown({ source, className }: { source: string; className?: st
 /** Plain-text excerpt for meta descriptions and previews. */
 export function markdownToPlain(source: string, maxLength = 160): string {
   const text = parseMarkdown(source)
-    .filter((b) => b.type !== "code")
-    .map((b) => (b.type === "ul" || b.type === "ol" ? b.items.join(", ") : b.text))
+    .map((b) => {
+      if (b.type === "ul" || b.type === "ol") return b.items.join(", ");
+      return b.type === "p" || b.type === "heading" ? b.text : "";
+    })
     .join(" ")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")

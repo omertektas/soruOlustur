@@ -2,9 +2,9 @@ import { INTERNAL_PREFIX, PUBLIC_PREFIX } from "./route-map";
 
 export const siteConfig = {
   name: "Mülakat Defteri",
-  shortDescription: "Yazılım ve mühendislik mülakat soruları",
+  shortDescription: "Yazılım mülakat soruları ve cevapları",
   description:
-    "Frontend, backend, full stack, oyun geliştirme, network, gömülü sistemler ve elektrik-elektronik mühendisliği mülakat soruları; kısa, net cevaplar ve örneklerle.",
+    "Frontend, backend, full stack, oyun geliştirme, network ve gömülü sistemler mülakat soruları; kod örnekleri ve ipuçlarıyla kısa, net cevaplar.",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oftechsolutions.com").replace(/\/+$/, ""),
   locale: "tr_TR",
   publisher: "OFTECHSOLUTIONS",

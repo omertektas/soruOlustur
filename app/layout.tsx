@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} | Yazılım ve Mühendislik Mülakat Soruları`,
+    default: `${siteConfig.name} | Yazılım Mülakat Soruları ve Cevapları`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111615",
-  colorScheme: "dark",
+  themeColor: "#edf1ee",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

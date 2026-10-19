@@ -16,7 +16,7 @@ import {
   type QuestionRow,
 } from "./mappers";
 
-/* ---------- Public reads (approved questions only) ---------- */
+/* ---------- Public reads (approved questions of published professions only) ---------- */
 
 interface ListOptions {
   professionId?: number;
@@ -25,7 +25,8 @@ interface ListOptions {
 }
 
 export async function listApprovedQuestions(options: ListOptions = {}): Promise<QuestionSummary[]> {
-  let query = createPublicSupabase().from("questions").select(SUMMARY_COLUMNS).eq("status", "approved");
+  let query = createPublicSupabase().from("questions").select(SUMMARY_COLUMNS).eq("status", "approved")
+    .eq("profession.is_published", true);
   if (options.professionId) query = query.eq("profession_id", options.professionId);
   if (options.topicId) query = query.eq("topic_id", options.topicId);
 
@@ -39,6 +40,7 @@ export async function listLatestQuestions(limit: number): Promise<QuestionSummar
     .from("questions")
     .select(SUMMARY_COLUMNS)
     .eq("status", "approved")
+    .eq("profession.is_published", true)
     .order("reviewed_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -51,6 +53,7 @@ export async function getApprovedQuestionBySlug(slug: string): Promise<QuestionD
     .from("questions")
     .select(DETAIL_COLUMNS)
     .eq("status", "approved")
+    .eq("profession.is_published", true)
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -63,6 +66,7 @@ export async function listRelatedQuestions(question: QuestionDetail, limit = 6):
     .from("questions")
     .select(SUMMARY_COLUMNS)
     .eq("status", "approved")
+    .eq("profession.is_published", true)
     .eq("topic.slug", question.topic.slug)
     .neq("id", question.id)
     .limit(limit * 2);
@@ -89,6 +93,7 @@ export async function searchApprovedQuestions(term: string, limit = 50): Promise
     .from("questions")
     .select(SUMMARY_COLUMNS)
     .eq("status", "approved")
+    .eq("profession.is_published", true)
     .or(`title.ilike.${pattern},answer.ilike.${pattern}`)
     .limit(limit);
   if (error) throw error;
@@ -105,8 +110,9 @@ export interface SitemapQuestion {
 export async function listQuestionsForSitemap(): Promise<SitemapQuestion[]> {
   const { data, error } = await createPublicSupabase()
     .from("questions")
-    .select("slug, updated_at, profession:professions!inner(slug), topic:topics!inner(slug)")
+    .select("slug, updated_at, profession:professions!inner(slug, is_published), topic:topics!inner(slug)")
     .eq("status", "approved")
+    .eq("profession.is_published", true)
     .limit(50000);
   if (error) throw error;
   return rows<{ slug: string; updated_at: string; profession: { slug: string }; topic: { slug: string } }>(data).map(
