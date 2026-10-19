@@ -50,6 +50,7 @@ async function review(formData: FormData, decision: "approved" | "rejected") {
   revalidatePath(internalRoutes.topic(row.profession.slug, row.topic.slug));
   revalidatePath("/sitemap.xml");
   revalidatePath(internalRoutes.admin);
+  revalidatePath(internalRoutes.adminQuestions());
 }
 
 export async function approveQuestion(formData: FormData) {

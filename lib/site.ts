@@ -25,6 +25,8 @@ function buildRoutes(prefix: typeof PUBLIC_PREFIX) {
     submit: prefix.submit,
     account: prefix.account,
     admin: prefix.admin,
+    adminQuestions: (status?: string) => (status ? `${prefix.adminQuestions}?status=${status}` : prefix.adminQuestions),
+    adminUsers: prefix.adminUsers,
     authCallback: "/auth/callback",
     signOut: "/auth/sign-out",
   };

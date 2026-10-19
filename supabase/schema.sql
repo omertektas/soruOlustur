@@ -291,6 +291,158 @@ revoke execute on function public.suggest_topic(text, text) from public, anon;
 grant execute on function public.suggest_profession(text, text) to authenticated;
 grant execute on function public.suggest_topic(text, text) to authenticated;
 
+-- ---------- Analytics and admin statistics ----------
+-- Cookie-less page view counter: one row per day and path. No IP address or user id is stored.
+
+create table if not exists public.page_view_daily (
+  day       date not null,
+  path      text not null check (char_length(path) between 1 and 200),
+  views     integer not null default 0,
+  visitors  integer not null default 0,
+  primary key (day, path)
+);
+
+alter table public.page_view_daily enable row level security;
+
+drop policy if exists "page_view_daily_admin_read" on public.page_view_daily;
+create policy "page_view_daily_admin_read" on public.page_view_daily for select using (public.is_admin());
+
+-- Called by every visitor's browser. p_new_visitor is true on a visitor's first page of the day.
+create or replace function public.track_page_view(p_path text, p_new_visitor boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_path is null or left(p_path, 1) <> '/' or char_length(p_path) > 200 then return; end if;
+  insert into public.page_view_daily (day, path, views, visitors)
+  values ((now() at time zone 'Europe/Istanbul')::date, p_path, 1, case when p_new_visitor then 1 else 0 end)
+  on conflict (day, path) do update
+    set views = page_view_daily.views + 1,
+        visitors = page_view_daily.visitors + excluded.visitors;
+end;
+$$;
+
+-- Fails unless the caller is an admin; used by every admin_* function below.
+create or replace function public.assert_admin()
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'ADMIN_ONLY' using errcode = '42501'; end if;
+end;
+$$;
+
+create or replace function public.admin_overview()
+returns json
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Europe/Istanbul')::date;
+begin
+  perform public.assert_admin();
+  return json_build_object(
+    'questions_published', (select count(*) from public.questions where status = 'approved'),
+    'questions_pending',   (select count(*) from public.questions where status = 'pending'),
+    'users_total',         (select count(*) from auth.users),
+    'users_last_7_days',   (select count(*) from auth.users where created_at >= now() - interval '7 days'),
+    'views_today',         (select coalesce(sum(views), 0) from public.page_view_daily where day = v_today),
+    'visitors_today',      (select coalesce(sum(visitors), 0) from public.page_view_daily where day = v_today),
+    'views_30_days',       (select coalesce(sum(views), 0) from public.page_view_daily where day > v_today - 30),
+    'visitors_30_days',    (select coalesce(sum(visitors), 0) from public.page_view_daily where day > v_today - 30)
+  );
+end;
+$$;
+
+-- Daily totals for the last p_days days, including days without traffic.
+create or replace function public.admin_traffic(p_days integer)
+returns table (day date, views bigint, visitors bigint)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Europe/Istanbul')::date;
+begin
+  perform public.assert_admin();
+  return query
+    select d::date, coalesce(sum(p.views), 0)::bigint, coalesce(sum(p.visitors), 0)::bigint
+    from generate_series(v_today - (least(greatest(p_days, 1), 365) - 1), v_today, interval '1 day') as d
+    left join public.page_view_daily p on p.day = d::date
+    group by d
+    order by d;
+end;
+$$;
+
+create or replace function public.admin_top_pages(p_days integer, p_limit integer)
+returns table (path text, views bigint, visitors bigint)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Europe/Istanbul')::date;
+begin
+  perform public.assert_admin();
+  return query
+    select p.path, sum(p.views)::bigint, sum(p.visitors)::bigint
+    from public.page_view_daily p
+    where p.day > v_today - least(greatest(p_days, 1), 365)
+    group by p.path
+    order by 2 desc, 1
+    limit least(greatest(p_limit, 1), 100);
+end;
+$$;
+
+create or replace function public.admin_list_users()
+returns table (
+  id uuid, email text, display_name text, role public.user_role,
+  created_at timestamptz, last_sign_in_at timestamptz, email_confirmed boolean,
+  approved_questions bigint, pending_questions bigint
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  perform public.assert_admin();
+  return query
+    select u.id, u.email::text, p.display_name, p.role,
+           u.created_at, u.last_sign_in_at, u.email_confirmed_at is not null,
+           count(q.id) filter (where q.status = 'approved'),
+           count(q.id) filter (where q.status = 'pending')
+    from auth.users u
+    join public.profiles p on p.id = u.id
+    left join public.questions q on q.author_id = u.id
+    group by u.id, p.display_name, p.role
+    order by u.created_at desc;
+end;
+$$;
+
+revoke execute on function public.track_page_view(text, boolean) from public;
+grant execute on function public.track_page_view(text, boolean) to anon, authenticated;
+
+revoke execute on function public.assert_admin() from public, anon;
+revoke execute on function public.admin_overview() from public, anon;
+revoke execute on function public.admin_traffic(integer) from public, anon;
+revoke execute on function public.admin_top_pages(integer, integer) from public, anon;
+revoke execute on function public.admin_list_users() from public, anon;
+grant execute on function public.assert_admin() to authenticated;
+grant execute on function public.admin_overview() to authenticated;
+grant execute on function public.admin_traffic(integer) to authenticated;
+grant execute on function public.admin_top_pages(integer, integer) to authenticated;
+grant execute on function public.admin_list_users() to authenticated;
+
 -- =====================================================================
 -- To make yourself an admin (after signing up on the site):
 --

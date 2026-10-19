@@ -66,5 +66,6 @@ export async function submitQuestion(prev: SubmitState, formData: FormData): Pro
 
   revalidatePath(internalRoutes.account);
   revalidatePath(internalRoutes.admin);
+  revalidatePath(internalRoutes.adminQuestions());
   return { status: "success", attempt };
 }

@@ -5,19 +5,27 @@
  * prefix to its internal route and permanently redirects the internal prefix to the
  * public one, so every page is reachable at exactly one URL.
  */
-export const ROUTE_MAP = [
-  { public: "/mulakat-sorulari", internal: "/interview-questions" },
-  { public: "/soru", internal: "/questions" },
-  { public: "/ara", internal: "/search" },
-  { public: "/giris", internal: "/login" },
-  { public: "/soru-ekle", internal: "/submit" },
-  { public: "/hesabim", internal: "/account" },
-  { public: "/yonetim", internal: "/admin" },
-] as const;
+export const ROUTES = {
+  interviewQuestions: { public: "/mulakat-sorulari", internal: "/interview-questions" },
+  question: { public: "/soru", internal: "/questions" },
+  search: { public: "/ara", internal: "/search" },
+  login: { public: "/giris", internal: "/login" },
+  submit: { public: "/soru-ekle", internal: "/submit" },
+  account: { public: "/hesabim", internal: "/account" },
+  admin: { public: "/yonetim", internal: "/admin" },
+  adminQuestions: { public: "/yonetim/sorular", internal: "/admin/questions" },
+  adminUsers: { public: "/yonetim/kullanicilar", internal: "/admin/users" },
+} as const;
 
-type RouteKey = "interviewQuestions" | "question" | "search" | "login" | "submit" | "account" | "admin";
+export type RouteKey = keyof typeof ROUTES;
 
-const KEYS: RouteKey[] = ["interviewQuestions", "question", "search", "login", "submit", "account", "admin"];
+const pick = (side: "public" | "internal") =>
+  Object.fromEntries(Object.entries(ROUTES).map(([key, route]) => [key, route[side]])) as Record<RouteKey, string>;
 
-export const PUBLIC_PREFIX = Object.fromEntries(KEYS.map((k, i) => [k, ROUTE_MAP[i].public])) as Record<RouteKey, string>;
-export const INTERNAL_PREFIX = Object.fromEntries(KEYS.map((k, i) => [k, ROUTE_MAP[i].internal])) as Record<RouteKey, string>;
+export const PUBLIC_PREFIX = pick("public");
+export const INTERNAL_PREFIX = pick("internal");
+
+/** Route pairs ordered so nested prefixes (e.g. /yonetim/sorular) match before their parents. */
+export function routePairsBy(side: "public" | "internal") {
+  return Object.values(ROUTES).sort((a, b) => b[side].length - a[side].length);
+}
