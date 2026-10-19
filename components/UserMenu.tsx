@@ -71,12 +71,27 @@ export function UserMenu() {
           Yönetim
         </Link>
       )}
-      <Link href={routes.account} className="navlink">
-        {state.name}
-      </Link>
-      <Link href={routes.submit} className="btn">
+      <Link href={routes.submit} className="btn btn-ghost usermenu-submit">
         Soru ekle
       </Link>
+      <Link href={routes.account} className="profile-chip" title="Hesabım">
+        <span className="profile-avatar" aria-hidden="true">
+          {initials(state.name)}
+        </span>
+        <span className="profile-name">{state.name}</span>
+      </Link>
+      <form action={routes.signOut} method="post">
+        <button type="submit" className="btn btn-signout">
+          Çıkış yap
+        </button>
+      </form>
     </div>
   );
+}
+
+/** "Ömer Tektaş" → "ÖT", "omer" → "O" */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0]?.[0] ?? "?");
+  return letters.toLocaleUpperCase("tr");
 }
