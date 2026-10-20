@@ -32,7 +32,7 @@ Eski projeden kalan Gemini anahtarı artık kullanılmıyor, isterseniz silebili
 
 ```powershell
 git add -A
-git commit -m "Mülakat Defteri: full stack sürüm"
+git commit -m "DevMülakat: full stack sürüm"
 git push
 ```
 

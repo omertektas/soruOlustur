@@ -1,7 +1,7 @@
 import { INTERNAL_PREFIX, PUBLIC_PREFIX } from "./route-map";
 
 export const siteConfig = {
-  name: "Mülakat Defteri",
+  name: "DevMülakat",
   shortDescription: "Yazılım mülakat soruları ve cevapları",
   description:
     "Frontend, backend, full stack, oyun geliştirme, network ve gömülü sistemler mülakat soruları; kod örnekleri ve ipuçlarıyla kısa, net cevaplar.",

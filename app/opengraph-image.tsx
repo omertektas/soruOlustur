@@ -21,8 +21,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", fontSize: 88, fontWeight: 800, letterSpacing: -2 }}>
-          Mülakat
-          <span style={{ marginLeft: 24, background: "#ffe27a", padding: "0 12px" }}>Defteri</span>
+          Dev
+          <span style={{ color: "#0e6f63" }}>Mülakat</span>
         </div>
         <div style={{ marginTop: 32, fontSize: 40, color: "#0e6f63" }}>Yazılım mülakat soruları ve cevapları</div>
         <div style={{ marginTop: 24, fontSize: 28, color: "#5a6763" }}>

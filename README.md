@@ -1,4 +1,4 @@
-# Mülakat Defteri
+# DevMülakat
 
 Community-driven interview question platform for software and engineering candidates (Turkish UI).
 Live: https://www.oftechsolutions.com

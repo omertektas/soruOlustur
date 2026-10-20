@@ -72,7 +72,7 @@ export default async function QuestionPage({ params }: Props) {
           </aside>
         )}
         <p className="byline muted small">
-          {question.authorName ? `${question.authorName} tarafından eklendi` : "Mülakat Defteri editörleri"} ·{" "}
+          {question.authorName ? `${question.authorName} tarafından eklendi` : "DevMülakat editörleri"} ·{" "}
           <time dateTime={question.updatedAt}>{dateFormat.format(new Date(question.updatedAt))}</time>
         </p>
       </section>

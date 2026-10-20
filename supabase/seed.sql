@@ -1,4 +1,4 @@
--- Mülakat Defteri — initial content (321 questions)
+-- DevMülakat — initial content (321 questions)
 -- Run AFTER schema.sql. Idempotent (safe to run again).
 
 insert into public.professions (slug, name, short_name, description, sort_order) values

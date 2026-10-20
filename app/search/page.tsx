@@ -6,7 +6,7 @@ import { routes } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Soru ara",
-  description: "Mülakat Defteri'ndeki tüm meslek ve konulardaki sorular arasında arama yapın.",
+  description: "DevMülakat'taki tüm meslek ve konulardaki sorular arasında arama yapın.",
   path: routes.search(),
   noIndex: true,
 });

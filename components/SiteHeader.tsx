@@ -7,7 +7,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="container site-header-inner">
         <Link href={routes.home} className="logo">
-          Mülakat <mark>Defteri</mark>
+          Dev<mark>Mülakat</mark>
         </Link>
         <form action={routes.search()} method="get" className="header-search" role="search">
           <input name="q" type="search" className="input" placeholder="Soru ara…" aria-label="Soru ara" />

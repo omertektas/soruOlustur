@@ -1,5 +1,5 @@
 -- =====================================================================
--- Mülakat Defteri — database schema
+-- DevMülakat — database schema
 -- Run in Supabase: SQL Editor → New query → paste this file → Run.
 -- Then run seed.sql. This file is idempotent (safe to run again).
 -- =====================================================================
