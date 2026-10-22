@@ -10,6 +10,7 @@ const STYLES: Record<string, { code: string; color: string }> = {
   "game-developer": { code: "GD", color: "#be3a78" },
   "network-engineer": { code: "NW", color: "#15803d" },
   "embedded-engineer": { code: "EM", color: "#b45309" },
+  "yapay-zeka-muhendisi": { code: "AI", color: "#0e7490" },
 };
 
 export function professionStyle(slug: string, shortName: string) {

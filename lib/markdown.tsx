@@ -9,8 +9,8 @@ import type { ReactNode } from "react";
 type Block =
   | { type: "code"; lang: string; content: string }
   | { type: "heading"; text: string }
-  | { type: "ul"; items: string[] }
-  | { type: "ol"; items: string[] }
+  | { type: "ul"; items: ListItem[] }
+  | { type: "ol"; items: ListItem[] }
   | { type: "table"; head: string[]; rows: string[][] }
   | { type: "p"; text: string };
 
@@ -28,6 +28,12 @@ function splitRow(line: string): string[] {
     .replace(/\|$/, "")
     .split(/(?<!\\)\|/)
     .map((cell) => cell.trim().replace(/\\\|/g, "|"));
+}
+
+/** A list item; `nested` marks an indented (second-level) item, rendered as a sub-item. */
+interface ListItem {
+  text: string;
+  nested: boolean;
 }
 
 export function parseMarkdown(source: string): Block[] {
@@ -72,9 +78,12 @@ export function parseMarkdown(source: string): Block[] {
     if (UL_RE.test(line) || OL_RE.test(line)) {
       const ordered = OL_RE.test(line);
       const re = ordered ? OL_RE : UL_RE;
-      const items: string[] = [];
-      while (i < lines.length && re.test(lines[i])) {
-        items.push(lines[i].match(re)![1]);
+      const items: ListItem[] = [];
+      while (i < lines.length && (UL_RE.test(lines[i]) || OL_RE.test(lines[i]))) {
+        const nested = /^\s{2,}/.test(lines[i]);
+        if (!nested && !re.test(lines[i])) break;
+        const match = lines[i].match(UL_RE) ?? lines[i].match(OL_RE);
+        items.push({ text: match![1], nested });
         i++;
       }
       blocks.push({ type: ordered ? "ol" : "ul", items });
@@ -163,7 +172,9 @@ export function Markdown({ source, className }: { source: string; className?: st
             return (
               <ul key={i}>
                 {block.items.map((item, j) => (
-                  <li key={j}>{renderInline(item)}</li>
+                  <li key={j} className={item.nested ? "li-nested" : undefined}>
+                    {renderInline(item.text)}
+                  </li>
                 ))}
               </ul>
             );
@@ -171,7 +182,9 @@ export function Markdown({ source, className }: { source: string; className?: st
             return (
               <ol key={i}>
                 {block.items.map((item, j) => (
-                  <li key={j}>{renderInline(item)}</li>
+                  <li key={j} className={item.nested ? "li-nested" : undefined}>
+                    {renderInline(item.text)}
+                  </li>
                 ))}
               </ol>
             );
@@ -187,7 +200,7 @@ export function Markdown({ source, className }: { source: string; className?: st
 export function markdownToPlain(source: string, maxLength = 160): string {
   const text = parseMarkdown(source)
     .map((b) => {
-      if (b.type === "ul" || b.type === "ol") return b.items.join(", ");
+      if (b.type === "ul" || b.type === "ol") return b.items.map((item) => item.text).join(", ");
       return b.type === "p" || b.type === "heading" ? b.text : "";
     })
     .join(" ")

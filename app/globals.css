@@ -295,6 +295,7 @@ select.input { appearance: auto; }
 .prose ol { list-style: decimal; padding-left: 22px; display: grid; gap: 6px; }
 .prose h3 { font-size: 18px; margin: 6px 0 0; }
 .prose strong { font-weight: 600; }
+.prose li.li-nested { margin-left: 20px; list-style-type: circle; }
 .prose table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--paper); }
 .prose th, .prose td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
 .prose th { background: color-mix(in srgb, var(--accent) 8%, var(--paper)); font-weight: 600; }
