@@ -22,7 +22,7 @@ export default async function HomePage() {
       <section className="hero">
         <p className="hero-badge">Ücretsiz · Türkçe · Topluluk destekli</p>
         <h1>
-          Yazılım mülakatlarına <mark>hazırlıklı</mark> gir
+          Mühendislik mülakatlarına <mark>hazırlıklı</mark> gir
         </h1>
         <p className="lede">
           Frontend, backend, full stack, yapay zeka, oyun geliştirme, network, gömülü sistemler ve elektrik-elektronik mühendisliği mülakatlarında sorulan sorular;
