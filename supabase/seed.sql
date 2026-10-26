@@ -1,4 +1,4 @@
--- DevMülakat — initial content (677 questions)
+-- DevMülakat — initial content (751 questions)
 -- Run AFTER schema.sql. Idempotent (safe to run again).
 
 insert into public.professions (slug, name, short_name, description, sort_order) values
@@ -10,7 +10,7 @@ insert into public.professions (slug, name, short_name, description, sort_order)
   ($md$network-engineer$md$, $md$Network Mühendisi$md$, $md$Network$md$, $md$OSI ve TCP/IP, alt ağlar, yönlendirme ve anahtarlama, OSPF, BGP, ağ güvenliği, kablosuz ve bulut ağları üzerine network mühendisi mülakat soruları.$md$, 60),
   ($md$embedded-engineer$md$, $md$Gömülü Sistem Mühendisi (Embedded)$md$, $md$Embedded$md$, $md$C programlama, mikrodenetleyiciler, UART/SPI/I2C/CAN, RTOS ve gömülü Linux üzerine gömülü sistemler mülakat soruları.$md$, 70),
   ($md$yapay-zeka-muhendisi$md$, $md$Yapay Zeka Mühendisi (AI/ML)$md$, $md$Yapay Zeka$md$, $md$Makine öğrenmesi, derin öğrenme, LLM ve üretken yapay zeka, RAG, MLOps ve istatistik üzerine yapay zeka mühendisi mülakat soruları.$md$, 75),
-  ($md$elektrik-elektronik-muhendisi$md$, $md$Elektrik-Elektronik Mühendisi$md$, $md$Elektrik-Elektronik$md$, $md$Devre analizi, elektronik, güç sistemleri, kontrol ve sinyal işleme üzerine elektrik-elektronik mühendisliği mülakat soruları.$md$, 80)
+  ($md$elektrik-elektronik-muhendisi$md$, $md$Elektrik-Elektronik Mühendisi$md$, $md$Elektrik-Elektronik$md$, $md$Devre analizi, elektronik, sayısal elektronik, güç sistemleri, elektrik makineleri, güç elektroniği, kontrol ve sinyal işleme üzerine elektrik-elektronik mühendisliği mülakat soruları.$md$, 80)
 on conflict (slug) do update set name = excluded.name, short_name = excluded.short_name, description = excluded.description, sort_order = excluded.sort_order;
 
 insert into public.topics (slug, name) values
@@ -60,6 +60,9 @@ insert into public.topics (slug, name) values
   ($md$llm-ve-uretken-yz$md$, $md$LLM & Üretken YZ$md$),
   ($md$mlops$md$, $md$MLOps$md$),
   ($md$veri-ve-istatistik$md$, $md$Veri & İstatistik$md$),
+  ($md$sayisal-elektronik$md$, $md$Sayısal Elektronik$md$),
+  ($md$elektrik-makineleri$md$, $md$Elektrik Makineleri$md$),
+  ($md$guc-elektronigi$md$, $md$Güç Elektroniği$md$),
   ($md$devre-analizi$md$, $md$Devre Analizi$md$),
   ($md$elektronik$md$, $md$Elektronik$md$),
   ($md$guc-sistemleri$md$, $md$Güç Sistemleri$md$),
@@ -5856,6 +5859,2158 @@ Faydası: sorunlu servise yük bindirmeyi bırakır, onun toparlanmasına izin v
 Timeout her çağrıyı sınırlar → retry geçici hataları emer → circuit breaker kalıcı arızada retry fırtınasını keser → **fallback** (cache'teki son değer, varsayılan yanıt) kullanıcı deneyimini korur. Ek olarak **bulkhead** (bağımlılık başına ayrı thread/connection havuzu) bir bağımlılığın tüm kaynakları tüketmesini engeller.
 
 Araçlar: Java'da Resilience4j, .NET'te Polly (Microsoft.Extensions.Http.Resilience), Node.js'te opossum; service mesh'ler (Istio) bunları altyapı seviyesinde de sunar.$md$, $md$Mülakatçılar sıklıkla 'ödeme isteğini retry etmek güvenli mi?' diye sorar. Ancak idempotency key ile güvenli olduğunu, aksi halde çift tahsilat riski olduğunu söyleyin.$md$, $md$medium$md$, $md$backend-developer$md$, $md$sistem-tasarimi$md$),
+  ($md$kondansator-ve-bobin-dc-ve-ac-altinda-nasil-davranir-anahtarlama-aninda-t-0-ne-o$md$, $md$Kondansatör ve bobin DC ve AC altında nasıl davranır? Anahtarlama anında (t = 0+) ne olur?$md$, $md$Kısaca: **DC kararlı durumda kondansatör açık devre, bobin kısa devre gibi davranır.** AC'de ikisi de frekansa bağlı bir reaktans gösterir. Anahtarlama anında ise kondansatörün **gerilimi**, bobinin **akımı** ani olarak değişemez.
+
+| Durum | Kondansatör (C) | Bobin (L) |
+| --- | --- | --- |
+| DC kararlı durum | Açık devre (akım akmaz) | Kısa devre (sadece sargı direnci) |
+| t = 0+ (başlangıçta boşsa) | Kısa devre gibi | Açık devre gibi |
+| Ani değişemeyen büyüklük | Gerilim | Akım |
+| AC reaktans | `Xc = 1 / (2πfC)` (frekans arttıkça düşer) | `XL = 2πfL` (frekans arttıkça artar) |
+| Akım-gerilim faz ilişkisi | Akım gerilimden 90° önde | Akım gerilimden 90° geride |
+
+### Sayısal örnek
+100 nF kondansatör:
+
+```text
+50 Hz'de:  Xc = 1 / (2π · 50 · 100e-9)  ≈ 31.8 kΩ  (neredeyse açık devre)
+1 MHz'de:  Xc = 1 / (2π · 1e6 · 100e-9) ≈ 1.59 Ω   (neredeyse kısa devre)
+```
+
+Decoupling kondansatörlerinin yüksek frekanslı gürültüyü toprağa "kısa devre" etmesinin sebebi budur.
+
+### Bobinde ani akım kesilmesi
+`v = L · di/dt` olduğundan akımı aniden kesmek çok yüksek gerilim üretir. 10 mH'lik bir röle bobininden geçen 100 mA, 1 µs içinde kesilirse:
+
+```text
+v = 10e-3 · (0.1 / 1e-6) = 1000 V
+```
+
+Bu gerilim transistörü yakar; bu yüzden röle/motor gibi endüktif yüklere ters paralel **flyback (serbest geçiş) diyotu** konur.$md$, $md$Mülakatta sık takip sorusu: 'Röle süren transistöre neden diyot koyarız?' Cevabı v = L·di/dt ile bağlayabilmek iyi izlenim bırakır.$md$, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$superpozisyon-teoremi-nedir-hangi-durumlarda-kullanilamaz-bir-ornekle-gosterin$md$, $md$Süperpozisyon teoremi nedir? Hangi durumlarda kullanılamaz? Bir örnekle gösterin.$md$, $md$**Süperpozisyon:** Birden fazla bağımsız kaynak içeren **doğrusal** bir devrede, herhangi bir elemandaki gerilim/akım, her kaynağın tek başına (diğerleri sıfırlanmışken) oluşturduğu katkıların toplamıdır.
+
+Kaynakları sıfırlamak:
+- **Gerilim kaynağı → kısa devre**
+- **Akım kaynağı → açık devre**
+- Bağımlı kaynaklar sıfırlanmaz, devrede kalır.
+
+### Örnek
+12 V kaynak, R1 = 4 Ω üzerinden A düğümüne bağlı. A düğümünden toprağa R2 = 12 Ω var ve A düğümüne 3 A'lik bir akım kaynağı akım basıyor. V_A = ?
+
+```text
+1) Sadece 12 V (akım kaynağı açık devre):
+   V_A' = 12 · 12 / (4 + 12) = 9 V
+
+2) Sadece 3 A (gerilim kaynağı kısa devre):
+   R1 || R2 = 4·12/16 = 3 Ω
+   V_A'' = 3 A · 3 Ω = 9 V
+
+Toplam: V_A = 9 + 9 = 18 V
+```
+
+Kontrol (düğüm denklemi): `(V-12)/4 + V/12 = 3` → `4V = 72` → `V = 18 V`. Sonuç tutuyor.
+
+### Kullanılamadığı durumlar
+- **Güç** hesabında doğrudan kullanılamaz: güç akımın karesiyle orantılıdır, `P ≠ P1 + P2`. Önce akımları topla, sonra gücü hesapla.
+- Diyot, transistör (büyük sinyal), doyuma giden çekirdekler gibi **doğrusal olmayan** elemanlarda geçersizdir.
+- Farklı frekanslı AC kaynaklarda kullanılabilir, ama her frekans için ayrı fazör analizi yapılıp sonuçlar **zaman domeninde** toplanmalıdır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$rc-devresinde-zaman-sabiti-nedir-10-k-ve-100-f-ile-5-v-a-sarj-olan-kondansator-4$md$, $md$RC devresinde zaman sabiti nedir? 10 kΩ ve 100 µF ile 5 V'a şarj olan kondansatör 4 V'a ne zaman ulaşır?$md$, $md$**Zaman sabiti τ = R · C**'dir; kondansatörün son değerine olan farkın %63.2'sini kapattığı süredir. Pratikte **5τ** sonunda devre kararlı duruma gelmiş (%99.3) kabul edilir. RL devresinde ise `τ = L / R`.
+
+Şarj denklemi (başlangıçta boş kondansatör):
+
+```text
+Vc(t) = Vs · (1 - e^(-t/τ))
+Deşarj: Vc(t) = V0 · e^(-t/τ)
+```
+
+| Süre | Şarj oranı |
+| --- | --- |
+| 1τ | %63.2 |
+| 2τ | %86.5 |
+| 3τ | %95.0 |
+| 5τ | %99.3 |
+
+### Hesap
+```text
+τ = 10e3 · 100e-6 = 1 s
+
+4 = 5 · (1 - e^(-t/1))
+e^(-t) = 0.2
+t = -ln(0.2) ≈ 1.61 s
+```
+
+Kondansatör 1.61 s'de 4 V'a ulaşır, ~5 s'de neredeyse tam dolar.
+
+### Pratik kullanım
+- MCU reset devresinde güç geldikten sonra reset pinini belli süre düşük tutmak
+- Buton debounce için RC filtre
+- Düşük geçiren filtre ve PWM'den analog gerilim elde etme$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$dugum-gerilimleri-yontemiyle-iki-dugumlu-bir-devreyi-cozun-dugum-ve-cevre-yontem$md$, $md$Düğüm gerilimleri yöntemiyle iki düğümlü bir devreyi çözün. Düğüm ve çevre yöntemi arasında nasıl seçim yaparsınız?$md$, $md$**Düğüm (node) yöntemi** KCL'ye dayanır: referans (toprak) seçilir, her bilinmeyen düğüm için "çıkan akımların toplamı = 0" yazılır. **Çevre (mesh) yöntemi** KVL'ye dayanır: her göz için çevre akımı tanımlanır. Hangisinde daha az denklem çıkıyorsa o seçilir.
+
+### Devre
+- 10 V kaynak, 2 Ω üzerinden V1 düğümüne bağlı
+- V1'den toprağa 4 Ω
+- V1 ile V2 arasında 2 Ω
+- V2'den toprağa 2 Ω
+- V2 düğümüne 2 A akım kaynağı akım basıyor
+
+### Denklemler
+```text
+V1 düğümü:  (V1 - 10)/2 + V1/4 + (V1 - V2)/2 = 0
+            ×4 →  5·V1 - 2·V2 = 20
+
+V2 düğümü:  (V2 - V1)/2 + V2/2 = 2
+            ×2 →  -V1 + 2·V2 = 4
+
+İkinciden: V1 = 2·V2 - 4
+Birinciye: 5(2·V2 - 4) - 2·V2 = 20  →  8·V2 = 40
+V2 = 5 V,  V1 = 6 V
+```
+
+Kontrol: V1'de akımlar `-2 + 1.5 + 0.5 = 0`, V2'de `-0.5 + 2.5 = 2 A`. Doğru.
+
+### Seçim kriterleri
+| Durum | Tercih |
+| --- | --- |
+| Çok sayıda akım kaynağı, az düğüm | Düğüm |
+| Çok sayıda gerilim kaynağı, az göz | Çevre |
+| Toprağa bağlı gerilim kaynağı | Düğüm (o düğüm doğrudan bilinir) |
+| İki düğüm arasında yüzen gerilim kaynağı | Düğüm + süper düğüm |
+| Gözler arası paylaşılan akım kaynağı | Çevre + süper çevre |
+| Düzlemsel olmayan devre | Düğüm (çevre yöntemi uygulanamaz) |
+
+SPICE gibi simülatörler, sistematik olduğu için Modified Nodal Analysis (MNA) kullanır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$maksimum-guc-transferi-teoremi-nedir-bu-kosulda-verim-neden-50-dir-ve-guc-sistem$md$, $md$Maksimum güç transferi teoremi nedir? Bu koşulda verim neden %50'dir ve güç sistemlerinde neden tercih edilmez?$md$, $md$**Maksimum güç transferi:** Bir kaynaktan yüke aktarılan güç, yük direnci kaynağın Thevenin direncine eşit olduğunda (`RL = Rth`) maksimum olur. AC devrelerde koşul `ZL = Zth*` (kompleks eşlenik) olur; yani reaktanslar birbirini yok eder.
+
+```text
+P_L = Vth² · RL / (Rth + RL)²
+RL = Rth  →  P_max = Vth² / (4·Rth)
+```
+
+### Örnek
+Vth = 12 V, Rth = 6 Ω:
+
+| RL | Akım | Yük gücü | Verim |
+| --- | --- | --- | --- |
+| 3 Ω | 1.333 A | 5.33 W | %33 |
+| 6 Ω | 1.0 A | **6.0 W** | %50 |
+| 12 Ω | 0.667 A | 5.33 W | %67 |
+
+`RL = Rth` iken aynı akım hem Rth'den hem RL'den geçer, yani kaynak içinde harcanan güç yükteki güce eşittir; **verim %50**'dir.
+
+### Nerede kullanılır, nerede kullanılmaz?
+- **Kullanılır:** RF ve haberleşme (anten, 50 Ω hatlar, LNA girişi), sensör ve zayıf sinyal kaynakları. Burada amaç sinyal gücünü maksimize etmek ve yansımayı önlemektir.
+- **Kullanılmaz:** Güç sistemleri ve güç kaynakları. Şebekede amaç **verimdir**; jeneratörün iç empedansı yükten çok küçük tutulur (`RL >> Rth`). %50 verimle çalışan bir enerji iletim sistemi kayıpları ve ısınmayı kabul edilemez kılar.$md$, $md$Takip sorusu genelde 'Ses yükselteci 8 Ω hoparlöre bağlanırken çıkış empedansı da 8 Ω mu olmalı?' şeklindedir. Hayır: modern yükselteçlerde çıkış empedansı çok düşüktür (yüksek damping factor), amaç gerilim sürmektir.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$230-v-50-hz-sebekeye-bagli-seri-r-30-xl-40-yukte-akimi-aktif-reaktif-ve-gorunur$md$, $md$230 V, 50 Hz şebekeye bağlı seri R = 30 Ω, XL = 40 Ω yükte akımı, aktif, reaktif ve görünür gücü fazörlerle hesaplayın.$md$, $md$Fazör analizinde sinüzoidal kaynak bir kompleks sayıya, elemanlar ise kompleks empedansa dönüştürülür: `ZR = R`, `ZL = jωL`, `ZC = 1/(jωC)`. Sonra devre DC devre gibi Ohm/Kirchhoff ile çözülür.
+
+### Empedans ve akım
+```text
+Z = 30 + j40 Ω
+|Z| = √(30² + 40²) = 50 Ω,   θ = arctan(40/30) = 53.13°
+
+I = V / Z = 230∠0° / 50∠53.13° = 4.6∠-53.13° A
+(akım gerilimden 53.13° geride → endüktif yük)
+
+L = XL / (2πf) = 40 / 314.16 ≈ 127 mH
+```
+
+### Güçler
+```text
+Aktif güç      P = I²·R = 4.6² · 30 = 634.8 W
+Reaktif güç    Q = I²·X = 4.6² · 40 = 846.4 VAr
+Görünür güç    S = V·I = 230 · 4.6 = 1058 VA
+Kontrol:       √(634.8² + 846.4²) = 1058 VA
+Güç faktörü    cos θ = P/S = 0.6 (geri)
+Kompleks güç   S = V·I* = 634.8 + j846.4 VA
+```
+
+| Büyüklük | Birim | Anlamı |
+| --- | --- | --- |
+| P | W | Gerçekten işe/ısıya dönüşen güç |
+| Q | VAr | Kaynak ile L/C arasında gidip gelen enerji |
+| S | VA | Kablonun, trafonun taşıması gereken güç |
+
+Trafolar ve kablolar **VA** (ve akım) cinsinden boyutlandırılır, çünkü reaktif güç de akım çeker ve bakır kaybı yaratır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$seri-rlc-devresinde-rezonans-frekansi-q-faktoru-ve-bant-genisligi-nedir-r-10-l-1$md$, $md$Seri RLC devresinde rezonans frekansı, Q faktörü ve bant genişliği nedir? R = 10 Ω, L = 10 mH, C = 1 µF için hesaplayın.$md$, $md$**Rezonansta** endüktif ve kapasitif reaktans eşitlenir (`XL = XC`), birbirini yok eder ve devre saf dirençli görünür. Seri RLC'de empedans minimum, akım maksimum olur; paralel RLC'de ise empedans maksimumdur.
+
+```text
+f0 = 1 / (2π·√(LC))
+Q  = (1/R)·√(L/C) = ω0·L / R     (seri RLC)
+BW = f0 / Q    (-3 dB bant genişliği)
+```
+
+### Hesap
+```text
+√(LC) = √(10e-3 · 1e-6) = √(1e-8) = 1e-4 s
+f0 = 1 / (2π · 1e-4) ≈ 1591.5 Hz
+
+√(L/C) = √(10e-3 / 1e-6) = √(10000) = 100 Ω
+Q = 100 / 10 = 10
+
+BW = 1591.5 / 10 ≈ 159 Hz  (yaklaşık 1512 Hz ile 1671 Hz arası)
+```
+
+### Gerilim büyütmesi
+10 V'luk kaynak uygulanırsa rezonansta akım `I = 10 / 10 = 1 A` olur. Bobin ve kondansatör üzerindeki gerilim:
+
+```text
+VL = VC = I · XL = 1 · (2π · 1591.5 · 0.01) ≈ 100 V  =  Q · Vkaynak
+```
+
+Yani 10 V'luk kaynakla kondansatör üzerinde **100 V** görülür. Kondansatör gerilim değeri seçilirken bu dikkate alınmalıdır.
+
+### Kullanım alanları
+- Radyo alıcısında kanal seçimi (yüksek Q = dar bant, iyi seçicilik)
+- Rezonanslı güç dönüştürücüler (LLC), kablosuz şarj
+- Q yüksekliği, bileşenlerin kaybı (ESR, sargı direnci) ile sınırlıdır$md$, $md$Seri ve paralel rezonansta empedansın minimum mu maksimum mu olduğunu karıştırmak çok yaygın bir hatadır. Bir de 'rezonansta kondansatör gerilimi kaynak geriliminden büyük olabilir mi?' sorusuna hazır olun.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$seri-rlc-devresinin-basamak-cevabinda-asiri-sonumlu-kritik-sonumlu-ve-az-sonumlu$md$, $md$Seri RLC devresinin basamak cevabında aşırı sönümlü, kritik sönümlü ve az sönümlü durumlar nedir? Hangi koşul hangisini belirler?$md$, $md$Seri RLC ikinci dereceden bir sistemdir. Karakteristik denklem:
+
+```text
+s² + (R/L)·s + 1/(LC) = 0
+
+α  = R / (2L)          (sönüm katsayısı, Neper frekansı)
+ω0 = 1 / √(LC)         (sönümsüz doğal frekans)
+ζ  = α / ω0            (sönüm oranı)
+s1,2 = -α ± √(α² - ω0²)
+```
+
+| Koşul | Kökler | Cevap |
+| --- | --- | --- |
+| α > ω0 (ζ > 1) | İki farklı reel kök | Aşırı sönümlü: salınım yok, yavaş oturur |
+| α = ω0 (ζ = 1) | Çift reel kök | Kritik sönümlü: salınımsız en hızlı oturma |
+| α < ω0 (ζ < 1) | Kompleks eşlenik kökler | Az sönümlü: aşma (overshoot) ve sönen salınım |
+| α = 0 (R = 0) | Sanal kökler | Sönümsüz sürekli salınım |
+
+Az sönümlü durumda cevap `e^(-αt)·cos(ωd·t)` biçimindedir; `ωd = √(ω0² - α²)`.
+
+### Örnek
+L = 10 mH, C = 1 µF:
+
+```text
+ω0 = 1 / √(1e-8) = 10 000 rad/s
+Kritik direnç: R_kr = 2·√(L/C) = 2 · 100 = 200 Ω
+
+R = 10 Ω  → α = 10 / 0.02 = 500 1/s, ζ = 0.05  → az sönümlü
+             ωd = √(1e8 - 2.5e5) ≈ 9987 rad/s (≈ 1.59 kHz salınım)
+R = 200 Ω → kritik sönümlü
+R = 1 kΩ  → α = 50 000, ζ = 5 → aşırı sönümlü
+```
+
+### Pratik karşılıkları
+- Uzun kablolu bir girişte veya LC filtreli güç kaynağında devreye alma anında **ringing** ve gerilim aşması görülür; bileşen anma gerilimini aşabilir.
+- Buck dönüştürücünün çıkış LC filtresi, kontrol döngüsünde ikinci dereceden bir kutup çifti oluşturur; düşük ESR'li seramik kondansatörlerde sönüm azalır.
+- Çözüm: seri sönüm direnci, RC snubber veya kontrol tasarımıyla ζ'yi ~0.7 civarına getirmek (yaklaşık %4.6 aşma, hızlı oturma).$md$, null, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$iki-kapili-ag-two-port-parametreleri-nelerdir-z-y-h-ve-abcd-parametrelerini-hang$md$, $md$İki kapılı ağ (two-port) parametreleri nelerdir? Z, Y, h ve ABCD parametrelerini hangi durumda kullanırsınız?$md$, $md$İki kapılı ağ, iç yapısı bilinmese bile giriş (V1, I1) ve çıkış (V2, I2) büyüklükleri arasındaki doğrusal ilişkiyle tanımlanan bir modeldir. Hangi iki büyüklüğün bağımsız seçildiğine göre farklı parametre setleri vardır.
+
+| Parametre | Denklem | Tipik kullanım |
+| --- | --- | --- |
+| Z (empedans) | V = Z · I | Seri bağlı ağlar, Z'ler toplanır |
+| Y (admitans) | I = Y · V | Paralel bağlı ağlar, Y'ler toplanır; FET modelleri |
+| h (hibrit) | V1, I2 = f(I1, V2) | BJT küçük sinyal modeli (hie, hfe, hre, hoe) |
+| ABCD (iletim) | V1, I1 = f(V2, -I2) | Kaskad bağlantı: matrisler çarpılır; iletim hatları |
+| S (saçılma) | Yansıyan/gelen dalgalar | RF/mikrodalga, VNA ölçümleri |
+
+### Tanımlar (ABCD örneği)
+```text
+V1 = A·V2 + B·(-I2)
+I1 = C·V2 + D·(-I2)
+
+A = V1/V2   (çıkış açık devre, I2 = 0)
+B = V1/(-I2) (çıkış kısa devre, V2 = 0)
+```
+
+### Temel bloklar
+```text
+Seri empedans Z:   [1  Z]       Paralel admitans Y:  [1  0]
+                   [0  1]                            [Y  1]
+```
+
+Örnek: Seri 10 Ω ardından toprağa 0.1 S (10 Ω) bir L-ağı:
+
+```text
+[1 10] · [1   0] = [1 + 10·0.1   10] = [2    10]
+[0  1]   [0.1 1]   [0.1           1]   [0.1   1]
+
+Açık devre gerilim kazancı = 1/A = 0.5   (gerilim bölücü ile tutarlı)
+Determinant AD - BC = 2·1 - 10·0.1 = 1  →  pasif karşılıklı (reciprocal) ağ
+```
+
+### Neden önemli?
+- **ABCD**: Filtre katları, iletim hattı bölümleri, güç sisteminde uzun hat modelleri (π ve T eşdeğerleri) kaskad edilirken çarpım yeterlidir.
+- **S parametreleri**: Yüksek frekansta açık/kısa devre koşulu kurmak zordur ve aktif cihazlar salınıma girebilir; bu yüzden 50 Ω referanslı S parametreleri ölçülür (S11 giriş yansıması, S21 kazanç/kayıp).$md$, $md$Savunma ve RF pozisyonlarında (radar, haberleşme) S parametreleri neredeyse kesin sorulur: S11'in dB cinsinden ne anlama geldiğini ve VSWR ile ilişkisini bilin.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$devre-analizi$md$),
+  ($md$normal-diyot-zener-schottky-ve-led-arasindaki-farklar-nelerdir-led-icin-seri-dir$md$, $md$Normal diyot, Zener, Schottky ve LED arasındaki farklar nelerdir? LED için seri direnç nasıl hesaplanır?$md$, $md$Hepsi PN (veya metal-yarıiletken) eklemli diyottur ama farklı amaçlar için optimize edilmiştir.
+
+| Tip | İleri gerilim | Öne çıkan özellik | Tipik kullanım |
+| --- | --- | --- | --- |
+| Silisyum doğrultucu (1N4007) | ~0.7 V | Yüksek ters gerilim, yavaş toparlanma | Şebeke doğrultma |
+| Hızlı / ultra-hızlı | ~0.9-1.2 V | Kısa ters toparlanma süresi (trr) | SMPS çıkışı |
+| Schottky (1N5819) | 0.2-0.45 V | Çok hızlı, düşük düşüm, ama ters sızıntı akımı yüksek ve ters gerilim sınırlı | Buck dönüştürücü, ters polarite koruması, OR-lama |
+| Zener (BZX55C5V1) | Ters yönde Vz'de iletir | Kontrollü ters kırılma | Basit regülasyon, referans, kırpma |
+| LED | 1.8-3.3 V (renge bağlı) | Işık yayar | Gösterge, aydınlatma |
+| TVS | Ters yönde kelepçeler | Çok hızlı, yüksek darbe gücü | ESD ve surge koruma |
+
+Zener **ters yönde** kırılma bölgesinde çalıştırılır ve her zaman akım sınırlayıcı bir seri dirençle kullanılır.
+
+### LED direnci hesabı
+5 V besleme, kırmızı LED (Vf ≈ 2.0 V), hedef akım 10 mA:
+
+```text
+R = (Vs - Vf) / I = (5 - 2) / 0.010 = 300 Ω  → standart değer 330 Ω
+Gerçek akım ≈ 3 / 330 ≈ 9.1 mA
+Direnç gücü P = I² · R ≈ 0.0091² · 330 ≈ 27 mW (1/8 W yeterli)
+```
+
+LED'ler **akımla** sürülür; doğrudan gerilim kaynağına bağlanırsa Vf'nin sıcaklıkla düşmesi akımı kontrolsüz artırır. Yüksek güçlü LED'lerde sabit akım sürücüleri kullanılır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$kopru-dogrultucu-ve-filtre-kondansatorunde-ripple-gerilimi-nasil-hesaplanir-12-v$md$, $md$Köprü doğrultucu ve filtre kondansatöründe ripple gerilimi nasıl hesaplanır? 12 V rms trafo, 0.5 A yük ve 2200 µF için hesaplayın.$md$, $md$Tam dalga köprü doğrultucu, AC'nin her iki yarım periyodunu da pozitife çevirir; filtre kondansatörü tepe değere şarj olur ve iki tepe arasında yüke deşarj olur. Bu deşarjın oluşturduğu dalgalanmaya **ripple** denir.
+
+```text
+Yarım dalga:  Vr(p-p) ≈ I / (f · C)
+Tam dalga:    Vr(p-p) ≈ I / (2f · C)     (ripple frekansı 2f = 100 Hz)
+```
+
+### Hesap
+```text
+Tepe gerilim:     Vp = 12 · √2 ≈ 16.97 V
+Köprüde iki diyot iletimde: 16.97 - 2·0.7 ≈ 15.57 V
+
+Ripple: Vr = 0.5 / (2 · 50 · 2200e-6) = 0.5 / 0.22 ≈ 2.27 V p-p
+
+Çıkış yaklaşık 15.57 V ile 13.3 V arasında salınır
+Ortalama DC ≈ 15.57 - 2.27/2 ≈ 14.4 V
+```
+
+Aynı devre yarım dalga olsaydı ripple iki katına (~4.5 V) çıkardı.
+
+### Tasarımda dikkat edilecekler
+- **Kondansatör seçimi:** İstenen ripple'a göre `C = I / (2f · Vr)`. 1 V ripple için `0.5 / (100 · 1) = 5000 µF` → 4700 µF seçilir.
+- **Gerilim değeri:** Şebeke +%10 toleransı ile tepe değer ~18.7 V olabilir; 25 V'luk kondansatör uygundur.
+- **Ripple akımı ve ısınma:** Kondansatör kısa süreli yüksek darbe akımlarıyla şarj olur; elektrolitikin ripple current değeri yeterli olmalı.
+- **Diyot PIV:** Köprüde her diyot yaklaşık Vp görür; marjla 50 V+ diyot seçilir.
+- Ardından bir regülatör kullanılacaksa ripple'ın alt noktası regülatörün giriş minimumunun (çıkış + dropout) üstünde kalmalıdır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$bjt-nin-calisma-bolgeleri-nelerdir-gerilim-bolucu-ongerilimlemeli-bir-devrede-ca$md$, $md$BJT'nin çalışma bölgeleri nelerdir? Gerilim bölücü öngerilimlemeli bir devrede çalışma noktasını (Q noktası) hesaplayın.$md$, $md$BJT'nin bölgeleri iki eklemin (BE ve BC) durumuna göre belirlenir:
+
+| Bölge | BE eklemi | BC eklemi | Kullanım |
+| --- | --- | --- | --- |
+| Kesim (cut-off) | Ters | Ters | Anahtar kapalı (açık devre) |
+| Aktif (forward-active) | İleri | Ters | Yükselteç, `IC = β · IB` |
+| Doyum (saturation) | İleri | İleri | Anahtar iletimde, VCE ≈ 0.1-0.2 V |
+| Ters aktif | Ters | İleri | Pratikte kullanılmaz |
+
+### Örnek devre
+VCC = 12 V, R1 = 47 kΩ (VCC-baz), R2 = 10 kΩ (baz-toprak), RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE = 0.7 V.
+
+```text
+Thevenin eşdeğeri (baz tarafı):
+VTH = 12 · 10 / (47 + 10) = 2.105 V
+RTH = 47k || 10k = 8.25 kΩ
+
+IB = (VTH - VBE) / (RTH + (β+1)·RE)
+   = (2.105 - 0.7) / (8.25k + 101k) = 1.405 / 109.25k ≈ 12.9 µA
+
+IC = β · IB ≈ 1.29 mA,   IE ≈ 1.30 mA
+VE = IE · RE ≈ 1.30 V
+VC = 12 - 1.29m · 2.2k ≈ 9.17 V
+VCE = 9.17 - 1.30 ≈ 7.87 V
+```
+
+VCE > 0.2 V ve BE ileri yönde olduğu için transistör **aktif bölgede**dir. Q noktası (IC ≈ 1.29 mA, VCE ≈ 7.9 V).
+
+### Neden gerilim bölücü + RE?
+- RE negatif geri besleme sağlar: sıcaklıkla IC artarsa VE artar, VBE azalır, IC'yi geri çeker.
+- `β · RE >> RTH` koşulu (burada 100k ile 8.25k) sağlandığında Q noktası β'dan neredeyse bağımsız olur; β üretimde 100-300 arası değişebildiği için bu kritik önemdedir.
+- AC kazancı korumak için RE'ye paralel bypass kondansatörü konur.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$mosfet-i-anahtar-olarak-kullanirken-nelere-dikkat-edersiniz-hangi-bolgede-calism$md$, $md$MOSFET'i anahtar olarak kullanırken nelere dikkat edersiniz? Hangi bölgede çalışmalı ve kayıplar nasıl hesaplanır?$md$, $md$MOSFET anahtar olarak **kesim** (VGS < Vth) ve **doğrusal/triode (ohmik)** bölge arasında çalıştırılır. Tam iletimde kanal küçük bir direnç gibi davranır: `RDS(on)`. **Doyum (saturation)** bölgesi ise yükselteç bölgesidir; anahtarlamada bu bölgede kalmak büyük güç kaybı demektir. (Dikkat: BJT'nin "doyum"u ile MOSFET'in "doyum"u farklı anlamlar taşır.)
+
+### Dikkat edilecekler
+- **Vth iletim gerilimi değildir.** Vth'de sadece ~250 µA akar. Datasheet'te RDS(on)'un hangi VGS'te verildiğine bakın; 3.3 V MCU ile sürülecekse "logic-level" (RDS(on) @ VGS = 2.5 V veya 4.5 V) MOSFET seçin.
+- **Low-side vs high-side:** Low-side anahtarda N-kanal kolaydır. High-side'da ya P-kanal kullanılır ya da N-kanal için kaynak üzerinde gerilim üreten bootstrap/şarj pompası sürücü gerekir.
+- **Gate direnci ve pull-down:** Seri 10-100 Ω gate direnci ringing'i azaltır; 10-100 kΩ gate-source pull-down MCU reset sırasında MOSFET'in yarı iletimde kalmasını önler.
+- **Endüktif yükte** flyback diyotu veya TVS; body diode'un da bir yolu olduğunu unutmayın.
+- **SOA ve ısı:** Lineer bölgede geçirilen süre ve sıcaklık RDS(on)'u artırır (25°C'den 100°C'ye ~1.5-2 kat).
+
+### Kayıp hesabı
+5 A yük, RDS(on) = 20 mΩ, 100 kHz anahtarlama, 12 V, geçiş süresi (yükselme + düşme) 40 ns:
+
+```text
+İletim kaybı:   P_cond = I² · RDS(on) = 25 · 0.02 = 0.5 W   (duty %100 kabulüyle)
+Anahtarlama:    P_sw ≈ 0.5 · V · I · (tr + tf) · f
+               = 0.5 · 12 · 5 · 40e-9 · 100e3 = 0.12 W
+
+Gate sürme:     Qg = 20 nC → ortalama gate akımı = Qg · f = 2 mA
+                1 A tepe akımlı sürücü ile şarj süresi ≈ Qg / Ig = 20 ns
+```
+
+Frekans arttıkça anahtarlama kayıpları baskın hale gelir; bu yüzden yüksek frekansta düşük Qg'li MOSFET veya GaN tercih edilir. MCU pini birkaç mA verebildiği için büyük MOSFET'lerde gate sürücü entegresi kullanılır.$md$, $md$En sık görülen hata 'Vth = 2 V, MCU 3.3 V veriyor, yeter' demektir. RDS(on) eğrisine bakmadan karar verilmez; bunu söylemek tecrübe gösterir.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$evirmeyen-yukseltec-ve-gerilim-izleyici-buffer-nasil-calisir-kazanc-ve-bant-geni$md$, $md$Evirmeyen yükselteç ve gerilim izleyici (buffer) nasıl çalışır? Kazanç ve bant genişliği nasıl hesaplanır?$md$, $md$**Evirmeyen yükselteçte** giriş op-amp'ın (+) girişine verilir; çıkıştan (-) girişe Rf ve Rg ile bölünmüş geri besleme alınır. Çıkış girişle aynı fazdadır.
+
+```text
+G = 1 + Rf / Rg
+
+Örnek: Rf = 9 kΩ, Rg = 1 kΩ  →  G = 1 + 9 = 10
+Vin = 0.2 V  →  Vout = 2 V
+```
+
+Kazanç en az 1'dir; eviren yükselteçteki gibi 1'in altına inemez.
+
+### Gerilim izleyici (unity-gain buffer)
+Çıkış doğrudan (-) girişe bağlanır, Rg yoktur: `G = 1`. Faydası kazanç değil, **empedans dönüşümüdür**:
+- Giriş empedansı çok yüksek (MΩ-TΩ), kaynağı yüklemez
+- Çıkış empedansı çok düşük, yükü rahatça sürer
+
+Tipik kullanım: yüksek empedanslı bir gerilim bölücü veya sensörü ADC girişine bağlamadan önce tamponlamak, referans gerilimi dağıtmak.
+
+### Bant genişliği (GBW)
+Gerilim geri beslemeli op-amp'larda kazanç-bant genişliği çarpımı yaklaşık sabittir. Evirmeyende "gürültü kazancı" G'ye eşittir:
+
+```text
+f_-3dB ≈ GBW / G
+
+GBW = 1 MHz, G = 10  →  f ≈ 100 kHz
+GBW = 1 MHz, G = 100 →  f ≈ 10 kHz
+```
+
+Yüksek kazanç ve geniş bant gerekiyorsa kazancı iki kata bölmek bant genişliğini artırır.
+
+### Pratik notlar
+- Rail-to-rail giriş/çıkış olmayan op-amp'lar besleme sınırlarına yaklaşamaz.
+- Büyük sinyallerde **slew rate** sınırlar: `f_max = SR / (2π · Vp)`. SR = 0.5 V/µs, Vp = 5 V için ~16 kHz.
+- Bazı op-amp'lar birim kazançta kararlı değildir (decompensated); buffer olarak kullanılamaz.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$op-amp-karsilastirici-ile-schmitt-trigger-arasindaki-fark-nedir-histerezis-esikl$md$, $md$Op-amp karşılaştırıcı ile Schmitt trigger arasındaki fark nedir? Histerezis eşiklerini hesaplayın.$md$, $md$**Karşılaştırıcı** iki girişi kıyaslar ve çıkışı bir uçtan diğerine atar. Sorun: gürültülü ve yavaş değişen bir sinyal eşiğin etrafında dolaşırken çıkış defalarca çakar (**chattering**). **Schmitt trigger**, pozitif geri beslemeyle iki farklı eşik oluşturur; sinyal yükselirken üst eşikte, düşerken alt eşikte geçiş yapar. Aradaki fark (**histerezis**) gürültüden büyük seçilirse çakma biter.
+
+### Eviren Schmitt trigger
+Giriş (-) uca, (+) uç ise çıkış ile toprak arasındaki bölücüye bağlı: R1 = 90 kΩ (çıkış → +), R2 = 10 kΩ (+ → toprak). Besleme ±12 V, çıkış yaklaşık ±12 V'ta doyuyor.
+
+```text
+β = R2 / (R1 + R2) = 10 / 100 = 0.1
+
+Çıkış +12 V iken eşik:  V_TH = +12 · 0.1 = +1.2 V
+Çıkış -12 V iken eşik:  V_TL = -12 · 0.1 = -1.2 V
+Histerezis: 2.4 V
+```
+
+Giriş +1.2 V'u geçince çıkış -12 V'a düşer; tekrar yükselmesi için girişin -1.2 V'un altına inmesi gerekir. Eşikleri sıfırdan kaydırmak için R2'nin alt ucu toprak yerine bir referans gerilimine bağlanır.
+
+### Op-amp mı, karşılaştırıcı entegresi mi?
+| Özellik | Op-amp | Karşılaştırıcı (LM393, TLV3201) |
+| --- | --- | --- |
+| Tasarım amacı | Negatif geri beslemeli lineer çalışma | Açık döngü, doyuma gidip gelme |
+| Doyumdan kurtulma | Yavaş (µs) | Hızlı (ns) |
+| Çıkış | Push-pull, analog | Çoğu açık kollektör/açık drain (pull-up gerekir) veya push-pull, lojik uyumlu |
+| Kompanzasyon | Var, slew rate sınırlı | Yok, hızlı |
+
+Kısa cevap: Hız ve lojik uyum önemliyse karşılaştırıcı entegresi kullanın. Mikrodenetleyicilerdeki birçok GPIO girişinde ve 74HC14 gibi kapılarda dahili Schmitt trigger zaten bulunur.$md$, null, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$bir-osilatorun-salinim-kosulu-barkhausen-kriteri-nedir-wien-koprusu-ve-kristal-o$md$, $md$Bir osilatörün salınım koşulu (Barkhausen kriteri) nedir? Wien köprüsü ve kristal osilatör için örnek verin.$md$, $md$**Barkhausen kriteri:** Kazancı A, geri besleme ağı β olan pozitif geri beslemeli bir sistemin belli bir frekansta sürekli salınması için o frekansta:
+
+```text
+|A · β| = 1           (döngü kazancı 1)
+∠(A · β) = 0° (veya 360°)   (toplam faz kayması sıfır)
+```
+
+Pratikte başlangıçta döngü kazancı **1'den biraz büyük** seçilir ki gürültüden salınım başlasın; genlik büyüdükçe bir mekanizma (diyot, lamba, AGC, kaynak doyumu) kazancı 1'e indirir. Aksi halde salınım ya söner ya da kırpılarak bozulur.
+
+### Wien köprüsü osilatörü
+Seri RC ve paralel RC'den oluşan ağ, `f0 = 1 / (2πRC)` frekansında faz kayması 0° ve kazancı **1/3** olan bir bant geçirendir. Bu yüzden yükselteç kazancı en az 3 olmalıdır.
+
+```text
+R = 10 kΩ, C = 10 nF:
+f0 = 1 / (2π · 10e3 · 10e-9) = 1 / (6.283e-4) ≈ 1592 Hz
+
+Evirmeyen yükselteç: G = 1 + Rf/Rg ≥ 3  →  Rf ≥ 2·Rg
+(Rf = 2.2 kΩ, Rg = 1 kΩ gibi; genlik kararlılığı için Rf'ye paralel diyotlar)
+```
+
+### Diğer tipler
+| Tip | Geri besleme | Frekans aralığı |
+| --- | --- | --- |
+| RC faz kaydırmalı | 3 RC kat, 180°, β = 1/29 | Ses frekansları |
+| Wien köprüsü | RC köprü, β = 1/3 | Hz - yüzlerce kHz, düşük distorsiyon |
+| Colpitts / Hartley | LC tank (kapasitif / endüktif bölücü) | RF |
+| Kristal (Pierce) | Kuvars rezonatör | kHz - ~100 MHz, ppm kararlılık |
+
+### Kristal yük kondansatörü
+MCU'lardaki Pierce osilatöründe iki kondansatör (C1, C2) kristalin yük kapasitesini (CL) sağlamalıdır:
+
+```text
+CL = (C1 · C2) / (C1 + C2) + C_stray
+
+CL = 12 pF, C_stray ≈ 3 pF  →  C1 = C2 = 18 pF  (18/2 + 3 = 12)
+```
+
+Yanlış yük kapasitesi frekansı ppm düzeyinde kaydırır (UART, RTC hataları); aşırı düşük kazanç ise soğuk ortamda osilatörün hiç başlamamasına yol açar.$md$, $md$'Kristal osilatör bazı kartlarda başlamıyor' senaryosu sık sorulur: yük kondansatörleri, negatif direnç marjı (gain margin), PCB'de kristalin MCU'ya mesafesi ve altında toprak düzlemi başlıca kontrol noktalarıdır.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$lineer-ldo-ve-anahtarlamali-regulator-arasindaki-farklar-nelerdir-12-v-tan-3-3-v$md$, $md$Lineer (LDO) ve anahtarlamalı regülatör arasındaki farklar nelerdir? 12 V'tan 3.3 V / 500 mA için hangisini seçersiniz?$md$, $md$**LDO**, giriş ile çıkış arasındaki farkı seri bir geçiş transistöründe ısı olarak harcar; basit, sessiz ama verimsizdir. **Anahtarlamalı regülatör** (buck, boost, buck-boost) enerjiyi bobin ve kondansatörde depolayıp aktarır; verimlidir ama gürültü üretir.
+
+| Özellik | LDO | Anahtarlamalı (buck) |
+| --- | --- | --- |
+| Verim | ≈ Vout / Vin | Tipik %80-95 |
+| Çıkış gürültüsü | Çok düşük, yüksek PSRR | Anahtarlama ripple'ı ve EMI |
+| Dış bileşen | 2 kondansatör | Bobin, diyot/senkron FET, kondansatörler |
+| PCB yerleşimi | Kolay | Kritik (sıcak döngü) |
+| Gerilim yükseltme | Yapamaz | Boost ile yapabilir |
+| Maliyet / alan | Düşük | Daha yüksek |
+
+### Hesap: 12 V → 3.3 V, 500 mA
+```text
+LDO:
+  Kayıp = (12 - 3.3) · 0.5 = 4.35 W
+  Verim = 3.3 / 12 ≈ %27.5
+  SOT-223 paket, θJA ≈ 60 °C/W  →  sıcaklık artışı ≈ 261 °C  (kabul edilemez)
+
+Buck (%90 verim):
+  Pout = 3.3 · 0.5 = 1.65 W
+  Pin  = 1.65 / 0.9 ≈ 1.83 W
+  Kayıp ≈ 0.18 W
+```
+
+Bu durumda **buck** seçilir. LDO şu durumlarda mantıklıdır: giriş-çıkış farkı küçük (örneğin 5 V → 3.3 V, düşük akım), gürültüye hassas devre (ADC referansı, PLL, RF, ses), düşük akım ve düşük maliyet.
+
+### Yaygın mimari
+Buck ile 12 V'u 3.8-4 V'a indirmek, ardından hassas analog bölüm için bir LDO ile 3.3 V elde etmek: verim büyük ölçüde korunur, ripple LDO'nun PSRR'si ile bastırılır.
+
+### Dropout
+"Low dropout", regülasyonun bozulmadan çalışabildiği minimum giriş-çıkış farkının düşük (100-300 mV) olması demektir. Klasik 7805 için bu ~2 V'tur.$md$, $md$Termal hesabı (P · θJA) mutlaka yapın. 'LDO ısınır' demek yerine kaç dereceye çıkacağını göstermek mülakatçıların aradığı mühendislik refleksidir.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$555-zamanlayici-astable-modda-nasil-calisir-frekans-ve-doluluk-oranini-hesaplayi$md$, $md$555 zamanlayıcı astable modda nasıl çalışır? Frekans ve doluluk oranını hesaplayın.$md$, $md$555, iki karşılaştırıcı (eşikler **1/3 Vcc** ve **2/3 Vcc**), bir SR flip-flop ve bir deşarj transistöründen oluşur. Astable modda kondansatör R1 + R2 üzerinden 2/3 Vcc'ye şarj olur, sonra deşarj pini üzerinden sadece R2 ile 1/3 Vcc'ye deşarj olur. Bu döngü sürekli kare dalga üretir.
+
+```text
+t_high = 0.693 · (R1 + R2) · C
+t_low  = 0.693 · R2 · C
+f      = 1.44 / ((R1 + 2·R2) · C)
+Duty   = (R1 + R2) / (R1 + 2·R2)
+```
+
+### Hesap
+R1 = 1 kΩ, R2 = 10 kΩ, C = 10 µF:
+
+```text
+t_high = 0.693 · 11k · 10µ ≈ 76.2 ms
+t_low  = 0.693 · 10k · 10µ ≈ 69.3 ms
+T ≈ 145.5 ms  →  f ≈ 6.87 Hz
+Duty = 11 / 21 ≈ %52.4
+```
+
+Bu formülde duty her zaman %50'nin üzerindedir, çünkü şarj yolu (R1 + R2) deşarj yolundan (R2) uzundur. %50'nin altı için R2'ye paralel bir diyot konarak şarj sadece R1 üzerinden yaptırılır.
+
+### Monostable mod
+Tetiklendiğinde tek bir darbe üretir:
+
+```text
+T = 1.1 · R · C
+R = 100 kΩ, C = 10 µF  →  T = 1.1 s
+```
+
+### Pratik notlar
+- Bipolar NE555 çıkış geçişlerinde besleme akımı çeker; Vcc'ye 100 nF decoupling şarttır. Düşük güç için CMOS sürüm (TLC555, ICM7555) tercih edilir.
+- Kontrol (CV) pini kullanılmıyorsa 10 nF ile toprağa bağlanır.
+- Hassas zamanlama için elektrolitik kondansatörün toleransı (±%20) sorun olur; günümüzde bu işler çoğunlukla MCU timer'ı ile yapılır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$pcb-tasariminda-decoupling-kondansatorlerini-nasil-yerlestirirsiniz-topraklama-v$md$, $md$PCB tasarımında decoupling kondansatörlerini nasıl yerleştirirsiniz? Topraklama ve EMI için hangi kurallara uyarsınız?$md$, $md$Decoupling kondansatörü, entegrenin ani akım taleplerini yakından karşılayan yerel bir enerji deposudur. Besleme hattının endüktansı nedeniyle uzaktaki regülatör nanosaniyelik akım darbelerine yetişemez.
+
+### Neden gerekli? Kısa hesap
+```text
+Hat endüktansı: L ≈ 10 nH (birkaç cm iz)
+Akım değişimi:  di/dt = 100 mA / 1 ns
+Gerilim düşümü: V = L · di/dt = 10e-9 · 1e8 = 1 V   (3.3 V'ta çok büyük)
+
+Yerel 100 nF kondansatör, 100 mA'yı 10 ns boyunca verirse:
+ΔV = I · Δt / C = 0.1 · 10e-9 / 100e-9 = 10 mV
+```
+
+### Decoupling kuralları
+- Her besleme pinine **100 nF** (0402/0603 seramik X7R) kondansatör, pine olabildiğince yakın; ayrıca entegre veya bölge başına 1-10 µF bulk kondansatör.
+- Önemli olan **döngü alanı ve ESL**: pin → kondansatör → via → toprak düzlemi yolu en kısa olmalı. Kondansatörü pine yakın koyup via'yı uzak koymak faydayı yok eder.
+- Küçük kılıf daha düşük ESL demektir. Farklı değerleri paralel koymak anti-rezonans oluşturabilir; datasheet'teki öneri ve PDN analizi esas alınır.
+- FPGA ve yüksek hızlı işlemcilerde üreticinin PDN tablosu ve hedef empedans yaklaşımı kullanılır.
+
+### Topraklama
+- Çok katmanlı kartta **kesintisiz bir toprak düzlemi** en etkili EMI önlemidir. Yüksek frekanslı dönüş akımı, sinyal izinin hemen altından akar.
+- Yüksek hızlı bir sinyali toprak düzlemindeki bir yarığın üzerinden geçirmeyin; dönüş yolu uzar, anten oluşur.
+- Karışık sinyalli tasarımlarda modern öneri: tek toprak düzlemi, ama analog ve dijital bileşenleri **bölgelere ayırarak** yerleştirmek. Düzlemi bölmek sadece özel durumlarda ve tek noktadan birleştirerek yapılır.
+- Anahtarlamalı regülatörde sıcak döngüyü (giriş kondansatörü, anahtar, diyot/FET) minimum alanda tutun.
+
+### EMI azaltma
+- Kenar hızlarını gereğinden hızlı yapmamak (seri 22-33 Ω sonlandırma dirençleri)
+- Saat hatlarını kısa tutmak ve iç katmanlarda, iki düzlem arasında yönlendirmek
+- Konnektör girişlerinde ferrit boncuk, ortak mod bobini, TVS ile ESD koruması
+- Kart kenarına toprak via dikişi (via stitching)$md$, $md$Savunma sanayinde MIL-STD-461 (EMI/EMC) ve MIL-STD-810 (çevresel) testleri gündemdedir. Bu standartların adını bilmek ve kartın neden EMC testinden kalabileceğini anlatabilmek ASELSAN, Roketsan gibi firmalarda artı puandır.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektronik$md$),
+  ($md$nand-ve-nor-neden-evrensel-kapi-olarak-adlandirilir-sadece-nand-kullanarak-not-a$md$, $md$NAND ve NOR neden evrensel kapı olarak adlandırılır? Sadece NAND kullanarak NOT, AND ve OR kapılarını oluşturun.$md$, $md$**Evrensel kapı**, tek başına kullanılarak tüm Boole fonksiyonlarının gerçekleştirilebildiği kapıdır. NAND ve NOR ile NOT, AND ve OR kurulabildiğinden her lojik fonksiyon bunlarla yazılabilir. CMOS'ta NAND/NOR transistör sayısı açısından verimlidir (2 girişli NAND = 4 transistör, AND = 6 transistör).
+
+### Sadece NAND ile
+```text
+NOT A   = NAND(A, A)                       (girişleri birleştir)
+A AND B = NOT(NAND(A, B)) = NAND(NAND(A,B), NAND(A,B))     → 2 kapı
+A OR B  = NAND(NOT A, NOT B) = NAND(NAND(A,A), NAND(B,B))  → 3 kapı
+```
+
+OR kurulumu De Morgan kuralından gelir:
+
+```text
+A + B = ((A + B)')' = (A' · B')'  →  A' ile B' girişli NAND
+```
+
+### XOR (4 NAND)
+```text
+N1 = NAND(A, B)
+N2 = NAND(A, N1)
+N3 = NAND(B, N1)
+A XOR B = NAND(N2, N3)
+```
+
+### Doğruluk tablosu kontrolü (OR)
+| A | B | NOT A | NOT B | NAND(NOT A, NOT B) |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | 1 | 1 | 0 |
+| 0 | 1 | 1 | 0 | 1 |
+| 1 | 0 | 0 | 1 | 1 |
+| 1 | 1 | 0 | 0 | 1 |
+
+Sonuç OR fonksiyonuyla aynıdır. NOR için de dual mantık geçerlidir: `NOT A = NOR(A, A)`, `A OR B = NOR(NOR(A,B), NOR(A,B))`, `A AND B = NOR(NOT A, NOT B)`.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$f-a-b-c-d-m-0-1-2-5-8-9-10-fonksiyonunu-karnaugh-haritasi-ile-sadelestirin$md$, $md$F(A,B,C,D) = Σm(0,1,2,5,8,9,10) fonksiyonunu Karnaugh haritası ile sadeleştirin.$md$, $md$Karnaugh haritasında komşu hücreler arasında yalnızca bir bit değişir (Gray kodu sırası: 00, 01, 11, 10). 1'leri **2'nin kuvveti** büyüklüğünde (1, 2, 4, 8) ve mümkün olduğunca büyük gruplara ayırırız; kenarlar ve köşeler de birbirine komşudur.
+
+### Harita (satırlar AB, sütunlar CD)
+| AB / CD | 00 | 01 | 11 | 10 |
+| --- | --- | --- | --- | --- |
+| 00 | 1 (m0) | 1 (m1) | 0 (m3) | 1 (m2) |
+| 01 | 0 (m4) | 1 (m5) | 0 (m7) | 0 (m6) |
+| 11 | 0 (m12) | 0 (m13) | 0 (m15) | 0 (m14) |
+| 10 | 1 (m8) | 1 (m9) | 0 (m11) | 1 (m10) |
+
+### Gruplar
+1. **m0, m1, m8, m9** (üst ve alt satır, ilk iki sütun; satırlar kenardan komşu): B = 0, C = 0 → `B'C'`
+2. **m0, m2, m8, m10** (dört köşe): B = 0, D = 0 → `B'D'`
+3. **m1, m5** (CD = 01 sütununda dikey komşular; açıkta kalan m5'i kapsamak için): A = 0, C = 0, D = 1 → `A'C'D`
+
+```text
+F = B'C' + B'D' + A'C'D
+```
+
+### Doğrulama
+- `B'C'` → 0, 1, 8, 9
+- `B'D'` → 0, 2, 8, 10
+- `A'C'D` → 1, 5
+
+Birleşim {0, 1, 2, 5, 8, 9, 10}: tüm mintermler kapsanıyor, fazladan hücre yok.
+
+### Bilinmesi gerekenler
+- **Don't care (X)** hücreleri, grubu büyütüyorsa 1 gibi kullanılabilir, gerekmiyorsa yok sayılır.
+- 0'ları gruplayarak **POS** (çarpımların toplamı yerine toplamların çarpımı) form elde edilir.
+- K-map 5-6 değişkene kadar pratiktir; daha fazlası için Quine-McCluskey veya sentez araçları kullanılır.
+- Gerçek tasarımda sadeleştirmeyi sentez aracı yapar; ama K-map statik hazard (glitch) analizinde hâlâ kullanılır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$latch-ile-flip-flop-arasindaki-fark-nedir-sr-d-jk-ve-t-flip-flop-lari-karsilasti$md$, $md$Latch ile flip-flop arasındaki fark nedir? SR, D, JK ve T flip-flop'ları karşılaştırın.$md$, $md$Kombinasyonel devrelerde çıkış yalnızca o anki girişlere bağlıdır; **ardışıl (sequential)** devrelerde ise geçmiş durum da (hafıza) etkilidir. Hafızanın temel elemanları latch ve flip-flop'tur.
+
+- **Latch: seviye tetiklemeli.** Enable aktifken çıkış girişi şeffaf şekilde takip eder.
+- **Flip-flop: kenar tetiklemeli.** Çıkış sadece saatin yükselen (veya düşen) kenarında güncellenir.
+
+Senkron tasarımlarda flip-flop tercih edilir; latch'ler zamanlama analizini zorlaştırır ve FPGA'da çoğunlukla istenmeyen bir HDL hatasının sonucudur.
+
+### Flip-flop tipleri
+| Tip | Girişler | Davranış | Karakteristik denklem |
+| --- | --- | --- | --- |
+| SR | S, R | S=1 set, R=1 reset, S=R=1 **geçersiz** | Q+ = S + R'Q (SR = 0) |
+| D | D | Kenarda D'yi örnekler | Q+ = D |
+| JK | J, K | SR gibi, J=K=1 iken **toggle** | Q+ = JQ' + K'Q |
+| T | T | T=1 iken toggle, T=0 iken tutar | Q+ = T ⊕ Q |
+
+### JK doğruluk tablosu
+| J | K | Q+ |
+| --- | --- | --- |
+| 0 | 0 | Q (değişmez) |
+| 0 | 1 | 0 |
+| 1 | 0 | 1 |
+| 1 | 1 | Q' (toggle) |
+
+### Pratikte
+- FPGA ve ASIC'lerde temel eleman **D flip-flop**'tur; JK ve T davranışı D'nin önüne lojik konarak elde edilir. Örneğin T flip-flop: `D = T XOR Q`.
+- T flip-flop (veya Q' çıkışı D'ye bağlı D flip-flop) frekansı ikiye böler; sayıcıların temel taşıdır.
+- Asenkron set/reset girişleri saatten bağımsız çalışır; senkron reset ise kenarda etkili olur. FPGA'da tercih edilen reset tipi üreticiye göre değişir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$setup-ve-hold-time-nedir-bir-senkron-devrede-maksimum-saat-frekansini-nasil-hesa$md$, $md$Setup ve hold time nedir? Bir senkron devrede maksimum saat frekansını nasıl hesaplarsınız?$md$, $md$- **Setup time (tsu):** Veri, saat kenarından **önce** en az bu kadar süre kararlı olmalıdır.
+- **Hold time (th):** Veri, saat kenarından **sonra** en az bu kadar süre kararlı kalmalıdır.
+- **Clock-to-Q (tcq):** Saat kenarından sonra çıkışın değişmesi için geçen süre.
+
+İhlal edilirse flip-flop yanlış değeri yakalar veya **metastabil** duruma girer.
+
+### Setup koşulu (maksimum frekans)
+Veri, bir flip-flop'tan çıkıp kombinasyonel lojikten geçerek bir sonraki saat kenarından önce hedefe ulaşmalıdır:
+
+```text
+T_clk ≥ tcq + t_logic(max) + tsu - t_skew
+(t_skew = yakalayan saatin, gönderen saatten ne kadar geç geldiği)
+
+Örnek: tcq = 0.5 ns, t_logic(max) = 6 ns, tsu = 0.5 ns, skew = 0
+T_min = 7 ns  →  f_max = 1 / 7 ns ≈ 142.9 MHz
+```
+
+### Hold koşulu (frekanstan bağımsız)
+Yeni veri, aynı kenarda yakalanan eski veriyi çok erken bozmamalıdır:
+
+```text
+tcq + t_logic(min) ≥ th + t_skew
+
+Örnek: tcq = 0.5 ns, t_logic(min) = 0.1 ns, th = 0.3 ns, skew = 0.4 ns
+0.6 ≥ 0.7 → İHLAL (0.1 ns negatif slack)
+```
+
+### İhlallerin çözümü
+| İhlal | Çözümler |
+| --- | --- |
+| Setup | Saat frekansını düşürmek, lojiği pipeline ile bölmek (register eklemek), kritik yolu optimize etmek, retiming, daha hızlı hücre/yerleşim |
+| Hold | Yola gecikme (buffer) eklemek, saat skew'ini azaltmak. Frekans düşürmek **işe yaramaz** |
+
+Hold ihlali silikonda saat yavaşlatılarak giderilemez; bu yüzden üretim sonrası bulunursa çok daha pahalıdır. FPGA'da STA (static timing analysis) aracı (Vivado, Quartus) her yol için slack raporlar; negatif slack ihlal demektir.$md$, $md$En çok aranan cümle: 'Hold ihlali saat frekansına bağlı değildir.' Pozitif skew'in setup'a yardım edip hold'a zarar verdiğini de söyleyebilirseniz çok iyi bir cevap olur.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$metastabilite-nedir-farkli-saat-domainleri-arasinda-cdc-sinyal-nasil-guvenli-akt$md$, $md$Metastabilite nedir? Farklı saat domainleri arasında (CDC) sinyal nasıl güvenli aktarılır?$md$, $md$**Metastabilite**, bir flip-flop'un girişi setup/hold penceresi içinde değiştiğinde çıkışın bir süre 0 ile 1 arasında, belirsiz bir gerilimde kalmasıdır. Sonunda rastgele bir değere oturur ama bu süre öngörülemez; sonraki lojik farklı yerlerde farklı değerler görebilir. Asenkron girişler (buton, harici sinyal) ve **farklı saat domainleri arasında geçen sinyaller** başlıca kaynaklardır.
+
+Metastabilite tamamen yok edilemez; yalnızca olasılığı kabul edilebilir seviyeye indirilir:
+
+```text
+MTBF = e^(t_r / τ) / (T0 · f_clk · f_data)
+t_r: metastabilitenin çözülmesi için tanınan süre
+τ, T0: teknolojiye bağlı sabitler
+```
+
+`t_r` üstel etki ettiği için bir saat periyodu daha beklemek MTBF'yi muazzam artırır.
+
+### Tek bitlik sinyal: iki flip-flop senkronizer
+```text
+module sync2 (
+    input  wire clk_dst,
+    input  wire async_in,
+    output wire sync_out
+);
+    (* ASYNC_REG = "TRUE" *) reg s1, s2;
+    always @(posedge clk_dst) begin
+        s1 <= async_in;   // metastabil olabilir
+        s2 <= s1;         // bir periyot çözülme süresi
+    end
+    assign sync_out = s2;
+endmodule
+```
+
+Çok yüksek frekanslarda veya güvenilirlik kritik sistemlerde 3 kat kullanılır. İlk flip-flop'un çıkışı başka hiçbir lojiğe bağlanmamalıdır.
+
+### Çok bitlik veri
+Her biti ayrı ayrı senkronize etmek **yanlıştır**: bitler farklı periyotlarda yakalanabilir ve geçersiz bir değer oluşur.
+- **Gray kodlu sayıcı:** Her adımda sadece bir bit değişir (asenkron FIFO pointer'ları)
+- **Asenkron FIFO:** Veri akışı için standart çözüm
+- **Handshake (req/ack):** Seyrek değişen kontrol ve konfigürasyon verileri
+- **Pulse senkronizer:** Hızlı domaindeki tek periyotluk darbeyi toggle'a çevirip aktarmak (darbe kaybolmasın diye)
+
+### Doğrulama
+Vivado `report_cdc`, Questa CDC gibi araçlar ve senkronizer yollarına doğru timing constraint (`set_max_delay -datapath_only`, `set_false_path`) uygulanması gerekir.$md$, $md$FPGA mülakatlarında (ASELSAN, TUSAŞ, Roketsan) 'çok bitlik bir sayacı başka saat domainine nasıl aktarırsınız?' sorusu çok yaygındır. 'Her bite iki flip-flop koyarım' cevabı elenme sebebidir; Gray kod veya asenkron FIFO deyin.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$asenkron-ripple-ve-senkron-sayici-arasindaki-fark-nedir-kaydirmali-kaydedicileri$md$, $md$Asenkron (ripple) ve senkron sayıcı arasındaki fark nedir? Kaydırmalı kaydedicilerin kullanım alanları nelerdir?$md$, $md$**Asenkron (ripple) sayıcıda** sadece ilk flip-flop ana saatle sürülür; her flip-flop bir öncekinin çıkışıyla tetiklenir. Basittir ama gecikmeler toplanır ve geçişlerde kısa süreli yanlış değerler (glitch) görülür. **Senkron sayıcıda** tüm flip-flop'lar aynı saati alır; durum geçişi lojikle hesaplanır.
+
+| Özellik | Asenkron | Senkron |
+| --- | --- | --- |
+| Saat | Zincirleme | Ortak |
+| Toplam gecikme | n · tpd | tcq + lojik |
+| Glitch | Var (ör. 0111 → 1000 geçişinde ara değerler) | Yok |
+| Kullanım | Basit frekans bölücü | FPGA/ASIC'te standart |
+
+Örnek: 4 bitlik ripple sayıcıda tpd = 10 ns ise son bitin oturması 40 ns sürer; çıkışı 25 MHz'in üstünde güvenle okuyamazsınız.
+
+Mod-N sayıcı için gereken flip-flop sayısı `⌈log2 N⌉`'dir: mod-10 için 4 flip-flop.
+
+### Senkron mod-10 sayıcı (Verilog)
+```text
+module mod10_counter (
+    input  wire clk,
+    input  wire rst,     // senkron reset
+    input  wire en,
+    output reg  [3:0] q
+);
+    always @(posedge clk) begin
+        if (rst)
+            q <= 4'd0;
+        else if (en)
+            q <= (q == 4'd9) ? 4'd0 : q + 4'd1;
+    end
+endmodule
+```
+
+### Kaydırmalı kaydediciler
+| Tip | Kullanım |
+| --- | --- |
+| SIPO (seri giriş, paralel çıkış) | 74HC595 ile az pinle çok LED/röle sürmek, SPI alıcısı |
+| PISO (paralel giriş, seri çıkış) | 74HC165 ile çok sayıda buton okumak, SPI vericisi |
+| Halka (ring) sayıcı | N flip-flop, N durum, tek 1 biti dolaşır |
+| Johnson sayıcı | Q' geri beslenir, N flip-flop ile 2N durum |
+| LFSR | Sözde rastgele sayı, CRC, scrambler |
+
+Ayrıca kaydırmalı kaydediciler sinyali belli saat periyodu kadar geciktirmek (delay line) ve FIR filtrelerdeki gecikme hattı için de kullanılır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$adc-cozunurlugu-nedir-flash-sar-ve-sigma-delta-adc-leri-karsilastirin-hangi-uygu$md$, $md$ADC çözünürlüğü nedir? Flash, SAR ve sigma-delta ADC'leri karşılaştırın; hangi uygulamada hangisini seçersiniz?$md$, $md$**Çözünürlük**, ADC'nin tam ölçek aralığını kaç seviyeye böldüğüdür. Bir LSB'nin karşılığı:
+
+```text
+LSB = V_ref / 2^N
+
+12 bit, 3.3 V:  3.3 / 4096 ≈ 0.806 mV
+16 bit, 2.5 V:  2.5 / 65536 ≈ 38.1 µV
+
+Örnek: 12 bit ADC'den 2048 okunursa  →  2048 · 0.806 mV ≈ 1.65 V
+```
+
+Nominal bit sayısı gerçek doğruluk değildir. Gürültü ve distorsiyon dahil gerçek performans **ENOB** ile ifade edilir: `ENOB = (SINAD - 1.76) / 6.02`.
+
+### ADC mimarileri
+| Mimari | Prensip | Hız | Çözünürlük | Tipik kullanım |
+| --- | --- | --- | --- | --- |
+| Flash | 2^N - 1 karşılaştırıcı paralel | GSPS | 6-8 bit | Osiloskop, çok yüksek hız |
+| Pipeline | Kademeli flash katları | 10 MSPS - GSPS | 10-16 bit | Radar, SDR, haberleşme |
+| SAR | İkili arama, N adımda bir dönüşüm | kSPS - ~10 MSPS | 8-18 bit | MCU dahili ADC, çok kanallı veri toplama |
+| Sigma-delta | Aşırı örnekleme + gürültü şekillendirme + dijital filtre | Hz - birkaç MSPS | 16-32 bit | Ses, tartı, termokupl, hassas ölçüm |
+
+### Seçim
+- **Motor akımı, genel sensör okuma:** SAR (düşük gecikme, kanal değiştirmek kolay)
+- **Load cell, termokupl:** Sigma-delta (çok yüksek çözünürlük, 50/60 Hz bastırma)
+- **Radar IF örnekleme:** Pipeline veya yüksek hızlı ADC (JESD204B/C arayüzlü)
+
+Sigma-delta'nın dijital decimation filtresi nedeniyle **gecikmesi** vardır; kontrol döngüleri ve çoklayıcıyla hızlı kanal değiştirme için uygun değildir.
+
+### DAC tarafı
+R-2R merdiveni, direnç dizisi (string) ve sigma-delta DAC'ler yaygındır. MCU'larda düşük maliyetli çözüm olarak PWM + RC filtre de kullanılır.$md$, $md$Takip sorusu genelde 'SAR ADC'nin önüne neden op-amp buffer konur?' olur. Cevap: örnekleme kondansatörü her dönüşümde ani akım çeker; yüksek empedanslı kaynak bu süre içinde oturamaz ve okuma hatalı çıkar.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$fpga-mikrodenetleyici-ve-asic-arasindaki-farklar-nelerdir-bir-proje-icin-nasil-s$md$, $md$FPGA, mikrodenetleyici ve ASIC arasındaki farklar nelerdir? Bir proje için nasıl seçim yaparsınız?$md$, $md$**Mikrodenetleyici (MCU)** komutları sırayla işleyen yazılım tabanlı bir işlemcidir. **FPGA**, yeniden yapılandırılabilir lojik bloklar (LUT, flip-flop, DSP, BRAM) içerir ve tasarım donanım olarak paralel çalışır. **ASIC** tek bir amaç için üretilen özel entegredir.
+
+| Özellik | Mikrodenetleyici | FPGA | ASIC |
+| --- | --- | --- | --- |
+| Çalışma | Ardışıl yazılım | Gerçek paralel donanım | Gerçek paralel donanım |
+| Programlama | C/C++ | VHDL/Verilog, HLS | RTL + fiziksel tasarım |
+| Gecikme / determinizm | µs, kesmeye bağlı | ns, deterministik | ns, en iyi |
+| Güç | Düşük | Orta-yüksek | En düşük (aynı iş için) |
+| Birim maliyet | Düşük | Yüksek | Yüksek hacimde en düşük |
+| NRE (ilk geliştirme maliyeti) | Çok düşük | Düşük-orta | Çok yüksek (maske, milyonlarca $) |
+| Sahada değişiklik | Firmware güncelleme | Bitstream güncelleme | İmkânsız |
+
+### Seçim kriterleri
+- **MCU:** Kontrol, haberleşme protokolleri, arayüz, düşük güç; µs mertebesi gecikme yeterli (ör. beyaz eşya kontrol kartı).
+- **FPGA:** Yüksek bant genişlikli paralel sinyal işleme, özel arayüzler, ns mertebesi deterministik gecikme, düşük-orta üretim adedi. Radar, elektronik harp, görüntü işleme ve haberleşme sistemlerinde yaygındır.
+- **ASIC:** Çok yüksek üretim adedi (telefon, otomotiv), en düşük güç ve maliyet hedefi; tasarım kesinleşmiş olmalıdır.
+
+### Hibrit çözümler
+SoC FPGA'lar (AMD Zynq, Intel Agilex/Cyclone V SoC) aynı çipte ARM işlemci ve programlanabilir lojiği birleştirir: kontrol yazılımda, ağır işlem donanımda yapılır. Yaygın geliştirme yolu da şudur: prototip FPGA'da doğrulanır, hacim artarsa ASIC'e geçilir.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$verilog-da-blocking-ve-non-blocking-atama-arasindaki-fark-nedir-hangisini-nerede$md$, $md$Verilog'da blocking (=) ve non-blocking (<=) atama arasındaki fark nedir? Hangisini nerede kullanırsınız?$md$, $md$- **Blocking (`=`)**: Atama hemen yapılır, sonraki satır yeni değeri görür. Yazılımdaki atama gibidir.
+- **Non-blocking (`<=`)**: Sağ taraflar blok başında değerlendirilir, atamalar zaman adımının sonunda **aynı anda** yapılır. Flip-flop davranışını doğru modeller.
+
+### Klasik örnek: iki register'ın yer değiştirmesi
+```text
+// Doğru: non-blocking ile gerçek swap
+always @(posedge clk) begin
+    a <= b;
+    b <= a;      // eski a değeri kullanılır
+end
+
+// Yanlış: blocking ile ikisi de b olur
+always @(posedge clk) begin
+    a = b;
+    b = a;       // a zaten b oldu
+end
+```
+
+### Shift register örneği
+```text
+always @(posedge clk) begin
+    q1 <= d;
+    q2 <= q1;
+    q3 <= q2;    // 3 flip-flop'lu kaydırmalı kaydedici
+end
+```
+
+Aynı kod `=` ile yazılırsa `d` tek saatte `q3`'e ulaşır; q1, q2 ve q3 aynı değeri tutar ve sentez aracı 3 katlı kaydırıcı yerine tek kat gecikme üretir. Ayrıca farklı `always` bloklarında blocking atama kullanmak simülasyonda yarış (race) koşuluna ve simülasyon-sentez uyumsuzluğuna yol açabilir.
+
+### Altın kurallar
+1. Ardışıl lojik (`always @(posedge clk)`): **`<=`** kullanın.
+2. Kombinasyonel lojik (`always @(*)`): **`=`** kullanın.
+3. Aynı `always` bloğunda ikisini karıştırmayın.
+4. Bir değişkene birden fazla `always` bloğundan atama yapmayın.
+
+### Latch tuzağı
+Kombinasyonel blokta her koşul dalında atama yapılmazsa sentez **latch** üretir:
+
+```text
+always @(*) begin
+    if (sel) y = a;      // sel = 0 iken y atanmıyor → latch
+end
+
+always @(*) begin
+    y = b;               // varsayılan değer → latch yok
+    if (sel) y = a;
+end
+```
+
+VHDL'de karşılığı: `signal` ataması (`<=`) non-blocking gibi, `variable` ataması (`:=`) blocking gibi davranır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sayisal-elektronik$md$),
+  ($md$fourier-serisi-ile-fourier-donusumu-arasindaki-fark-nedir-kare-dalganin-frekans$md$, $md$Fourier serisi ile Fourier dönüşümü arasındaki fark nedir? Kare dalganın frekans içeriği nedir?$md$, $md$**Fourier serisi** periyodik bir sinyali, temel frekansın tam katlarındaki (harmonikler) sinüs ve kosinüslerin toplamı olarak ifade eder; spektrum **ayrıktır**. **Fourier dönüşümü** periyodik olmayan sinyallere de uygulanır; spektrum **süreklidir**.
+
+| Dönüşüm | Zaman | Frekans |
+| --- | --- | --- |
+| Fourier serisi | Sürekli, periyodik | Ayrık (harmonikler) |
+| Fourier dönüşümü (CTFT) | Sürekli, periyodik değil | Sürekli |
+| DTFT | Ayrık örnekler | Sürekli ve 2π periyodik |
+| DFT / FFT | Ayrık, sonlu N örnek | Ayrık, N nokta |
+
+Bilgisayarda hesaplanabilen tek dönüşüm DFT'dir (FFT onun hızlı algoritmasıdır).
+
+### Kare dalga örneği
+Genliği ±1 olan, 50% doluluklu kare dalga:
+
+```text
+x(t) = (4/π) · [ sin(ωt) + (1/3)·sin(3ωt) + (1/5)·sin(5ωt) + ... ]
+```
+
+- Sadece **tek harmonikler** vardır (simetri nedeniyle).
+- n. harmoniğin genliği 1/n ile azalır.
+- 1 kHz kare dalga: 1 kHz (genlik 1.27), 3 kHz (0.42), 5 kHz (0.25), 7 kHz (0.18)...
+
+### Mühendislikte anlamı
+- Kare dalga (saat sinyali, PWM) sonsuz bant genişliğine sahiptir; keskin kenarlar yüksek harmonikler demektir. EMI'nin temel kaynağı budur.
+- Dijital sinyalin bant genişliği için pratik kural: `BW ≈ 0.35 / t_r` (t_r: yükselme süresi). 1 ns yükselme ≈ 350 MHz.
+- Kare dalgayı sınırlı bantlı bir sistemden geçirince kenarlarda aşma görülür (Gibbs olayı, ~%9).$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$laplace-ve-z-donusumu-ne-ise-yarar-bir-sistemin-kararliligini-kutuplarin-konumun$md$, $md$Laplace ve Z dönüşümü ne işe yarar? Bir sistemin kararlılığını kutupların konumundan nasıl anlarsınız?$md$, $md$**Laplace dönüşümü** sürekli zaman sistemlerini, **Z dönüşümü** ayrık zaman sistemlerini analiz etmek için kullanılır. İkisi de diferansiyel/fark denklemlerini cebirsel denklemlere çevirir, konvolüsyonu çarpıma dönüştürür ve sistemi bir **transfer fonksiyonu** ile ifade etmeyi sağlar.
+
+```text
+Laplace: X(s) = ∫ x(t)·e^(-st) dt,   s = σ + jω
+Z:       X(z) = Σ x[n]·z^(-n)
+İlişki:  z = e^(sT)   (T: örnekleme periyodu)
+```
+
+`s = jω` (Laplace) veya `z = e^(jω)` (birim çember) yazılınca frekans cevabı elde edilir.
+
+### Kararlılık kuralı (nedensel sistemler)
+| Domen | Kararlı | Kararsız |
+| --- | --- | --- |
+| s-düzlemi | Tüm kutuplar **sol yarı düzlemde** (Re < 0) | Sağ yarı düzlemde kutup |
+| z-düzlemi | Tüm kutuplar **birim çemberin içinde** (büyüklüğü 1'den küçük) | Çember dışında kutup |
+| Sınırda | jω ekseni / birim çember üzerinde | Sürekli salınım |
+
+`z = e^(sT)` dönüşümü sol yarı düzlemi birim çemberin içine eşler; bu yüzden kurallar birbirinin karşılığıdır.
+
+### Örnekler
+```text
+H(s) = 1 / (s + 2)          kutup s = -2      → kararlı, h(t) = e^(-2t)
+H(s) = 1 / (s - 1)          kutup s = +1      → kararsız, e^(t) büyür
+
+H(z) = 1 / (1 - 0.5·z^-1)   kutup z = 0.5     → kararlı
+Fark denklemi: y[n] = x[n] + 0.5·y[n-1]
+Darbe cevabı:  h[n] = 0.5^n  (1, 0.5, 0.25, ...)
+
+H(z) = 1 / (1 - 1.2·z^-1)   kutup z = 1.2     → kararsız (1.2^n büyür)
+```
+
+### Pratik kullanım
+- Kontrol tasarımında Laplace ile kontrolcü tasarlanır, sonra **bilinear (Tustin)** dönüşümüyle `s = (2/T)·(z-1)/(z+1)` dijitale aktarılır.
+- Son değer teoremi: `lim t→∞ y(t) = lim s→0 s·Y(s)`; kalıcı durum hatasını hızla bulmayı sağlar.
+- IIR filtre katsayıları kuantalandığında kutuplar birim çembere yaklaşabilir; bu yüzden yüksek dereceli filtreler ikinci dereceden bölümlere (biquad/SOS) ayrılır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$lti-sistem-nedir-konvolusyon-neden-onemlidir-x-n-1-2-3-ve-h-n-1-1-icin-cikisi-he$md$, $md$LTI sistem nedir, konvolüsyon neden önemlidir? x[n] = [1, 2, 3] ve h[n] = [1, 1] için çıkışı hesaplayın.$md$, $md$**LTI (Linear Time-Invariant)** sistem iki özelliği sağlar:
+- **Doğrusallık:** `a·x1 + b·x2` girişi `a·y1 + b·y2` çıkışı verir (süperpozisyon).
+- **Zamanla değişmezlik:** Giriş k örnek kaydırılırsa çıkış da aynen k örnek kayar.
+
+Bu iki özellik sayesinde bir LTI sistem **darbe cevabı h[n]** ile tamamen tanımlanır. Herhangi bir giriş için çıkış, giriş ile darbe cevabının **konvolüsyonudur**:
+
+```text
+y[n] = Σ x[k] · h[n - k]
+Uzunluk: N + M - 1
+```
+
+### Hesap
+x = [1, 2, 3], h = [1, 1] (iki noktalı toplayıcı, ölçeksiz hareketli ortalama):
+
+```text
+y[0] = x[0]·h[0]                 = 1·1         = 1
+y[1] = x[0]·h[1] + x[1]·h[0]     = 1 + 2       = 3
+y[2] = x[1]·h[1] + x[2]·h[0]     = 2 + 3       = 5
+y[3] = x[2]·h[1]                 = 3           = 3
+
+y = [1, 3, 5, 3]   (uzunluk 3 + 2 - 1 = 4)
+```
+
+```python
+import numpy as np
+print(np.convolve([1, 2, 3], [1, 1]))   # [1 3 5 3]
+```
+
+### Neden önemli?
+- **Zamanda konvolüsyon = frekansta çarpma:** `Y(f) = X(f) · H(f)`. Filtre tasarımı bu yüzden frekans cevabı üzerinden yapılır.
+- Uzun konvolüsyonlar FFT ile hızlandırılır (overlap-add / overlap-save); radarda **eşleşmiş filtre (matched filter)** ve darbe sıkıştırma bu şekilde uygulanır.
+- FIR filtre çıkışı doğrudan bu konvolüsyon toplamıdır.
+
+### LTI olmayan örnekler
+- `y[n] = x[n]²` doğrusal değil
+- `y[n] = n·x[n]` zamanla değişen
+- Kırpılan (doyuma giden) yükselteç doğrusal değil$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$aliasing-nedir-nasil-onlenir-10-khz-ile-orneklenen-7-khz-lik-sinyal-hangi-frekan$md$, $md$Aliasing nedir, nasıl önlenir? 10 kHz ile örneklenen 7 kHz'lik sinyal hangi frekansta görünür? Anti-aliasing filtresini nasıl tasarlarsınız?$md$, $md$**Aliasing**, örnekleme frekansının yarısının (Nyquist frekansı, `fs/2`) üstündeki bileşenlerin örneklemeden sonra daha düşük bir frekansa "katlanarak" görünmesidir. Örneklemeden sonra gerçek frekans ile alias birbirinden ayırt edilemez; yani hata **geri alınamaz**.
+
+```text
+f_alias = | f - k · fs |   (sonucu 0 ile fs/2 arasına getiren k ile)
+
+fs = 10 kHz, f = 7 kHz  →  |7 - 10| = 3 kHz
+fs = 10 kHz, f = 12 kHz →  |12 - 10| = 2 kHz
+fs = 10 kHz, f = 5 kHz  →  tam sınırda, faza bağlı belirsiz
+```
+
+Gündelik örnek: videoda tekerleklerin ters dönüyormuş gibi görünmesi (wagon-wheel effect).
+
+### Önleme
+1. ADC'den **önce** analog alçak geçiren filtre (anti-aliasing filtresi) koymak. Dijital filtre işe yaramaz, çünkü katlanma örnekleme anında olur.
+2. Örnekleme frekansını yeterince yüksek seçmek.
+
+### Filtre tasarımı örneği
+Ses: ilgilenilen bant 20 kHz, fs = 48 kHz.
+
+```text
+Nyquist = 24 kHz
+Bandın içine katlanan en düşük frekans: fs - 20 kHz = 28 kHz
+Geçiş bandı: 20 kHz → 28 kHz (sadece 0.15 dekat)
+16 bit için ~96 dB bastırma gerekir
+Butterworth: 20·n dB/dekat → 96 / (20 · 0.146) ≈ 33. derece (pratik değil)
+```
+
+### Gerçek hayattaki çözüm: aşırı örnekleme
+- ADC çok daha yüksek hızda (ör. 64 × 48 kHz) örnekler; böylece analog filtre basit bir 1.-2. derece RC olabilir.
+- Ardından dijital decimation filtresi bandı keskin şekilde keser ve hızı düşürür. Sigma-delta ADC'ler bunu kendi içinde yapar.
+
+### Kasıtlı aliasing
+Haberleşme ve radarda **undersampling (bandpass sampling)** ile yüksek frekanslı dar bantlı bir IF sinyali bilinçli olarak düşük frekansa katlanarak örneklenir; bu durumda bant geçiren bir filtre kullanılır.$md$, $md$Sadece 'Nyquist'in iki katı' demek yetmez; mülakatçılar filtrenin neden ADC'den önce olması gerektiğini ve geçiş bandının neden pratikte daha yüksek fs gerektirdiğini duymak ister.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$fir-ve-iir-filtre-arasindaki-farklar-nelerdir-hangi-durumda-hangisini-secersiniz$md$, $md$FIR ve IIR filtre arasındaki farklar nelerdir? Hangi durumda hangisini seçersiniz?$md$, $md$**FIR (Finite Impulse Response)** filtrenin çıkışı sadece mevcut ve geçmiş **girişlere** bağlıdır; geri besleme yoktur, darbe cevabı sonludur. **IIR (Infinite Impulse Response)** filtrede çıkış geçmiş **çıkışlara** da bağlıdır (geri besleme); darbe cevabı teorik olarak sonsuza kadar sürer.
+
+```text
+FIR: y[n] = b0·x[n] + b1·x[n-1] + ... + bM·x[n-M]
+IIR: y[n] = Σ bk·x[n-k] - Σ ak·y[n-k]
+```
+
+| Özellik | FIR | IIR |
+| --- | --- | --- |
+| Kararlılık | Her zaman kararlı (sadece sıfırlar) | Kutuplar birim çember içinde olmalı |
+| Faz | Simetrik katsayılarla **doğrusal faz** (sabit grup gecikmesi) | Doğrusal olmayan faz |
+| Aynı keskinlik için derece | Yüksek (onlarca-yüzlerce tap) | Düşük (4-8. derece) |
+| Hesap ve bellek | Fazla | Az |
+| Gecikme | Yüksek (tap sayısının yarısı) | Düşük |
+| Kuantalama hassasiyeti | Düşük | Yüksek (limit cycle, kararsızlık riski) |
+| Analog karşılığı | Yok | Butterworth, Chebyshev, eliptik prototiplerden türetilir |
+
+### Basit örnekler
+```text
+FIR, 4 noktalı hareketli ortalama:
+y[n] = (x[n] + x[n-1] + x[n-2] + x[n-3]) / 4
+
+IIR, üstel yumuşatma (1. derece alçak geçiren):
+y[n] = α·x[n] + (1 - α)·y[n-1],   0 < α < 1
+```
+
+```python
+from scipy import signal
+fs = 1000
+b_fir = signal.firwin(numtaps=101, cutoff=50, fs=fs)              # FIR, 101 tap
+sos_iir = signal.butter(N=4, Wn=50, fs=fs, output="sos")          # IIR, 4. derece
+```
+
+### Seçim
+- **FIR:** Faz bozulması kabul edilemiyorsa (haberleşmede sembol şekillendirme, radar, ses, görüntü), FPGA'da paralel çarpıcılar bolsa, decimation/interpolation filtrelerinde.
+- **IIR:** İşlem gücü kısıtlı MCU'da, düşük gecikme gereken kontrol döngülerinde, analog filtre davranışının taklidinde.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$fft-neden-dft-den-hizlidir-frekans-cozunurlugu-spektral-sizinti-ve-pencereleme-k$md$, $md$FFT neden DFT'den hızlıdır? Frekans çözünürlüğü, spektral sızıntı ve pencereleme kavramlarını açıklayın.$md$, $md$**DFT** N noktalı bir dizinin spektrumunu doğrudan hesaplar ve **O(N²)** işlem gerektirir. **FFT** (ör. Cooley-Tukey radix-2), DFT'yi tekrarlayan şekilde çift/tek indisli alt DFT'lere bölerek simetri ve periyodikliği kullanır; karmaşıklık **O(N log N)** olur. Sonuç aynıdır, sadece hesaplama yolu farklıdır.
+
+```text
+N = 1024:
+DFT  ≈ N² = 1 048 576 kompleks çarpma
+FFT  ≈ (N/2)·log2(N) = 512 · 10 = 5 120 kompleks çarpma   (~200 kat hızlı)
+```
+
+### Frekans çözünürlüğü
+```text
+Δf = fs / N = 1 / (gözlem süresi)
+
+fs = 1 MHz, N = 1024  →  Δf ≈ 976.6 Hz
+Anlamlı bin'ler: 0 ile fs/2 arası (gerçel sinyalde N/2 + 1 bin)
+```
+
+Birbirine 500 Hz yakın iki tonu ayırmak için daha uzun gözlem süresi gerekir (N ≥ 2000 civarı). **Zero-padding** spektrumu daha sık örnekler (eğriyi pürüzsüzleştirir) ama gerçek çözünürlüğü **artırmaz**.
+
+### Spektral sızıntı (leakage)
+FFT, alınan N örneğin periyodik olarak tekrarlandığını varsayar. Sinyal pencereye tam sayıda periyot sığmıyorsa uçlarda süreksizlik oluşur ve enerji komşu bin'lere yayılır. Zayıf bir sinyal, güçlü bir sinyalin sızıntısı altında kaybolabilir.
+
+### Pencereleme
+Sinyal, kenarları sıfıra yumuşakça inen bir pencere fonksiyonuyla çarpılır:
+
+| Pencere | Ana lob | Yan lob seviyesi | Kullanım |
+| --- | --- | --- | --- |
+| Dikdörtgen | En dar | -13 dB | Pencereye tam sığan sinyaller, geçici olaylar |
+| Hann | Orta | -31 dB | Genel amaçlı varsayılan |
+| Hamming | Orta | -43 dB | Konuşma, haberleşme |
+| Blackman | Geniş | -58 dB | Yüksek dinamik aralık |
+| Flat-top | Çok geniş | Düşük | Doğru genlik ölçümü |
+
+Ödünleşim: yan lobları bastırmak ana lobu genişletir, yani çözünürlükten feragat edilir.
+
+```python
+import numpy as np
+fs, N = 1_000_000, 1024
+t = np.arange(N) / fs
+x = np.sin(2*np.pi*100_300*t) + 1e-3*np.sin(2*np.pi*120_000*t)
+X = np.fft.rfft(x * np.hanning(N))
+f = np.fft.rfftfreq(N, 1/fs)       # bin frekansları, adım ≈ 976.6 Hz
+mag_db = 20*np.log10(np.abs(X) + 1e-12)
+```$md$, $md$Radar ve elektronik harp pozisyonlarında 'FFT boyutunu nasıl seçersiniz?' sorusu gelir: gereken frekans çözünürlüğü (fs/N), gecikme ve işlem kaynağı (FPGA'da BRAM/DSP) arasındaki ödünleşimi anlatın.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$kuantalama-gurultusu-nedir-n-bitlik-bir-adc-nin-teorik-sqnr-degeri-nasil-hesapla$md$, $md$Kuantalama gürültüsü nedir? N bitlik bir ADC'nin teorik SQNR değeri nasıl hesaplanır ve aşırı örnekleme bunu nasıl iyileştirir?$md$, $md$**Kuantalama**, sürekli genlikli bir örneğin sonlu sayıda seviyeden en yakınına yuvarlanmasıdır. Gerçek değer ile yuvarlanan değer arasındaki fark **kuantalama hatasıdır** ve ±LSB/2 aralığındadır. Sinyal yeterince "meşgul" ise bu hata düzgün dağılımlı beyaz gürültü gibi modellenir.
+
+```text
+Δ = FSR / 2^N          (FSR: tam ölçek aralığı)
+Gürültü gücü = Δ² / 12
+Gürültü RMS  = Δ / √12
+```
+
+### Teorik SQNR
+Tam ölçekli bir sinüs için:
+
+```text
+SQNR = 6.02·N + 1.76 dB
+
+ 8 bit  →  49.9 dB
+12 bit  →  74.0 dB
+16 bit  →  98.1 dB
+24 bit  → 146.2 dB  (pratikte termal gürültü nedeniyle ~120 dB'i geçmez)
+```
+
+Her ek bit SQNR'yi ~6 dB artırır. Sinyal tam ölçeğin altında kalırsa SQNR aynı oranda düşer: tam ölçeğin -20 dB altında çalışan 12 bit bir ADC ~54 dB verir. Bu yüzden ADC girişine kazanç ayarı (PGA) yapılır.
+
+### Aşırı örnekleme (oversampling)
+Toplam kuantalama gürültü gücü sabittir ama `0 - fs/2` aralığına yayılır. İlgilenilen bant B sabit tutulup fs artırılırsa banttaki gürültü azalır:
+
+```text
+SQNR = 6.02·N + 1.76 + 10·log10(OSR)   dB,   OSR = fs / (2B)
+
+OSR = 4    →  +6 dB   (≈ 1 ek bit)
+OSR = 256  →  +24 dB  (≈ 4 ek bit)
+```
+
+Yani sadece aşırı örneklemeyle her 1 bit için hızı 4 kat artırmak gerekir. **Sigma-delta** ADC'ler buna ek olarak **gürültü şekillendirme (noise shaping)** uygular: kuantalama gürültüsünü bant dışına, yüksek frekanslara iter; ardından dijital filtre bu gürültüyü atar. 2. derece bir modülatörde OSR'nin her iki katına çıkışı ~15 dB kazanç sağlar.
+
+### İlgili kavramlar
+- **Dither:** Çok düşük seviyeli sinyallerde hata sinyalle korelasyonlu hale gelir (harmonik distorsiyon). Küçük gürültü eklemek bunu beyaz gürültüye çevirir.
+- **ENOB:** Ölçülen SINAD'dan `ENOB = (SINAD - 1.76) / 6.02` ile bulunur. 12 bitlik bir ADC'nin ENOB'u 10.5-11 bit olabilir.$md$, null, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$am-ve-fm-modulasyon-arasindaki-farklar-nelerdir-bant-genislikleri-nasil-hesaplan$md$, $md$AM ve FM modülasyon arasındaki farklar nelerdir? Bant genişlikleri nasıl hesaplanır?$md$, $md$**Modülasyon**, bilgi sinyalini (mesaj) yüksek frekanslı bir taşıyıcıya bindirme işlemidir. Böylece anten boyutları makul olur, kanallar frekansta ayrılabilir. **AM**'de taşıyıcının **genliği**, **FM**'de **frekansı** mesaja göre değişir.
+
+```text
+AM:  s(t) = Ac · [1 + m·cos(2π·fm·t)] · cos(2π·fc·t)
+     m: modülasyon indeksi (0 < m ≤ 1, m > 1 aşırı modülasyon → distorsiyon)
+
+FM:  anlık frekans = fc + Δf · m(t)
+     β = Δf / fm   (modülasyon indeksi)
+```
+
+### Bant genişliği
+```text
+AM (DSB):  BW = 2 · fm
+   5 kHz ses → 10 kHz  (AM yayın kanalları ~9-10 kHz aralıklı)
+
+FM (Carson kuralı):  BW ≈ 2 · (Δf + fm)
+   FM radyo: Δf = 75 kHz, fm = 15 kHz → 2 · 90 = 180 kHz  (kanallar 200 kHz)
+```
+
+### AM'de güç verimi
+```text
+P_toplam = Pc · (1 + m²/2)
+m = 1 iken yan bant gücü = 0.5·Pc / 1.5·Pc = toplam gücün 1/3'ü
+```
+
+Gücün en az 2/3'ü bilgi taşımayan taşıyıcıya harcanır. SSB (tek yan bant) hem gücü hem bant genişliğini yarıya indirir.
+
+| Özellik | AM | FM |
+| --- | --- | --- |
+| Değişen parametre | Genlik | Frekans |
+| Bant genişliği | Dar (2·fm) | Geniş |
+| Gürültü dayanımı | Zayıf (gürültü genliği bozar) | İyi (limiter ile genlik gürültüsü atılır, capture effect) |
+| Verici | Lineer yükselteç gerekir | Sabit zarf, verimli doyumlu yükselteç kullanılabilir |
+| Alıcı | Basit (zarf dedektörü) | Daha karmaşık (PLL, discriminator) |
+| Kullanım | Orta dalga yayın, havacılık telsizi (VHF AM) | FM radyo, telsiz |
+
+Modern sistemlerde dijital modülasyonlar kullanılır: ASK, FSK, PSK (BPSK, QPSK) ve QAM. Bunlar da temelde genlik, frekans ve fazı ayrık değerlerle değiştirme fikrine dayanır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$sinyal-isleme$md$),
+  ($md$turkiye-de-iletim-ve-dagitim-gerilim-seviyeleri-nelerdir-enerji-neden-yuksek-ger$md$, $md$Türkiye'de iletim ve dağıtım gerilim seviyeleri nelerdir? Enerji neden yüksek gerilimle iletilir?$md$, $md$Türkiye'de iletim (TEİAŞ) **400 kV** (sahada genelde "380 kV" denir) ve **154 kV** seviyelerinde yapılır; çok az miktarda 66 kV hat kalmıştır. Dağıtım şirketleri (TEDAŞ'tan devralan bölgesel dağıtım şirketleri) orta gerilimde ağırlıklı olarak **34,5 kV**, bazı bölgelerde 31,5 / 15,8 / 10,5 / 6,3 kV kullanır. Alçak gerilim **0,4 kV** (faz-faz 400 V, faz-nötr 230 V, 50 Hz) seviyesindedir. Santral generatörleri tipik olarak 10,5–21 kV üretir ve yükseltici trafo ile iletime bağlanır.
+
+### Neden yüksek gerilim?
+Aynı gücü taşımak için gerilim arttıkça akım azalır, hat kaybı ise akımın karesiyle orantılıdır: `P_kayıp = 3 · I² · R`.
+
+### Sayısal örnek
+100 MW, cosφ = 1 güç iletiliyor:
+
+- 154 kV'ta: `I = P / (√3 · U) = 100e6 / (1,732 · 154e3) ≈ 375 A`
+- 380 kV'ta: `I = 100e6 / (1,732 · 380e3) ≈ 152 A`
+
+Aynı iletken direnci için kayıp oranı `(380/154)² ≈ 6,1` kat azalır.
+
+### Diğer faydalar
+- Daha ince iletken, daha hafif direk ve daha düşük yatırım maliyeti
+- Gerilim düşümü (yüzde olarak) azalır
+- Uzun mesafede daha fazla güç aktarım kapasitesi (`P ≈ V1·V2·sinδ / X`)
+
+Dezavantajı: izolasyon, açıklık mesafeleri, korona kaybı ve trafo merkezi maliyeti artar. Bu yüzden her seviye ekonomik optimuma göre seçilir.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$kesici-ayirici-yuk-ayiricisi-ve-sigorta-arasindaki-fark-nedir-ayirici-yuk-altind$md$, $md$Kesici, ayırıcı, yük ayırıcısı ve sigorta arasındaki fark nedir? Ayırıcı yük altında açılabilir mi?$md$, $md$**Kesici (circuit breaker)** normal yük akımını ve kısa devre akımını açıp kapatabilen, ark söndürme hücresi olan anahtarlama elemanıdır. **Ayırıcı (disconnector)** ark söndürme yeteneği olmayan, yalnızca **yüksüz** durumda açılan ve görünür bir ayırma aralığı sağlayan elemandır. Bu yüzden ayırıcı yük altında **açılmaz**; açılırsa kontaklar arasında ark oluşur, ekipman ve personel zarar görür.
+
+| Eleman | Yük akımı keser mi | Kısa devre keser mi | Tipik kullanım |
+| --- | --- | --- | --- |
+| Kesici | Evet | Evet (röle kumandasıyla) | OG/YG fider, trafo, AG ana dağıtım (ACB, MCCB, MCB) |
+| Ayırıcı | Hayır | Hayır | Bakımda görünür ayırma, hat izolasyonu |
+| Yük ayırıcısı | Evet | Hayır (sigorta ile kombine edilir) | 34,5 kV RMU hücreleri, dağıtım trafosu girişi |
+| Sigorta | Bir kez (eriyerek) | Evet, akım sınırlayıcı | NH/HRC sigortalar, OG trafo koruma |
+
+### Manevra sırası (interlock mantığı)
+Enerjiyi kesme: önce **kesici** açılır, sonra **ayırıcılar**, en son **topraklama ayırıcısı** kapatılır. Enerji verme ters sırada yapılır: topraklama açılır, ayırıcı kapatılır, en son kesici kapatılır.
+
+OG kesicilerde ark söndürme ortamı bugün çoğunlukla **vakum**, YG'de (154/380 kV) **SF6**'dır. SF6'nın sera gazı etkisi nedeniyle 2025 itibarıyla AB'de SF6'sız (vakum + kuru hava, g3 vb.) çözümler yaygınlaşmaktadır.$md$, $md$İş güvenliği sorusu gibi de sorulur: '5 güvenlik kuralı' (ayır, tekrar kapanmaya karşı emniyete al, gerilim yokluğunu kontrol et, topraklayıp kısa devre et, yakındaki gerilimli bölümleri kapat) bilmek artı puan getirir.$md$, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$kacak-akim-rolesi-rcd-nasil-calisir-30-ma-ve-300-ma-hangi-durumda-kullanilir$md$, $md$Kaçak akım rölesi (RCD) nasıl çalışır? 30 mA ve 300 mA hangi durumda kullanılır?$md$, $md$Kaçak akım rölesi, faz ve nötr iletkenlerinin geçtiği bir **toroid akım trafosu** ile giden ve dönen akımların farkını ölçer. Normalde `I_faz − I_nötr = 0` olduğundan toroidde net manyetik akı oluşmaz. Akımın bir kısmı insan vücudu veya yalıtım hatası üzerinden toprağa akarsa fark oluşur, sekonderde gerilim indüklenir ve röle devreyi açar.
+
+### Hassasiyet seçimi
+- **30 mA**: Can güvenliği. Priz devreleri, banyo/ıslak hacimler, şantiye ve dış ortam devreleri için kullanılır. Kalp fibrilasyonu riskini düşürecek sürede (tipik 30–40 ms) açar.
+- **300 mA**: Yangın koruma. Ana girişte veya aydınlatma gibi gruplarda, yalıtım bozulmasından doğan ısınma ve yangını önlemek için kullanılır.
+- **Seçicilik**: Ana girişte gecikmeli (S tipi) 300 mA, alt devrelerde 30 mA kullanılarak ilk hatada yalnızca ilgili devre açtırılır.
+
+### Tipler
+| Tip | Algıladığı kaçak akım |
+| --- | --- |
+| AC | Yalnızca sinüs AC |
+| A | AC + darbeli DC (tek faz doğrultuculu cihazlar) |
+| F | A + karışık frekans (tek fazlı inverterli cihazlar) |
+| B | A + düz DC (VFD, EV şarj, PV inverter) |
+
+RCD aşırı akım veya kısa devreye karşı koruma yapmaz; bu yüzden ya bir MCB ile birlikte ya da ikisi tek gövdede (RCBO) kullanılır. Ayda bir test butonuna basılması önerilir.$md$, $md$Sık takip sorusu: 'Kaçak akım rölesinden sonra nötr ile toprağı birleştirirsem ne olur?' Cevap: nötr akımının bir kısmı PE üzerinden döner, fark oluşur ve röle sürekli atar.$md$, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$per-unit-birim-deger-sistemi-nedir-neden-kullanilir-baz-degisimini-bir-ornekle-g$md$, $md$Per-unit (birim değer) sistemi nedir, neden kullanılır? Baz değişimini bir örnekle gösterin.$md$, $md$Per-unit sistemi, tüm büyüklükleri seçilen bir **baz değere** oranlayarak boyutsuz ifade etme yöntemidir: `değer_pu = gerçek değer / baz değer`. İki baz seçilir (genelde sistem geneli tek bir `S_baz`, her gerilim bölgesi için `U_baz`); akım ve empedans bazları bunlardan türetilir:
+
+- `I_baz = S_baz / (√3 · U_baz)`
+- `Z_baz = U_baz² / S_baz`
+
+### Neden kullanılır?
+- Trafo dönüştürme oranı ortadan kalkar; trafonun iki tarafında aynı pu empedans görülür.
+- Ekipman parametreleri dar bir aralıkta olur (trafo uk %4–12, generatör X''d 0,1–0,3 pu), hatalı veri kolayca fark edilir.
+- Kısa devre ve yük akışı hesapları sadeleşir; ETAP, DIgSILENT PowerFactory, PSS/E gibi programlar pu ile çalışır.
+
+### Baz değişimi formülü
+```text
+Z_pu,yeni = Z_pu,eski · (S_baz,yeni / S_baz,eski) · (U_baz,eski / U_baz,yeni)²
+```
+
+### Örnek
+Bir generatör 100 MVA, 13,8 kV, X''d = 0,2 pu. Sistem bazı 200 MVA, 13,8 kV ise:
+
+`X_yeni = 0,2 · (200/100) · (13,8/13,8)² = 0,4 pu`
+
+Ohm değeri kontrol: `Z_baz,eski = 13,8² / 100 = 1,904 Ω` → `X = 0,2 · 1,904 = 0,381 Ω`. Yeni bazda `Z_baz = 13,8²/200 = 0,952 Ω` → `0,381 / 0,952 = 0,4 pu`. İki yol aynı sonucu verir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$1000-kva-34-5-0-4-kv-uk-6-bir-dagitim-trafosunun-ag-barasinda-uc-faz-kisa-devre$md$, $md$1000 kVA, 34,5/0,4 kV, uk = %6 bir dağıtım trafosunun AG barasında üç faz kısa devre akımı nedir? Şebeke gücü 500 MVA ise sonuç nasıl değişir?$md$, $md$Sonsuz güçlü şebeke kabulüyle AG barasında yaklaşık **24 kA**, 500 MVA'lık şebeke katkısı dahil edildiğinde yaklaşık **23,3 kA** simetrik kısa devre akımı çıkar.
+
+### 1. Anma akımı
+```text
+In = S / (√3 · U) = 1 000 000 / (1,732 · 400) ≈ 1443 A
+```
+
+### 2. Sonsuz şebeke kabulü
+Trafo empedansı tek sınırlayıcıdır:
+```text
+Ik = In / uk = 1443 / 0,06 ≈ 24,06 kA
+```
+
+### 3. Şebeke empedansı dahil (per-unit, S_baz = 1 MVA)
+- Şebeke: `Z_ş = S_baz / Sk = 1 / 500 = 0,002 pu`
+- Trafo: `Z_tr = 0,06 pu`
+- Toplam: `Z = 0,062 pu` (basitlik için hepsi reaktif ve aynı açıda kabul edildi)
+
+```text
+Ik = In / Z_pu = 1443 / 0,062 ≈ 23,3 kA
+```
+
+### Pratikte nelere dikkat edilir?
+- **IEC 60909**'a göre maksimum kısa devrede gerilim faktörü `c = 1,05` (AG) veya `1,1` (OG) alınır; sonuç ~%5–10 artar.
+- Kablo empedansı eklendikçe tali panolarda akım hızla düşer.
+- Darbe kısa devre akımı `ip = κ · √2 · Ik` (κ tipik 1,5–1,8) baraların dinamik dayanımı için kullanılır.
+- Seçilen ACB/MCCB'nin kesme kapasitesi (Icu/Ics) bu değerin üstünde olmalı; burada en az 25 kA, pratikte 36–50 kA'lık bir ACB seçilir.
+- Motorlar kısa devrenin ilk anında akım besler; büyük motor yükü olan tesislerde hesaba katılır.$md$, $md$Sonucu tek formülle söylemek yetmez; 'kesici seçiminde Icu ve Ics farkı nedir' sorusu genelde gelir. Icu son kesme kapasitesi, Ics servis kesme kapasitesidir (kestikten sonra kullanılmaya devam edebilir).$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$tn-s-tn-c-tn-c-s-tt-ve-it-topraklama-sistemlerini-karsilastirin-hangisi-nerede-k$md$, $md$TN-S, TN-C, TN-C-S, TT ve IT topraklama sistemlerini karşılaştırın. Hangisi nerede kullanılır?$md$, $md$Harf kodlamasında **ilk harf** kaynağın (trafo yıldız noktası) toprakla ilişkisini, **ikinci harf** gövdelerin nasıl topraklandığını gösterir. T = doğrudan toprak, I = topraktan yalıtılmış veya yüksek empedansla topraklı, N = gövdeler nötr üzerinden kaynağın toprağına bağlı.
+
+| Sistem | Yapı | Hata akımı ve koruma | Tipik kullanım |
+| --- | --- | --- | --- |
+| TN-S | N ve PE baştan sona ayrı | Yüksek hata akımı, MCB/sigorta açar | Fabrikalar, veri merkezleri, kendi trafosu olan tesisler |
+| TN-C | N ve PE tek iletken (PEN) | PEN kopması tehlikeli; RCD kullanılamaz | Eski tesisler, yalnızca büyük kesitlerde |
+| TN-C-S | Şebekeden PEN gelir, ana panoda N ve PE ayrılır | Ayrımdan sonra RCD kullanılabilir | Türkiye'de binaların çoğu |
+| TT | Kaynak ve gövdeler ayrı topraklarda | Hata akımı toprak direncine bağlı ve düşük, RCD şart | Kırsal, havai hatla beslenen yerler |
+| IT | Kaynak yalıtılmış | İlk hatada açma yok, yalıtım izleme cihazı uyarır | Ameliyathaneler, yoğun bakım, maden, süreç kritik tesis |
+
+### TT sisteminde örnek hesap
+Dokunma gerilimi koşulu `R_A · IΔn ≤ 50 V`:
+- 30 mA RCD ile: `R_A ≤ 50 / 0,03 ≈ 1667 Ω`
+- 300 mA RCD ile: `R_A ≤ 50 / 0,3 ≈ 167 Ω`
+
+Bu yüzden TT'de RCD olmadan sadece sigortaya güvenmek mümkün değildir: 20 Ω topraklama direnciyle hata akımı yalnızca ~11 A olur ve 16 A'lik sigorta açmaz.
+
+### Önemli noktalar
+- PEN iletkeni hiçbir zaman sigorta veya anahtar üzerinden kesilmez.
+- TN-C-S'de N–PE ayrımı yapıldıktan sonra tekrar birleştirilmez.
+- Türkiye'de ilgili mevzuat **Elektrik Tesislerinde Topraklamalar Yönetmeliği** ve **Elektrik İç Tesisleri Yönetmeliği**'dir; topraklama direnci ölçümü (üç kazık / düşen gerilim yöntemi) periyodik kontrollerde yapılır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$harmonik-nedir-thd-nasil-hesaplanir-bir-tesiste-harmonik-sorununu-nasil-tespit-e$md$, $md$Harmonik nedir, THD nasıl hesaplanır? Bir tesiste harmonik sorununu nasıl tespit edip çözersiniz?$md$, $md$Harmonikler, temel frekansın (50 Hz) tam katlarındaki akım/gerilim bileşenleridir. VFD'ler, doğrultucular, UPS'ler, LED sürücüler ve SMPS gibi **lineer olmayan yükler** sinüs olmayan akım çeker ve bu akım şebeke empedansında gerilim bozulmasına yol açar.
+
+### THD formülü
+```text
+THD_I = √(I2² + I3² + I4² + ...) / I1
+```
+
+### Örnek
+Bir VFD girişinde ölçüm: I1 = 100 A, I5 = 20 A, I7 = 14 A, I11 = 9 A.
+```text
+THD_I = √(20² + 14² + 9²) / 100 = √677 / 100 ≈ %26
+```
+6 darbeli doğrultucu karakteristik olarak `6k ± 1` (5, 7, 11, 13...) harmonikleri üretir.
+
+### Etkileri
+- Trafo ve kablolarda ek ısınma, trafonun kapasitesinin düşürülmesi (derating, K-faktörü)
+- Kompanzasyon kondansatörlerinde rezonans, aşırı akım ve patlama
+- 3. harmonik ve katları (triplen) nötrde toplanır; nötr akımı faz akımını geçebilir
+- Röle ve sayaçlarda hatalı ölçüm, hassas cihazlarda arıza
+
+### Tespit ve çözüm
+1. Güç kalitesi analizörü (Fluke 435, Janitza vb.) ile en az bir hafta kayıt alınır; IEEE 519 veya EN 50160 sınırlarıyla karşılaştırılır.
+2. Kaynak yük belirlenir (genelde VFD veya UPS grupları).
+3. Çözüm seçilir: VFD girişine **hat reaktörü veya DC şok** (%3–5), **harmonik filtreli (detuned) kompanzasyon**, **pasif LC filtre**, **aktif harmonik filtre (AHF)**, 12/18 darbeli doğrultucu veya **AFE (active front end)** sürücü.
+4. Nötr kesiti büyütülür ve sonrasında tekrar ölçüm yapılarak doğrulanır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$asiri-akim-diferansiyel-ve-mesafe-rolelerini-karsilastirin-hangi-ekipmani-hangis$md$, $md$Aşırı akım, diferansiyel ve mesafe rölelerini karşılaştırın. Hangi ekipmanı hangisi korur, selektivite nasıl sağlanır?$md$, $md$Üç röle de kısa devreyi algılar ama farklı ilkeyle çalışır: **aşırı akım** akımın büyüklüğüne, **diferansiyel** bir bölgeye giren ve çıkan akımın farkına, **mesafe** röleli noktadan görülen empedansa (`Z = U / I`) bakar.
+
+| Röle (ANSI) | Prensip | Selektivite | Tipik kullanım |
+| --- | --- | --- | --- |
+| Aşırı akım 50/51, 50N/51N | I > ayar → ani veya ters zamanlı açma | Zaman ve akım kademelendirme | OG fiderler, AG, motor, yedek koruma |
+| Diferansiyel 87T/87G/87B | Giriş − çıkış akımı | Mutlak: yalnızca kendi bölgesi | Trafo, generatör, bara |
+| Mesafe 21 | Görünen empedans | Bölge (zone) ve zaman | 154/380 kV iletim hatları |
+
+### Aşırı akım: ters zamanlı (IDMT) örnek
+IEC standart ters eğri: `t = TMS · 0,14 / ((I/Is)^0,02 − 1)`
+
+I/Is = 10, TMS = 0,1 için: `10^0,02 = 1,047` → `t = 0,1 · 0,14 / 0,047 ≈ 0,30 s`.
+Bir üst kademedeki röle aynı arıza için tipik **0,25–0,4 s** daha geç açacak şekilde ayarlanır (kesici açma süresi + röle toleransı + emniyet payı).
+
+### Diferansiyel röle (trafo)
+- Oransal (biased) karakteristik kullanılır; CT hataları ve kademe değiştirici kaynaklı fark akımında yanlış açma engellenir.
+- Trafonun bağlantı grubu (örneğin Dyn11'deki 30° kayma) ve CT oranları sayısal rölede yazılımsal olarak kompanze edilir.
+- Enerjilendirme (inrush) akımındaki yüksek **2. harmonik** algılanarak açma bloke edilir; aşırı ikazda 5. harmonik kullanılır.
+
+### Mesafe rölesi bölgeleri
+- **Bölge 1**: hattın %80–85'i, gecikmesiz (ölçüm ve CT/VT hataları için hat sonu dışarıda bırakılır)
+- **Bölge 2**: hattın %120'si veya sonraki hattın yarısı, ~300–400 ms
+- **Bölge 3**: uzak yedek koruma, ~1 s ve üzeri
+Haberleşmeli şemalar (POTT, PUTT) ve hat diferansiyeli (87L) ile hattın tamamı gecikmesiz temizlenir. Modern trafo merkezlerinde bu fonksiyonlar IEC 61850 ile haberleşen çok fonksiyonlu IED'lerde bulunur (Siemens SIPROTEC, ABB Relion, Schneider MiCOM/Easergy).$md$, $md$TEİAŞ ve dağıtım şirketi mülakatlarında 'trafoyu enerjilendirdik, diferansiyel attı; nedenleri neler olabilir?' sorusu klasiktir: inrush (2. harmonik blokajı), yanlış CT polaritesi/oranı, yanlış vektör grubu ayarı, gerçek iç arıza.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$500-kw-cos-0-75-olan-bir-fabrikada-kompanzasyon-panosunu-nasil-boyutlandirirsini$md$, $md$500 kW, cosφ = 0,75 olan bir fabrikada kompanzasyon panosunu nasıl boyutlandırırsınız? Harmonik varsa neye dikkat edersiniz?$md$, $md$cosφ'yi 0,75'ten 0,98'e çıkarmak için yaklaşık **340 kVAr** kapasitif güç gerekir. Ancak tesiste harmonik yük varsa düz kondansatör yerine **harmonik filtreli (detuned)** kademeler seçilmelidir; aksi halde rezonans riski vardır.
+
+### 1. Gerekli kondansatör gücü
+```text
+Qc = P · (tanφ1 − tanφ2)
+tanφ1 = tan(acos 0,75) = 0,882
+tanφ2 = tan(acos 0,98) = 0,203
+Qc = 500 · (0,882 − 0,203) ≈ 340 kVAr
+```
+
+### 2. Türkiye'deki ceza sınırı
+EPDK düzenlemelerine göre reaktif tarifeye tabi, kurulu gücü 50 kVA ve üzerindeki abonelerde **endüktif reaktif / aktif ≤ %20**, **kapasitif reaktif / aktif ≤ %15** olmalıdır (50 kVA altında %33 / %20). `tanφ = 0,20` → `cosφ ≈ 0,98` olduğu için hedef genelde 0,98–0,99 alınır. Aşırı kompanzasyon da kapasitif cezaya yol açar; bu yüzden **şönt reaktör** veya küçük kademeler gerekebilir.
+
+### 3. Kademe yapısı
+Toplam 340 kVAr; örnek kademeleme: 10 + 20 + 30 + 2×50 + 3×60 (= 340 kVAr) gibi, kombinasyonla ince ayar yapılabilecek şekilde. Kontrolü bir reaktif güç rölesi (Entes, Janitza vb.) yapar; anahtarlama kontaktörle, hızlı değişen yüklerde (kaynak, vinç) tristörlü modülle yapılır.
+
+### 4. Rezonans kontrolü
+Kondansatör ile trafo/şebeke endüktansı paralel rezonans oluşturur:
+```text
+h_r ≈ √(Sk / Qc)
+Trafo 1000 kVA, uk %6 → Sk ≈ 1000 / 0,06 ≈ 16,7 MVA
+h_r ≈ √(16 700 / 340) ≈ 7
+```
+Rezonans 7. harmoniğe (350 Hz) denk geliyor; VFD'lerin ürettiği 7. harmonik büyütülür ve kondansatörler aşırı ısınır.
+
+### 5. Çözüm: detuned kademe
+Kondansatörle seri **%7 reaktör** (p = 0,07) kullanılır: `f_r = 50 / √0,07 ≈ 189 Hz` (h ≈ 3,8), yani 5. harmoniğin altında. Reaktör nedeniyle kondansatör gerilimi `U / (1 − p) = 400 / 0,93 ≈ 430 V` olur; bu yüzden **440 V veya 480 V** anma gerilimli kondansatör seçilir. Ayrıca kondansatörün etiket gücü ile gerçekte verdiği güç farklı olduğundan katalog değerleri reaktörlü haliyle kontrol edilir.$md$, $md$Sadece Qc formülünü yazan aday 'orta'dır; rezonans kontrolü, EPDK oranları ve detuned reaktör gerekçesini anlatan aday sahayı biliyor demektir. Kompanzasyon bakımında ölçülen kondansatör akımının etiket değerine göre düşük olması kapasite kaybını gösterir.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-sistemleri$md$),
+  ($md$transformatorun-calisma-prensibi-nedir-transformator-neden-dc-gerilimde-calismaz$md$, $md$Transformatörün çalışma prensibi nedir? Transformatör neden DC gerilimde çalışmaz?$md$, $md$Transformatör **Faraday'ın indüksiyon yasasına** göre çalışır: primere uygulanan AC gerilim, demir nüvede zamanla değişen bir manyetik akı oluşturur; bu akı sekonder sargıyı keserek orada gerilim indükler. Sargılar elektriksel olarak bağlı değildir, enerji manyetik yolla aktarılır.
+
+### Temel bağıntılar
+- İndüklenen gerilim: `E = 4,44 · f · N · Φmax`
+- İdeal trafoda: `U1 / U2 = N1 / N2 = I2 / I1`
+- Güç korunur: `S1 ≈ S2`
+
+### Örnek
+1000 kVA, 34,5/0,4 kV dağıtım trafosu:
+- Dönüştürme oranı: `34,5 / 0,4 = 86,25`
+- OG anma akımı: `1 000 000 / (√3 · 34 500) ≈ 16,7 A`
+- AG anma akımı: `1 000 000 / (√3 · 400) ≈ 1443 A`
+
+Gerilim 86 kat düşerken akım 86 kat artar.
+
+### Neden DC'de çalışmaz?
+DC'de akı sabittir, `dΦ/dt = 0` olur ve sekonderde gerilim indüklenmez. Daha kritiği, primer akımını sınırlayan endüktif reaktans (`X = 2πfL`) DC'de sıfırdır; akımı yalnızca çok küçük sargı direnci sınırlar. Bu durumda nüve doyar, primer aşırı akım çeker ve sargı yanar.
+
+Aynı mantıkla 50 Hz trafo 60 Hz'de çalışabilir (akı azalır), ama 60 Hz trafo 50 Hz'de aynı gerilimde çalıştırılırsa akı ~%20 artar ve nüve doyuma gidebilir. Bu yüzden `U/f` oranı sabit tutulmalıdır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$transformatorde-hangi-kayiplar-vardir-verim-nasil-hesaplanir-ve-maksimum-verim-h$md$, $md$Transformatörde hangi kayıplar vardır? Verim nasıl hesaplanır ve maksimum verim hangi yükte olur?$md$, $md$Trafoda iki ana kayıp grubu vardır: yükten bağımsız **demir (boşta) kayıpları** ve yükün karesiyle değişen **bakır (yük) kayıpları**.
+
+### Demir kayıpları (P0)
+- **Histerezis kaybı**: nüvenin her çevrimde mıknatıslanıp çözülmesi; silisli sac ve amorf nüve ile azaltılır.
+- **Fuko (girdap akımı) kaybı**: nüvede indüklenen akımlar; ince, yalıtılmış saclarla azaltılır.
+- Gerilim ve frekansa bağlıdır; trafo enerjili olduğu sürece sabittir.
+
+### Bakır kayıpları (Pk)
+- Sargı dirençlerindeki `I²R` kaybı ve kaçak akı kaynaklı ek kayıplar.
+- Yük oranının (x) karesiyle değişir: `P_cu = x² · Pk`
+
+### Verim
+```text
+η = x·S·cosφ / (x·S·cosφ + P0 + x²·Pk)
+```
+
+### Örnek
+1000 kVA trafo, P0 = 1,7 kW, Pk = 10,5 kW, tam yük, cosφ = 0,9:
+```text
+η = 900 / (900 + 1,7 + 10,5) = 900 / 912,2 ≈ %98,66
+```
+
+### Maksimum verim koşulu
+Maksimum verim, **bakır kaybı = demir kaybı** olduğunda elde edilir:
+```text
+x_opt = √(P0 / Pk) = √(1,7 / 10,5) ≈ 0,40
+```
+Bu trafo en yüksek verimi ~%40 yükte verir. Dağıtım trafoları çoğu zaman kısmi yükte çalıştığı için bu bilinçli bir tasarım seçimidir. AB Ecodesign (EU 548/2014, Tier 2) gibi düzenlemeler P0 ve Pk için üst sınırlar koyar; Türkiye'deki ihalelerde de düşük kayıplı trafo şartı arttı.
+
+Kuru tip ve yağlı trafo karşılaştırması da sıkça sorulur: kuru tip yangın riski olan binalarda tercih edilir, yağlı tip daha ucuz ve dış ortama uygundur.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$transformatorde-bosta-calisma-ve-kisa-devre-deneyleri-nasil-yapilir-her-deneyden$md$, $md$Transformatörde boşta çalışma ve kısa devre deneyleri nasıl yapılır? Her deneyden hangi parametreler elde edilir?$md$, $md$Bu iki deney trafonun eşdeğer devre parametrelerini ve kayıplarını, trafoyu gerçek yükle yüklemeden bulmayı sağlar.
+
+### Boşta çalışma deneyi (açık devre)
+- Genelde **AG sargıya anma gerilimi** uygulanır, OG sargı açık bırakılır (güvenli ve kolay gerilim kaynağı).
+- Ölçülenler: `U0`, `I0`, `P0`
+- Elde edilen: **demir kaybı** (P0), boşta akım (anma akımının %0,5–3'ü), mıknatıslanma kolu `Rc` ve `Xm`.
+- Akım çok küçük olduğundan bakır kaybı ihmal edilir.
+
+### Kısa devre deneyi
+- **AG sargı kısa devre edilir**, OG sargıya gerilim sıfırdan yavaşça artırılarak **anma akımı** akıtılır.
+- Ölçülenler: `Uk`, `In`, `Pk`
+- Elde edilen: **bakır kaybı** (Pk), kısa devre gerilimi `uk %`, eşdeğer `Req` ve `Xeq`.
+- Uygulanan gerilim düşük olduğundan akı küçüktür, demir kaybı ihmal edilir.
+
+### Örnek hesap
+34,5 kV taraftan anma akımı 16,7 A'ya ulaşıldığında voltmetre 2070 V gösteriyor, wattmetre 10,5 kW:
+```text
+uk = 2070 / 34 500 = %6
+Zeq = Uk_faz / I = (2070 / √3) / 16,7 ≈ 71,6 Ω
+Req = Pk / (3 · I²) = 10 500 / (3 · 16,7²) ≈ 12,5 Ω
+Xeq = √(Zeq² − Req²) ≈ 70,5 Ω
+```
+
+### uk değerinin pratik önemi
+- Kısa devre akımını belirler: `Ik ≈ In / uk` (burada ~16,7 · In)
+- Yük altında gerilim düşümünü belirler
+- Paralel çalışmada yük paylaşımını belirler (uk'ları yakın olmalı)
+
+Dağıtım trafolarında uk tipik %4–6, güç trafolarında %10–14 civarındadır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$dyn11-baglanti-grubu-ne-anlama-gelir-dagitim-trafolarinda-neden-tercih-edilir-ve$md$, $md$Dyn11 bağlantı grubu ne anlama gelir? Dağıtım trafolarında neden tercih edilir ve trafoların paralel bağlanma şartları nelerdir?$md$, $md$**Dyn11**: OG (büyük harf) sargısı **üçgen (D)**, AG (küçük harf) sargısı **yıldız (y)** ve **nötrü dışarı çıkarılmış (n)**; **11** ise saat gösterimiyle faz kaymasıdır. Her saat 30° olduğundan AG gerilim vektörü OG'ye göre `11 · 30° = 330°` geride, yani **30° ileridedir**.
+
+### Neden dağıtımda tercih edilir?
+- **Nötr erişimi**: AG tarafta 4 telli sistem (230/400 V) kurulur; tek fazlı yükler beslenir.
+- **Dengesiz yük taşıma**: AG'deki dengesiz veya tek faz yükün sıfır bileşen akımı OG üçgen sargıda dolaşarak dengelenir; Yyn bağlamada olduğu gibi nötr kayması ve aşırı akı oluşmaz.
+- **3. harmonik yakalama**: Üçüncü harmonik ve katları (sıfır bileşen) üçgen sargıda dolaşır, OG şebekeye geçmez.
+- **Toprak hatası ayrımı**: AG taraftaki toprak hatası, sıfır bileşen olarak OG şebekesine yansımaz; koruma koordinasyonu kolaylaşır.
+
+### Paralel bağlama şartları
+1. **Aynı bağlantı grubu** (aynı faz kayması). Dyn11 ile Dyn5 doğrudan paralel bağlanamaz; aradaki faz farkı büyük dolaşım akımı doğurur.
+2. **Aynı dönüştürme oranı** (kademe konumları dahil); aksi halde boşta bile dolaşım akımı akar.
+3. **Kısa devre gerilimleri (uk) yakın olmalı**, tipik ±%10. Düşük uk'lu trafo daha fazla yük alır ve önce aşırı yüklenir.
+4. **Aynı faz sırası**.
+5. Güç oranı tercihen **3:1**'den büyük olmamalı (farklı X/R oranı yük paylaşımını bozar).
+
+### Yük paylaşımı örneği
+1000 kVA, uk = %5 ve 1000 kVA, uk = %6 iki trafo toplam 2000 kVA'lık yükü besliyor. Yük, uk ile ters orantılı paylaşılır:
+```text
+S1 / S2 = uk2 / uk1 = 6 / 5
+S1 = 2000 · 6/11 ≈ 1091 kVA (%109 yük)
+S2 = 2000 · 5/11 ≈ 909 kVA
+```
+Toplam yük anma toplamına eşit olmasına rağmen birinci trafo aşırı yüklenir; bu yüzden toplam yük ~1830 kVA ile sınırlanmalıdır.$md$, $md$Görüşmeci saat diyagramını çizdirebilir. 11'in ileri mi geri mi olduğunu karıştırmamak için '11 saat = 330° geri = 30° ileri' ifadesini ezberleyin.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$asenkron-motorda-kayma-nedir-4-kutuplu-50-hz-1450-d-d-calisan-bir-motorun-kaymas$md$, $md$Asenkron motorda kayma nedir? 4 kutuplu, 50 Hz, 1450 d/d çalışan bir motorun kaymasını ve rotor frekansını hesaplayın.$md$, $md$Kayma, döner alanın senkron hızı ile rotor hızı arasındaki farkın senkron hıza oranıdır: `s = (ns − nr) / ns`. Asenkron motor tork üretebilmek için rotorun döner alandan **geri** kalması gerekir; bu fark sayesinde rotor çubuklarında gerilim ve akım indüklenir.
+
+### Hesap
+```text
+ns = 120 · f / p = 120 · 50 / 4 = 1500 d/d
+s  = (1500 − 1450) / 1500 = 0,0333 → %3,33
+f_rotor = s · f = 0,0333 · 50 ≈ 1,67 Hz
+```
+
+### Güç akışı
+Hava aralığı gücünün (`P_ag`) kayma kadar kısmı rotor bakır kaybına gider:
+```text
+P_cu,rotor = s · P_ag
+P_mek     = (1 − s) · P_ag
+```
+P_ag = 10 kW ise rotor bakır kaybı ≈ 333 W, mekanik güç ≈ 9,67 kW olur.
+
+### Neden senkron hızda dönemez?
+Rotor senkron hıza ulaşsaydı rotor ile döner alan arasında bağıl hareket olmaz, indüksiyon ve dolayısıyla tork sıfıra düşerdi. Bu yüzden boşta bile kayma küçük de olsa sıfırdan büyüktür.
+
+### Tipik değerler
+| Durum | Kayma |
+| --- | --- |
+| Boşta | %0,1–0,5 |
+| Anma yükü (küçük/orta motor) | %2–6 |
+| Büyük motorlar | %0,5–2 |
+| Kalkış anı | %100 (s = 1) |
+
+Etiket hızından kutup sayısını tahmin etmek de sorulur: 2950 d/d → 2 kutup, 1460 → 4 kutup, 970 → 6 kutup.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$asenkron-motorun-moment-hiz-egrisini-cizip-yorumlayin-gerilim-10-duserse-ne-olur$md$, $md$Asenkron motorun moment-hız eğrisini çizip yorumlayın. Gerilim %10 düşerse ne olur?$md$, $md$Moment-hız eğrisi, motorun kalkıştan senkron hıza kadar her hızda üretebileceği momenti gösterir. Kalkışta orta düzey bir moment, ortalarda bir maksimum (devrilme momenti) ve senkron hıza yaklaştıkça hızla sıfıra inen bir eğri vardır.
+
+### Eğrideki karakteristik noktalar
+- **Kalkış momenti (Tk)**: s = 1'de; tipik 1,5–2,5 · Tn. Kalkış akımı ise 5–8 · In'dir.
+- **Semer (pull-up) momenti**: kalkış sırasında görülen en düşük moment; yük momentinin altına düşerse motor bu hızda takılır.
+- **Devrilme (breakdown) momenti (Tmax)**: tipik 2–3 · Tn. Yaklaşık `s_max ≈ R2' / X2'` kaymada oluşur.
+- **Çalışma bölgesi**: senkron hız ile devrilme noktası arasındaki dik, neredeyse doğrusal kısım. Burada yük artınca hız biraz düşer, moment artar; yani **kararlıdır**.
+- Devrilme noktasının sol tarafı kararsızdır; yük Tmax'ı geçerse motor durma noktasına kadar yavaşlar.
+
+### Rotor direncinin etkisi
+R2 artırılırsa (bilezikli motorda dış direnç, derin oluklu rotor) `Tmax` değişmez ama daha yüksek kaymada oluşur; kalkış momenti artar, kalkış akımı düşer.
+
+### Gerilim düşümü örneği
+Moment gerilimin karesiyle orantılıdır: `T ∝ U²`.
+```text
+U = 0,9 · Un → T = 0,81 · T  (yaklaşık %19 düşüş)
+```
+Sabit momentli yükte (konveyör, kompresör) motor momenti dengelemek için kaymayı artırır, akım yükselir, sargılar ısınır ve termik röle açabilir. Kalkışta gerilim düşükse kalkış momenti yükü yenemeyebilir.
+
+Değişken momentli yüklerde (fan, pompa: `T ∝ n²`) çalışma noktası eğrilerin kesişimidir; bu yükler VFD ile hız kontrolüne en uygun yüklerdir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$asenkron-motorlara-yol-verme-yontemlerini-karsilastirin-direkt-yildiz-ucgen-soft$md$, $md$Asenkron motorlara yol verme yöntemlerini karşılaştırın: direkt, yıldız-üçgen, soft starter ve VFD.$md$, $md$Direkt yol vermede motor 5–8 · In kalkış akımı çeker. Büyük motorlarda bu akım şebekede gerilim düşümüne, mekanik zorlanmaya ve koruma açmalarına yol açtığı için akımı veya gerilimi sınırlayan yöntemler kullanılır.
+
+| Yöntem | Kalkış akımı | Kalkış momenti | Hız kontrolü | Not |
+| --- | --- | --- | --- | --- |
+| Direkt (DOL) | 5–8 · In | Tam (1,5–2,5 · Tn) | Yok | En ucuz, küçük motorlar |
+| Yıldız-üçgen | DOL'un 1/3'ü | DOL'un 1/3'ü | Yok | Geçişte akım darbesi |
+| Soft starter | 2–4 · In (ayarlı) | U² ile azalır | Yok | Rampalı kalkış/duruş |
+| VFD | ~1–1,5 · In | Düşük hızda tam moment | Var | Enerji tasarrufu, en pahalı |
+
+### Yıldız-üçgen hesabı
+Yıldızda sargı başına gerilim `1/√3`'e düşer; sargı akımı `1/√3` ve hat akımı üçgendeki hat akımına göre `1/3` olur. Moment `U²` ile orantılı olduğundan o da `1/3`'e iner.
+
+Örnek: DOL kalkış akımı 7 · In = 700 A olan motor yıldızda yaklaşık 233 A çeker.
+
+**Şart**: motor normal çalışmada **üçgen** bağlı olmalı ve etiketi şebekede üçgen çalışmaya uygun olmalıdır (400 V şebeke için etiket **400 V Δ / 690 V Y**). Etiketi 230 V Δ / 400 V Y olan motor bu yöntemle kullanılamaz. Yüksek ataletli yüklerde yıldız momenti yetersiz kalabilir.
+
+### Soft starter
+Ters paralel tristörlerle faz açısı kontrolü yaparak gerilimi rampalı artırır; kalkış bitince **bypass kontaktörü** kapanır, tristör kaybı ortadan kalkar. Pompalarda yumuşak duruşla **su koçu** önlenir. Hız ayarı yapamaz, frekans sabit kalır.
+
+### VFD
+Frekans ve gerilimi birlikte değiştirir (V/f veya vektör kontrol). Kalkış akımı düşük, düşük hızda tam moment ve hassas hız kontrolü sağlar. Fan ve pompalarda **benzeşim yasaları** nedeniyle büyük tasarruf sağlar: `P ∝ n³`, hız %80'e düşünce güç `0,8³ ≈ %51`'e iner. Dezavantajları: harmonik, EMC, motor yalıtımına dv/dt stresi, yatak akımları ve maliyet.$md$, $md$Klasik tuzak: 'Yıldız-üçgende akım neden 1/3'e düşüyor, 1/√3 değil mi?' Sargı akımı 1/√3, hat akımı 1/3 düşer; bu ayrımı net yapın.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$senkron-generatorun-sebekeye-paralel-baglanma-sartlari-nelerdir-paralel-baglandi$md$, $md$Senkron generatörün şebekeye paralel bağlanma şartları nelerdir? Paralel bağlandıktan sonra aktif ve reaktif güç nasıl kontrol edilir?$md$, $md$Bir senkron generatör şebekeye (veya başka bir generatöre) bağlanmadan önce kesicinin iki tarafındaki gerilimlerin neredeyse aynı olması gerekir. Aksi halde büyük bir dengeleme akımı ve mekanik darbe oluşur; mil, kaplin ve sargılar zarar görebilir.
+
+### Senkronizasyon şartları
+1. **Faz sırası** aynı olmalı (devreye almada bir kez kontrol edilir).
+2. **Gerilim genliği** eşit olmalı (tipik ±%5 tolerans).
+3. **Frekans** eşit olmalı; generatör genelde şebekeden çok az hızlı tutulur (ör. +0,1 Hz), böylece bağlanınca hemen güç verir, motor olarak çalışmaz.
+4. **Faz açısı** eşit olmalı (tipik ±10°).
+
+Kontrol bir **otomatik senkronizör** ve **senkronizm kontrol rölesi (ANSI 25)** ile yapılır; elle senkronizasyonda senkronoskop ibresinin saat yönünde yavaşça dönerek tepe noktasına (12) gelmesi beklenir.
+
+### Paralel çalışmada güç kontrolü
+Sonsuz bara kabulünde gerilim ve frekansı şebeke belirler; generatör yalnızca ne kadar güç vereceğini belirler.
+
+- **Aktif güç (P)** türbinin/motorun **governor** (hız regülatörü) ayarı ile kontrol edilir. Yakıt veya buhar artırılınca hız değişmez, yük açısı δ ve verilen P artar: `P = E·U·sinδ / Xs`.
+- **Reaktif güç (Q)** **ikaz akımı** (AVR) ile kontrol edilir.
+- **Aşırı ikaz**: generatör şebekeye endüktif reaktif güç verir (şebekeye göre kondansatör gibi davranır, cosφ geri).
+- **Düşük ikaz**: generatör şebekeden reaktif güç çeker ve kararlılık sınırına yaklaşır.
+
+### Ada modu ve droop
+Birden fazla generatör kendi aralarında yük paylaşacaksa **frekans droop** (tipik %4–5) ve **gerilim droop** kullanılır; böylece yük, generatör güçleri oranında paylaşılır. Türkiye'deki santraller için şebeke bağlantısında TEİAŞ'ın Elektrik Şebeke Yönetmeliği'ndeki primer frekans kontrolü ve reaktif güç destek şartları geçerlidir.
+
+### Örnek
+E = 1,2 pu, U = 1 pu, Xs = 1,0 pu, δ = 30°: `P = 1,2 · 1 · 0,5 / 1 = 0,6 pu`. Maksimum (statik kararlılık sınırı) δ = 90°'de `1,2 pu`'dur; ikaz düşürülürse bu sınır da düşer.$md$, $md$Enerji santrali ve EPC mülakatlarında 'senkronizasyon 180° faz farkıyla yapılırsa ne olur?' sorulur: kısa devrenin yaklaşık iki katı akım, çok büyük mekanik moment darbesi ve kaplin/mil hasarı.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$dc-motor-cesitleri-nelerdir-dc-motorun-hizi-nasil-kontrol-edilir$md$, $md$DC motor çeşitleri nelerdir? DC motorun hızı nasıl kontrol edilir?$md$, $md$DC motorlar uyartım (alan) sargısının armatüre nasıl bağlandığına göre sınıflandırılır. Hız denklemi: `n = (U − Ia · Ra) / (k · Φ)`; yani hız armatür gerilimiyle doğru, akıyla ters orantılıdır.
+
+### Çeşitler
+| Tip | Bağlantı | Karakteristik | Kullanım |
+| --- | --- | --- | --- |
+| Serbest uyartımlı | Alan ayrı kaynaktan | Hassas, bağımsız kontrol | Eski haddehaneler, test sistemleri |
+| Şönt | Alan armatüre paralel | Yükle hız çok az değişir | Takım tezgahı, fan |
+| Seri | Alan armatürle seri | Çok yüksek kalkış momenti | Eski tramvay, vinç, marş motoru |
+| Kompunt | Seri + şönt | İkisinin arası | Pres, asansör |
+| Sabit mıknatıslı (PMDC) | Mıknatıs alan | Basit, küçük güç | Otomotiv, oyuncak, aktüatör |
+
+**Seri motor boşta çalıştırılmamalıdır**: yük kalkınca akım ve akı azalır, hız teorik olarak sınırsız artar ve motor parçalanabilir.
+
+### Hız kontrol yöntemleri
+1. **Armatür gerilimi kontrolü**: baz hızın altında, sabit moment bölgesi. Bugün tristörlü doğrultucu veya PWM'li H-köprüsü (chopper) ile yapılır.
+2. **Alan zayıflatma**: akı azaltılarak baz hızın üstüne çıkılır, sabit güç bölgesi.
+3. **Armatüre seri direnç**: basit ama verimsiz, artık kullanılmıyor.
+
+### Örnek
+U = 220 V, Ra = 0,5 Ω, Ia = 20 A, n = 1500 d/d. Zıt EMK: `E = 220 − 20 · 0,5 = 210 V`.
+Gerilim 160 V'a düşürülürse (aynı akım ve akı): `E = 160 − 10 = 150 V` → `n = 1500 · 150 / 210 ≈ 1071 d/d`.
+
+Kalkışta zıt EMK sıfır olduğundan akım `U / Ra = 440 A` olurdu; bu yüzden kalkış direnci veya rampalı sürücü kullanılır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$bldc-motor-ile-pmsm-arasindaki-fark-nedir-hangisini-hangi-uygulamada-secersiniz$md$, $md$BLDC motor ile PMSM arasındaki fark nedir? Hangisini hangi uygulamada seçersiniz?$md$, $md$İkisi de rotorunda sabit mıknatıs, statorunda üç fazlı sargı olan fırçasız senkron makinelerdir. Temel fark **zıt EMK dalga şekli** ve buna bağlı **sürme yöntemidir**: BLDC'de zıt EMK **trapezoidal**, PMSM'de **sinüzoidaldir**.
+
+| Özellik | BLDC | PMSM |
+| --- | --- | --- |
+| Zıt EMK | Trapezoidal | Sinüzoidal |
+| Sargı | Konsantre | Dağıtılmış veya sinüse yakın |
+| Sürme | 6 adımlı (120° iletim) | Sinüs akım, FOC (vektör kontrol) |
+| Konum sensörü | 3 Hall sensörü (60° çözünürlük) yeterli | Enkoder/resolver veya sensörsüz gözlemci |
+| Tork dalgalanması | Komütasyonda belirgin | Çok düşük |
+| Kontrol maliyeti | Düşük, basit MCU | Daha güçlü MCU/DSP gerekir |
+| Uygulama | Fan, pompa, drone, elektrikli el aleti | EV çekiş motoru, servo, robot, kompresör |
+
+### 6 adımlı komütasyon
+Her an iki faz iletimde, biri boştadır. Hall sensörü rotor konumunu 60°'lik dilimlerde verir ve sürücü buna göre köprüdeki iki anahtarı açar. Basittir ama her 60°'de akım geçişi tork dalgalanması ve akustik gürültü yaratır.
+
+### FOC (Field Oriented Control)
+Faz akımları Clarke ve Park dönüşümleriyle rotorla birlikte dönen d-q eksenine aktarılır. `iq` torku, `id` akıyı kontrol eder; iki PI kontrolcü ile DC motor gibi kontrol edilir. Yüzeye mıknatıslı (SPMSM) makinede genelde `id = 0` seçilir; içe gömülü mıknatıslı (IPMSM) makinede negatif `id` ile **relüktans torku** da kullanılır (MTPA) ve yüksek hızda alan zayıflatma yapılır.
+
+### Seçim
+- Maliyet ve basitlik önemliyse, tork dalgalanması kritik değilse: **BLDC**.
+- Sessizlik, hassas konum/hız, yüksek verim ve geniş hız aralığı gerekiyorsa: **PMSM + FOC**.
+
+Pratikte birçok "BLDC" etiketli motor da sinüzoidal FOC ile sürülebilir; ayrım biraz da sürücü yöntemiyle ilgilidir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$elektrik-makineleri$md$),
+  ($md$kontrolsuz-ve-kontrollu-dogrultuculari-karsilastirin-uc-fazli-400-v-tan-tam-dalg$md$, $md$Kontrolsüz ve kontrollü doğrultucuları karşılaştırın. Üç fazlı 400 V'tan tam dalga köprü doğrultucu ile kaç V DC elde edilir?$md$, $md$**Kontrolsüz doğrultucular** diyot kullanır; çıkış gerilimi yalnızca giriş gerilimine bağlıdır. **Kontrollü doğrultucular** tristör kullanır; tetikleme açısı (α) ile ortalama DC gerilim ayarlanır.
+
+### Ortalama çıkış gerilimleri (sürekli iletim, ideal)
+| Devre | Kontrolsüz | Kontrollü (tristör) |
+| --- | --- | --- |
+| Tek faz yarım dalga | 0,45 · U | 0,45 · U · (1 + cosα) / 2 |
+| Tek faz tam dalga köprü | 0,9 · U | 0,9 · U · cosα |
+| Üç faz 6 darbeli köprü | 1,35 · U_LL | 1,35 · U_LL · cosα |
+
+(U: faz rms gerilimi, U_LL: fazlar arası rms gerilim)
+
+### Örnek
+400 V üç faz diyot köprü:
+```text
+Udc = 1,35 · 400 = 540 V (rezistif yük, ortalama)
+```
+Çıkışa büyük DC bara kondansatörü konursa gerilim tepe değere yaklaşır: `√2 · 400 ≈ 565 V`. Bu yüzden VFD'lerin DC barası boşta yaklaşık **540–565 V** ölçülür.
+
+### Kontrollü doğrultucuda α'nın etkisi
+- α = 0° → tam gerilim
+- α = 60° → `1,35 · 400 · 0,5 = 270 V`
+- 90° < α < 180° → ortalama gerilim negatif olur, doğrultucu **inverter modunda** çalışır ve enerji DC taraftan şebekeye aktarılır (DC motor rejeneratif frenleme, HVDC).
+
+### Pratik notlar
+- 6 darbeli doğrultucu 5, 7, 11, 13... harmonikleri üretir.
+- Tristörlü doğrultucuda α arttıkça şebekeden çekilen akım gerilime göre geri kalır, yani güç faktörü düşer.
+- Çıkış dalgalanması (ripple) frekansı 6 darbeli köprüde `6 · 50 = 300 Hz`'dir.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$igbt-mosfet-ve-tristoru-karsilastirin-hangi-uygulamada-hangisini-secersiniz$md$, $md$IGBT, MOSFET ve tristörü karşılaştırın. Hangi uygulamada hangisini seçersiniz?$md$, $md$Seçim gerilim, akım ve anahtarlama frekansına göre yapılır: düşük gerilim ve yüksek frekansta **MOSFET**, orta-yüksek gerilim ve orta frekansta **IGBT**, çok yüksek güç ve şebeke frekansında **tristör**.
+
+| Özellik | MOSFET (Si) | IGBT | Tristör (SCR) |
+| --- | --- | --- | --- |
+| Kontrol | Gerilim (gate) | Gerilim (gate) | Akım darbesiyle iletime girer |
+| Kapatma | Gate ile | Gate ile | Kendiliğinden kapanmaz, akım sıfıra inmeli |
+| İletim kaybı | `I² · Rds(on)` | `Vce(sat) · I` (~1,5–2 V) | ~1–1,5 V |
+| Frekans | 50 kHz – MHz | 2–20 kHz (tipik) | 50/60 Hz |
+| Gerilim aralığı | < 600 V (Si) | 600 V – 6,5 kV | kV seviyesinde |
+| Tipik uygulama | SMPS, DC-DC, şarj cihazı | VFD, UPS, PV inverter, EV inverter | Soft starter, HVDC, kontrollü doğrultucu |
+
+### Önemli ayrıntılar
+- MOSFET'in **body diyodu** vardır; köprü devrelerde serbest geçiş diyotu olarak kullanılabilir ama ters toparlanması yavaş olabilir.
+- MOSFET'in `Rds(on)` değeri sıcaklıkla artar, bu da paralel bağlamayı kolaylaştırır.
+- IGBT'de kapanma sırasında **kuyruk akımı (tail current)** vardır; bu, frekansını sınırlayan ana etkendir.
+- Tristör yalnızca **akım sıfırdan geçince** (doğal komütasyon) kapanır; AC devrelerde kolaydır, DC'de zorunlu komütasyon devresi gerekir. Tamamen kontrol edilebilen versiyonları GTO ve IGCT'dir.
+
+### Geniş bant aralıklı yarı iletkenler
+2025–2026 itibarıyla **SiC MOSFET** (650–1700 V) EV çekiş inverterlerinde ve hızlı şarj istasyonlarında IGBT'nin yerini alıyor; **GaN** ise 650 V altında yüksek frekanslı adaptör ve sunucu güç kaynaklarında yaygın. Daha düşük anahtarlama kaybı sayesinde daha yüksek frekans ve daha küçük pasif elemanlar mümkün olur.$md$, $md$Gerekçe sorulur: 'Neden 10 kW'lık motor sürücüde MOSFET değil IGBT?' Cevap: 400 V şebekede ~600 V DC bara için 1200 V'luk eleman gerekir; bu gerilimde Si MOSFET'in Rds(on) değeri çok yüksektir. SiC MOSFET'i alternatif olarak söylemek artı puandır.$md$, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$buck-dusurucu-donusturucu-nasil-calisir-24-v-tan-5-v-elde-etmek-icin-duty-cycle$md$, $md$Buck (düşürücü) dönüştürücü nasıl çalışır? 24 V'tan 5 V elde etmek için duty cycle ve endüktör akım dalgalanmasını hesaplayın.$md$, $md$Buck dönüştürücü, bir anahtarı (MOSFET) yüksek frekansta açıp kapatarak giriş gerilimini **darbeler** halinde LC filtreye verir; filtre bu darbelerin ortalamasını çıkışa aktarır. Sürekli iletim modunda (CCM) ideal ilişki `Vo = D · Vin`'dir.
+
+### Çalışma aralıkları
+- **Anahtar iletimde (D·T)**: endüktöre `Vin − Vo` uygulanır, akım doğrusal artar, enerji depolanır.
+- **Anahtar kesimde ((1−D)·T)**: diyot veya senkron MOSFET iletime girer, endüktöre `−Vo` uygulanır, akım azalarak yüke akmaya devam eder.
+- Kararlı durumda endüktör gerilimi bir periyotta ortalama sıfırdır (volt-saniye dengesi): `(Vin − Vo) · D = Vo · (1 − D)` → `Vo = D · Vin`.
+
+### Hesap
+Vin = 24 V, Vo = 5 V, L = 22 µH, fsw = 500 kHz, Io = 2 A:
+```text
+D  = Vo / Vin = 5 / 24 ≈ 0,208
+ΔIL = (Vin − Vo) · D / (L · fsw)
+    = (24 − 5) · 0,208 / (22e-6 · 500e3)
+    = 3,96 / 11 ≈ 0,36 A (tepeden tepeye)
+```
+Dalgalanma yük akımının %18'i; tasarımda tipik olarak %20–40 hedeflenir. Endüktörün tepe akımı `2 + 0,18 = 2,18 A`; doyma akımı bunun üzerinde seçilir.
+
+### Çıkış gerilim dalgalanması
+```text
+ΔVo ≈ ΔIL / (8 · fsw · C)
+C = 22 µF ise: 0,36 / (8 · 500e3 · 22e-6) ≈ 4 mV (ESR ihmal)
+```
+Pratikte kondansatörün ESR değeri (`ΔIL · ESR`) çoğu zaman baskındır.
+
+### Pratik notlar
+- Diyot yerine alt MOSFET kullanan **senkron buck** düşük çıkış geriliminde verimi artırır.
+- Yük çok azalırsa akım sıfıra iner ve **kesintili moda (DCM)** geçilir; `Vo = D · Vin` artık geçerli değildir.
+- Kontrol genelde akım modlu (peak current mode) bir kontrolcü ile yapılır.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$boost-ve-buck-boost-donusturuculerde-cikis-gerilimi-nasil-hesaplanir-12-v-tan-48$md$, $md$Boost ve buck-boost dönüştürücülerde çıkış gerilimi nasıl hesaplanır? 12 V'tan 48 V elde etmek için gereken duty cycle nedir?$md$, $md$Boost dönüştürücü çıkış gerilimini **yükseltir**: `Vo = Vin / (1 − D)`. Buck-boost ise hem düşürür hem yükseltir ama klasik topolojide **ters polariteli** çıkış verir: `Vo = −Vin · D / (1 − D)`.
+
+### Boost çalışma prensibi
+- **Anahtar iletimde**: endüktör doğrudan girişe bağlanır, `Vin` ile enerji depolar; diyot ters kutuplanır, yükü kondansatör besler.
+- **Anahtar kesimde**: endüktör akımı sürekliliğini korumak için gerilimini girişe ekler ve diyot üzerinden çıkışa aktarır.
+- Volt-saniye dengesi: `Vin · D = (Vo − Vin) · (1 − D)` → `Vo = Vin / (1 − D)`.
+
+### Hesap
+```text
+Vo = Vin / (1 − D)  →  D = 1 − Vin / Vo = 1 − 12 / 48 = 0,75
+```
+Giriş akımı ideal durumda `Io · Vo / Vin` kadardır: çıkışta 2 A (96 W) isteniyorsa girişten ~8 A çekilir. Endüktör ve anahtar bu akıma göre seçilir.
+
+### Neden D → 1 pratik değil?
+İdeal formül D = 0,95'te 20 kat kazanç verir; ama endüktör ve anahtar dirençleri nedeniyle gerçek kazanç bir tepe yapıp **düşer**. Tipik olarak 4–5 katın üzerindeki oranlar için izole topolojiler (flyback, push-pull, LLC) veya kademeli dönüştürücüler kullanılır.
+
+### Buck-boost türleri
+| Topoloji | Çıkış | Not |
+| --- | --- | --- |
+| Klasik buck-boost | Ters polarite | Tek anahtar, basit |
+| SEPIC | Pozitif | Ek kondansatör ve endüktör |
+| 4 anahtarlı buck-boost | Pozitif | Batarya ile beslenen sistemler (USB-PD) |
+| Flyback | İzole | Endüktör yerine kuplajlı endüktör/trafo |
+
+### Önemli uyarı
+Boost dönüştürücüde **kısa devre koruması doğal olarak yoktur**: anahtar kapalıyken bile girişten diyot üzerinden çıkışa yol vardır. Ayrıca boost'un kontrol transfer fonksiyonunda **sağ yarı düzlem sıfırı (RHPZ)** bulunur; bu, kontrol bant genişliğini sınırlar.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$pwm-inverter-ve-sinuzoidal-pwm-spwm-nasil-calisir-540-v-dc-baradan-elde-edilebil$md$, $md$PWM inverter ve sinüzoidal PWM (SPWM) nasıl çalışır? 540 V DC baradan elde edilebilecek maksimum çıkış gerilimi nedir?$md$, $md$PWM inverter, DC baradaki gerilimi yarı iletken anahtarlarla yüksek frekansta kıyarak ortalaması sinüs olan bir gerilim üretir. **SPWM**'de her faz için bir sinüs **referans** sinyali, yüksek frekanslı üçgen **taşıyıcı** ile karşılaştırılır: referans taşıyıcıdan büyükse üst anahtar, küçükse alt anahtar iletimdedir.
+
+### Tanımlar
+- **Genlik modülasyon indeksi**: `ma = V_ref,tepe / V_taşıyıcı,tepe`
+- **Frekans modülasyon oranı**: `mf = f_taşıyıcı / f_çıkış`
+- `ma ≤ 1` doğrusal bölgedir; `ma > 1` aşırı modülasyondur ve düşük dereceli harmonikler çıkar.
+
+### Çıkış gerilimi
+Faz-nötr temel bileşen tepe değeri `ma · Vdc / 2`'dir. Fazlar arası rms değer:
+```text
+V_LL,rms = (√3 / √2) · ma · Vdc / 2 ≈ 0,612 · ma · Vdc
+Vdc = 540 V, ma = 1 → V_LL ≈ 330 V
+```
+Yani sade SPWM ile 400 V'luk motora tam gerilim verilemez.
+
+### Çözüm: 3. harmonik enjeksiyonu / SVPWM
+Referansa 3. harmonik eklemek veya **uzay vektör PWM (SVPWM)** kullanmak, doğrusal bölgeyi yaklaşık **%15,5** genişletir:
+```text
+V_LL,rms,max ≈ 0,707 · Vdc = 0,707 · 540 ≈ 382 V
+```
+3. harmonik fazlar arasında birbirini götürdüğünden motor tarafından görülmez. Modern VFD'ler SVPWM ve aşırı modülasyon kullanarak ~400 V'a yaklaşır.
+
+### Pratik konular
+- **Ölü zaman (dead time)**: aynı koldaki iki anahtarın aynı anda iletime girip DC barayı kısa devre etmesini (shoot-through) önlemek için 0,5–3 µs eklenir; çıkış geriliminde hafif bozulma yaratır ve kompanze edilir.
+- Taşıyıcı frekansı yükseldikçe akım dalgalanması ve motor gürültüsü azalır ama anahtarlama kayıpları artar; VFD'lerde tipik 4–16 kHz.
+- Çıkış gerilimi kare dalga darbelerden oluşur; uzun motor kablolarında **dv/dt** ve yansıma nedeniyle motor terminalinde gerilim tepeleri oluşur, dv/dt veya sinüs filtresi gerekebilir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$frekans-konvertoru-vfd-nasil-calisir-v-f-kontrolu-nedir-ve-frenleme-direnci-nede$md$, $md$Frekans konvertörü (VFD) nasıl çalışır? V/f kontrolü nedir ve frenleme direnci neden kullanılır?$md$, $md$VFD üç temel bloktan oluşur: şebekeyi DC'ye çeviren **doğrultucu**, enerjiyi depolayıp gerilimi düzleyen **DC bara (kondansatör, bazen DC şok)** ve DC'yi istenen frekans ve gerilimde AC'ye çeviren **IGBT inverter**. Motor hızı frekansla orantılı olduğundan (`ns = 120 · f / p`) frekans değiştirilerek hız ayarlanır.
+
+### V/f kontrolü
+Motor akısı `Φ ∝ U / f` olduğundan, frekans düşürülürken gerilim de orantılı düşürülür; böylece akı ve moment kapasitesi sabit kalır.
+```text
+400 V / 50 Hz = 8 V/Hz
+25 Hz → 200 V,  10 Hz → 80 V
+```
+- Çok düşük frekansta stator direnci düşümü baskın olur; **boost** (IR kompanzasyonu) ile gerilim biraz artırılır.
+- 50 Hz üstünde gerilim artırılamaz (şebeke sınırı); akı azalır, **alan zayıflatma / sabit güç** bölgesine girilir.
+- Daha iyi dinamik performans için **sensörsüz vektör kontrol** veya **enkoderli kapalı çevrim vektör kontrol** (vinç, asansör, sarma makinesi) kullanılır.
+
+### Frenleme direnci ve chopper
+Motor hızlı yavaşlatıldığında veya yük motoru sürdüğünde (düşen yük, büyük ataletli fan) motor **generatör** olarak çalışır; enerji DC baraya döner. Diyot doğrultucu enerjiyi şebekeye geri veremediğinden DC bara gerilimi yükselir ve sürücü **aşırı gerilim (OV) hatası** verir. Çözümler:
+- **Frenleme chopper'ı + direnci**: bara gerilimi eşiği (400 V sürücüde ~700–780 V) aşınca direnç devreye girer, enerji ısıya dönüşür.
+- **AFE (active front end) / rejeneratif sürücü**: enerjiyi şebekeye geri verir (asansör, santrifüj).
+- Ortak DC bara: bir sürücünün frenleme enerjisini diğer sürücüler kullanır.
+
+### Sahada sık karşılaşılan sorunlar
+- Uzun kabloda motor yalıtım stresi ve kapasitif kaçak akım → dv/dt filtresi, ekranlı kablo
+- Yatak akımları → izoleli rulman, şaft topraklama halkası
+- Şebeke harmonikleri → hat reaktörü, AFE
+- Düşük hızda uzun süre çalışmada motorun kendi fanı yetersiz kalır → harici (cebri) fan
+
+Fan ve pompalarda VFD ile hız %80'e düşürüldüğünde güç `0,8³ ≈ %51`'e iner; enerji tasarrufu sorusu sık gelir.$md$, $md$Fabrika ve otomasyon mülakatlarında 'VFD sürekli OV hatası veriyor, ne yaparsınız?' senaryosu klasiktir: rampa süresini uzatmak, frenleme direnci eklemek, DC bara kontrolcüsünü (OV controller) aktif etmek.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$yari-iletken-anahtarlarda-anahtarlama-ve-iletim-kayiplari-nasil-hesaplanir-snubb$md$, $md$Yarı iletken anahtarlarda anahtarlama ve iletim kayıpları nasıl hesaplanır? Snubber devreleri ne işe yarar?$md$, $md$Bir anahtardaki toplam kayıp **iletim kaybı** ile **anahtarlama kaybının** toplamıdır. Anahtarlama kaybı, açma ve kapama geçişlerinde gerilim ve akımın aynı anda sıfırdan farklı olmasından doğar ve frekansla doğru orantılıdır.
+
+### Kayıp formülleri (yaklaşık, doğrusal geçiş kabulü)
+```text
+P_iletim     = Vce(sat) · I · D          (IGBT)
+P_iletim     = I_rms² · Rds(on)           (MOSFET)
+P_anahtarlama = 0,5 · V · I · (tr + tf) · fsw
+               veya (Eon + Eoff) · fsw     (datasheet enerji değerleriyle)
+```
+
+### Örnek
+IGBT: V = 600 V, I = 50 A, tr + tf = 200 ns, fsw = 10 kHz, Vce(sat) = 1,8 V, D = 0,5:
+```text
+P_sw   = 0,5 · 600 · 50 · 200e-9 · 10e3 = 30 W
+P_cond = 1,8 · 50 · 0,5 = 45 W
+P_top  = 75 W
+```
+Termal kontrol: Rth(j-a) = 0,5 K/W (soğutucu dahil), ortam 40 °C:
+```text
+Tj = 40 + 75 · 0,5 = 77,5 °C
+```
+Tj,max (genelde 150–175 °C) altında ve yeterli pay bırakılmış. Frekans 40 kHz'e çıkarılırsa P_sw = 120 W, toplam 165 W ve Tj ≈ 122 °C olur; bu yüzden IGBT'ler yüksek frekansta kullanılmaz.
+
+### Snubber devreleri
+Snubber, anahtarın geçiş sırasında gördüğü gerilim/akım zorlanmasını azaltan yardımcı devredir.
+- **RC snubber**: parazitik endüktans (`V = L · di/dt`) ile oluşan gerilim aşımını ve osilasyonu sönümler.
+- **RCD snubber** (kapanma snubber'ı): kapanmada akımı kondansatöre saptırarak dv/dt'yi sınırlar; flyback'te trafonun kaçak endüktans enerjisini kırpmak için kullanılan **RCD clamp** benzer mantıktadır.
+- **Seri endüktör (açılma snubber'ı)**: di/dt'yi sınırlar.
+Snubber kaybı kabaca RCD snubber'da `0,5 · C · V² · fsw`, RC snubber'da (kondansatör her periyotta direnç üzerinden hem dolup hem boşaldığı için) `C · V² · fsw` kadardır; kayıp anahtardan dirence taşınmış olur.
+
+### Kayıpları azaltma yolları
+- Layout'ta komütasyon döngüsünü (DC bara kondansatörü + anahtarlar) küçük tutarak parazitik endüktansı azaltmak; laminer bara kullanmak
+- Gate direncini optimize etmek: küçük Rg hızlı anahtarlama ve düşük kayıp, ama yüksek dv/dt ve EMI
+- **Yumuşak anahtarlama** (ZVS/ZCS): LLC, faz kaydırmalı tam köprü, dual active bridge
+- SiC/GaN gibi geniş bant aralıklı elemanlara geçmek$md$, $md$Formülün yanında termal hesabı (Tj = Ta + P · Rth) yapmak, sınırın frekans değil sıcaklık olduğunu gösterir. 'Gate direncini düşürürsem ne olur?' takip sorusuna hazırlıklı olun.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$guc-faktoru-duzeltme-pfc-devresi-neden-gereklidir-aktif-boost-pfc-nasil-calisir$md$, $md$Güç faktörü düzeltme (PFC) devresi neden gereklidir? Aktif boost PFC nasıl çalışır?$md$, $md$Diyot köprü + büyük kondansatörlü bir giriş katı, şebekeden yalnızca gerilimin tepesine yakın kısa süreli **darbeli akım** çeker. Akım gerilimle aynı fazda olsa bile dalga şekli bozuk olduğundan güç faktörü düşüktür (tipik 0,5–0,7) ve yüksek harmonik üretir. PFC devresi, giriş akımını gerilimle **aynı şekilde ve fazda sinüs** yaparak güç faktörünü 0,95–0,99'a çıkarır.
+
+### Güç faktörü ve THD ilişkisi
+```text
+PF = cosφ · 1 / √(1 + THD_I²)
+cosφ = 1, THD_I = %100 → PF = 1 / √2 ≈ 0,71
+cosφ = 1, THD_I = %10  → PF ≈ 0,995
+```
+
+### Neden gerekli?
+- **IEC 61000-3-2** (faz başına ≤ 16 A cihazlar), 75 W üzerindeki birçok cihaz sınıfı için harmonik akım sınırları koyar.
+- Aynı güç için şebekeden çekilen rms akım ve buna bağlı kablo/sigorta boyutu düşer.
+- Nötrde 3. harmonik akımları azalır (bilgisayar odaları, ofis binaları).
+
+### Pasif PFC
+Girişe büyük bir LC filtre konur; ucuz ama ağır, hacimli ve PF tipik olarak ~0,8–0,9 ile sınırlıdır.
+
+### Aktif boost PFC
+Diyot köprüsünden sonra bir **boost dönüştürücü** yer alır:
+1. Çıkış (genelde **~400 V DC**) bir gerilim döngüsüyle sabit tutulur; bu döngü yavaştır (~10–20 Hz bant genişliği) ki 100 Hz dalgalanmayı akım referansına taşımasın.
+2. Gerilim döngüsünün çıkışı, doğrultulmuş şebeke gerilimiyle çarpılarak **akım referansı** üretilir; böylece referans sinüs şeklindedir.
+3. Hızlı bir akım döngüsü, endüktör akımını bu referansı takip edecek şekilde duty cycle'ı ayarlar.
+
+Çalışma modları: düşük güçte **CRM** (kritik iletim, ZVS'e yakın), orta/yüksek güçte **CCM**, çok yüksek verim için **interleaved** veya **köprüsüz totem-pole PFC** (GaN/SiC ile %99'a yakın verim; sunucu PSU'larında 80 PLUS Titanium için yaygın).
+
+### Tasarım soruları
+- Çıkış neden 400 V? Boost yalnızca yükseltebildiği için 265 V AC tepe değeri (~375 V) üzerinde olmalı.
+- PFC sonrası genelde izoleli bir DC-DC (LLC) katı gelir; PFC kondansatörü hold-up süresi (tipik 10–20 ms) için boyutlandırılır.$md$, null, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$ups-turleri-nelerdir-offline-line-interactive-ve-online-ups-arasindaki-farki-aci$md$, $md$UPS türleri nelerdir? Offline, line-interactive ve online UPS arasındaki farkı açıklayın.$md$, $md$UPS (kesintisiz güç kaynağı) üç temel topolojide üretilir. Aralarındaki fark, normal çalışmada yükün şebekeden mi yoksa inverterden mi beslendiği ve kesintide geçiş süresidir. IEC 62040-3 bunları **VFD, VI ve VFI** olarak sınıflandırır.
+
+| Tür | Normal çalışmada yük | Geçiş süresi | Gerilim/frekans düzeltme | Kullanım |
+| --- | --- | --- | --- | --- |
+| Offline / standby (VFD) | Doğrudan şebeke | 4–10 ms | Yok | Ev bilgisayarı, modem |
+| Line-interactive (VI) | Şebeke + kademeli AVR trafosu | 2–4 ms | Gerilim düzeltir, frekans düzeltmez | Küçük ofis, sunucu dolabı |
+| Online çift dönüşüm (VFI) | Sürekli inverter | 0 ms | Gerilim ve frekans tamamen bağımsız | Veri merkezi, hastane, endüstriyel kontrol |
+
+### Online UPS blokları
+1. **Doğrultucu / PFC**: şebekeyi DC'ye çevirir ve aküyü şarj eder.
+2. **DC bara + akü grubu** (VRLA veya giderek yaygınlaşan Li-ion).
+3. **İnverter**: DC'den temiz sinüs üretir; yük her zaman buradan beslenir.
+4. **Statik bypass**: UPS arızası veya aşırı yükte yükü kesintisiz şebekeye aktarır.
+5. **Manuel bakım bypass'ı**: UPS'i tamamen devre dışı bırakıp bakım yapmayı sağlar.
+
+### Seçimde dikkat edilenler
+- **Güç**: kVA ve kW ayrı kontrol edilir; modern UPS'lerde güç faktörü genelde 0,9–1.
+- **Yedekleme süresi**: akü kapasitesi `t ≈ (akü enerjisi · verim) / yük gücü` ile kabaca hesaplanır.
+- **Verim**: çift dönüşümde %94–97; **ECO mode** ile ~%99 ama geçiş süresi oluşur.
+- **Yedeklilik**: veri merkezlerinde N+1 veya 2N (A/B besleme) yapıları kullanılır.
+- **Jeneratör uyumu**: UPS'in giriş akım THD'si düşük olmalı; aksi halde jeneratör gerilimi bozulur.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$gunes-inverterinde-mppt-nedir-perturb-and-observe-algoritmasini-aciklayin$md$, $md$Güneş inverterinde MPPT nedir? Perturb and Observe algoritmasını açıklayın.$md$, $md$**MPPT (Maximum Power Point Tracking)**, güneş paneli dizisinden her an alınabilecek **maksimum gücü** çekmek için çalışma gerilimini sürekli ayarlayan kontrol algoritmasıdır. Panelin I-V eğrisi ışınım ve sıcaklıkla değişir; gücün maksimum olduğu nokta (Vmp, Imp) sabit değildir.
+
+### Panel karakteristiği
+- Işınım artınca akım (Isc) neredeyse doğrusal artar.
+- Sıcaklık artınca gerilim (Voc) düşer: kristal silikonda yaklaşık **−%0,3/°C**. Yazın sıcak bir öğleden sonra panel gerilimi STC değerinin belirgin altına iner.
+- Vmp genellikle Voc'nin ~%80'i civarındadır.
+
+### Perturb and Observe (P&O)
+Gerilimi küçük bir adımla değiştir, gücün nasıl değiştiğine bak; güç arttıysa aynı yönde devam et, azaldıysa yönü çevir.
+
+```python
+def mppt_po(v, i, state, step=0.5):
+    p = v * i
+    dp = p - state["p_prev"]
+    dv = v - state["v_prev"]
+    if dp != 0:
+        if (dp > 0) == (dv > 0):
+            state["v_ref"] += step   # güç artıyor, aynı yönde git
+        else:
+            state["v_ref"] -= step   # güç azaldı, yön değiştir
+    state["p_prev"], state["v_prev"] = p, v
+    return state["v_ref"]
+```
+
+- **Avantaj**: basit, panel parametrelerini bilmeyi gerektirmez.
+- **Dezavantaj**: MPP etrafında sürekli salınım yapar; ışınım hızlı değiştiğinde yanlış yöne gidebilir. Değişken adım boyu ile iyileştirilir.
+
+### Diğer yöntemler
+- **Artımlı iletkenlik (Incremental Conductance)**: MPP'de `dP/dV = 0` yani `dI/dV = −I/V` koşulunu kullanır; hızlı değişimlerde daha doğrudur.
+- **Kısmi gölgelenme**: baypas diyotları nedeniyle P-V eğrisinde birden fazla yerel tepe oluşur; inverterler periyodik **global tarama** yapar.
+
+### Inverter mimarisi
+Tipik bir string inverterde PV girişi **boost dönüştürücü** (MPPT burada yapılır) → DC bara → şebekeye senkronize (PLL ile) **inverter** şeklindedir. Birden fazla MPPT girişi, farklı yön veya eğimdeki dizilerin ayrı optimize edilmesini sağlar. Şebeke bağlantısında anti-islanding koruması ve ilgili şebeke yönetmeliği şartları (gerilim/frekans ride-through, reaktif güç desteği) zorunludur.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$guc-elektronigi$md$),
+  ($md$acik-cevrim-ve-kapali-cevrim-kontrol-sistemleri-arasindaki-fark-nedir-geri-besle$md$, $md$Açık çevrim ve kapalı çevrim kontrol sistemleri arasındaki fark nedir? Geri beslemenin avantaj ve dezavantajları nelerdir?$md$, $md$**Açık çevrim** sistemde kontrol sinyali çıkışın ne olduğuna bakmadan üretilir; **kapalı çevrim** sistemde çıkış ölçülür, referansla karşılaştırılır ve hata sinyaline göre kontrol sinyali düzeltilir.
+
+### Örnekler
+| Açık çevrim | Kapalı çevrim |
+| --- | --- |
+| Zamanlı çalışan çamaşır makinesi | Termostatlı kombi/klima |
+| V/f ile sürülen fan (enkodersiz) | Enkoderli servo motor |
+| Zaman ayarlı trafik lambası | Araç sayısına göre çalışan akıllı kavşak |
+| Ekmek kızartma makinesi | Otomatik gerilim regülatörü (AVR) |
+
+### Kapalı çevrimin kapalı form ifadesi
+İleri yol G(s), geri besleme H(s) için:
+```text
+T(s) = C(s) / R(s) = G(s) / (1 + G(s) · H(s))
+```
+
+### Geri beslemenin avantajları
+- **Bozucu etkileri bastırır** (yük değişimi, ortam sıcaklığı)
+- **Parametre değişimlerine duyarlılığı azaltır** (eskime, sıcaklıkla değişen direnç)
+- Kararlı durum hatasını düşürür, sistemi hızlandırabilir
+
+### Dezavantajları
+- **Kararsızlık riski**: yüksek kazanç veya gecikme salınıma yol açabilir
+- Sensör gerekir; maliyet artar ve sensör gürültüsü sisteme girer
+- Sensör arızalanırsa sistem tamamen yanlış çalışabilir
+
+### Pratik yaklaşım
+Gerçek sistemlerde çoğu zaman ikisi birlikte kullanılır: ölçülebilen bozucu etkiye göre **ileri besleme (feedforward)** hızlı tepki verir, **geri besleme** kalan hatayı düzeltir. Örneğin bir kazanda buhar çekişindeki artış ölçülüp yakıt hemen artırılır, basınç döngüsü ise ince ayarı yapar.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$blok-diyagram-indirgeme-nasil-yapilir-g-s-10-s-s-2-ve-birim-geri-beslemeli-siste$md$, $md$Blok diyagram indirgeme nasıl yapılır? G(s) = 10 / (s(s+2)) ve birim geri beslemeli sistemin kapalı çevrim transfer fonksiyonunu bulun.$md$, $md$Transfer fonksiyonu, sıfır başlangıç koşullarında çıkışın Laplace dönüşümünün girişin Laplace dönüşümüne oranıdır. Blok diyagramlar üç temel kuralla tek bir bloğa indirgenir.
+
+### Temel kurallar
+| Yapı | Eşdeğer |
+| --- | --- |
+| Seri bloklar | G1 · G2 |
+| Paralel bloklar (toplanan) | G1 + G2 |
+| Negatif geri besleme | G / (1 + G · H) |
+| Pozitif geri besleme | G / (1 − G · H) |
+
+Toplama noktası veya dallanma noktası bir bloğun önüne/arkasına taşınırken ilgili blok veya tersi eklenerek eşdeğerlik korunur. Karmaşık, iç içe döngülü diyagramlarda **Mason kazanç formülü** daha pratiktir.
+
+### Örnek
+```text
+G(s) = 10 / (s · (s + 2)),  H(s) = 1
+
+T(s) = G / (1 + G)
+     = [10 / (s(s+2))] / [1 + 10 / (s(s+2))]
+     = 10 / (s² + 2s + 10)
+```
+
+### Yorum
+- **Karakteristik denklem**: `s² + 2s + 10 = 0` → kutuplar `s = −1 ± j3`. Sol yarı düzlemde olduğu için sistem kararlıdır; sanal kısım olduğu için basamak cevabı salınımlıdır.
+- Standart ikinci derece forma benzetilirse: `ωn² = 10` → `ωn ≈ 3,16 rad/s`, `2ζωn = 2` → `ζ ≈ 0,316`.
+- DC kazancı `T(0) = 10 / 10 = 1`; basamak girişte kararlı durum hatası sıfırdır (G'de bir integratör var).
+
+### Doğrulama (Python)
+```python
+import control as ct
+G = ct.tf([10], [1, 2, 0])
+T = ct.feedback(G, 1)
+print(T)            # 10 / (s^2 + 2 s + 10)
+print(ct.poles(T))  # [-1+3j, -1-3j]
+```$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$ikinci-derece-bir-sistemin-basamak-cevabinda-asim-yerlesme-suresi-ve-sonum-orani$md$, $md$İkinci derece bir sistemin basamak cevabında aşım, yerleşme süresi ve sönüm oranı nasıl hesaplanır? T(s) = 10 / (s² + 2s + 10) için hesaplayın.$md$, $md$Standart ikinci derece sistem `T(s) = ωn² / (s² + 2ζωn·s + ωn²)` biçimindedir. Basamak cevabının karakteristikleri yalnızca **sönüm oranı ζ** ve **doğal frekans ωn** ile belirlenir.
+
+### Formüller
+```text
+Maksimum aşım     Mp = exp(−ζπ / √(1 − ζ²))
+Tepe zamanı       tp = π / (ωn · √(1 − ζ²))
+Yerleşme (%2)     ts ≈ 4 / (ζ · ωn)
+Yükselme (yakl.)  tr ≈ 1,8 / ωn   (0,3 < ζ < 0,8 için)
+```
+
+### Hesap
+```text
+ωn = √10 ≈ 3,16 rad/s
+ζ  = 2 / (2 · 3,16) ≈ 0,316
+√(1 − ζ²) ≈ 0,949
+
+Mp = exp(−0,316 · 3,1416 / 0,949) = exp(−1,046) ≈ 0,35 → %35
+tp = 3,1416 / (3,16 · 0,949) ≈ 1,05 s
+ts ≈ 4 / (0,316 · 3,16) = 4 / 1 = 4 s
+```
+
+### Sönüm oranına göre davranış
+| ζ | Davranış |
+| --- | --- |
+| ζ = 0 | Sönümsüz, sürekli salınım |
+| 0 < ζ < 1 | Az sönümlü, aşımlı salınım |
+| ζ = 1 | Kritik sönümlü, aşımsız en hızlı |
+| ζ > 1 | Aşırı sönümlü, yavaş |
+
+Pratikte birçok sistem için **ζ ≈ 0,6–0,8** (aşım %10–%1,5) iyi bir hız/aşım dengesidir; ζ = 0,707'de aşım yaklaşık %4,3'tür.
+
+### Birinci derece sistem karşılaştırması
+`T(s) = K / (τs + 1)` için aşım yoktur; çıkış `1τ`'da son değerin **%63,2**'sine, `4τ`'da **%98**'ine ulaşır. Sıcaklık ve seviye gibi yavaş prosesler genelde birinci derece + ölü zaman (FOPDT) ile modellenir.
+
+### Aşımı azaltma
+Bu örnekte aşım %35 ile yüksektir. Kazancı düşürmek ζ'yi artırır ama sistemi yavaşlatır; daha iyi yol türev etkisi (PD) veya faz ilerletici (lead) kompanzatör eklemektir.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$routh-hurwitz-kriteri-ile-kararlilik-analizi-yapin-s-2s-3s-k-0-karakteristik-den$md$, $md$Routh-Hurwitz kriteri ile kararlılık analizi yapın: s³ + 2s² + 3s + K = 0 karakteristik denklemi için sistemi kararlı yapan K aralığını bulun.$md$, $md$Doğrusal zamanla değişmeyen bir sistem, kapalı çevrim kutuplarının tamamı **sol yarı düzlemde** (gerçek kısmı negatif) ise kararlıdır. Routh-Hurwitz kriteri, kökleri hesaplamadan, Routh tablosunun **ilk sütunundaki işaret değişimi sayısının** sağ yarı düzlemdeki kök sayısına eşit olduğunu söyler.
+
+### Routh tablosu
+```text
+s³ |  1            3
+s² |  2            K
+s¹ |  (2·3 − 1·K)/2 = (6 − K)/2
+s⁰ |  K
+```
+
+### Kararlılık koşulları
+İlk sütundaki tüm elemanlar pozitif olmalı:
+- `(6 − K) / 2 > 0` → `K < 6`
+- `K > 0`
+
+Sonuç: **0 < K < 6**
+
+### Sınır durumu: K = 6
+s¹ satırı sıfır olur; bu sanal eksende kök olduğunu gösterir. Bir üst satırdan **yardımcı polinom** kurulur:
+```text
+A(s) = 2s² + 6 = 0  →  s = ± j√3
+```
+Sistem K = 6'da `ω = √3 ≈ 1,73 rad/s` frekansında sürekli salınım yapar. Bu değerler, **Ziegler-Nichols** ayarındaki kritik kazanç `Ku = 6` ve kritik periyot `Tu = 2π / 1,73 ≈ 3,63 s` olarak kullanılabilir.
+
+### Özel durumlar
+- **İlk sütunda tek sıfır**: sıfır yerine küçük pozitif ε konur ve limit alınır.
+- **Tüm satır sıfır**: simetrik kökler (sanal eksende veya orijine göre simetrik) vardır; yardımcı polinomun türevi o satıra yazılır.
+- Gerekli (ama yeterli olmayan) ön koşul: polinomdaki tüm katsayılar **aynı işaretli ve sıfırdan farklı** olmalıdır.
+
+### Kontrol (Python)
+```python
+import numpy as np
+for K in [5, 6, 7]:
+    print(K, np.roots([1, 2, 3, K]))
+# K=5: tüm gerçek kısımlar < 0, K=6: ±j1.73, K=7: sağ yarı düzlemde kök
+```$md$, $md$Ezbere tablo kurmak yerine, K = 6'daki salınım frekansını yardımcı polinomdan bulmanız ve bunu Ziegler-Nichols'a bağlamanız çok iyi izlenim bırakır.$md$, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$bode-diyagraminda-kazanc-payi-ve-faz-payi-nedir-g-s-10-s-s-1-s-10-icin-kazanc-pa$md$, $md$Bode diyagramında kazanç payı ve faz payı nedir? G(s) = 10 / (s(s+1)(s+10)) için kazanç payını hesaplayın.$md$, $md$**Kazanç payı (GM)**, açık çevrim fazının −180° olduğu frekansta (faz kesim frekansı, ωpc) kazancın 0 dB'den ne kadar altında olduğudur; sistemi kararsız yapmadan kazancın kaç kat artırılabileceğini gösterir. **Faz payı (PM)**, kazancın 0 dB (1) olduğu frekansta (kazanç kesim frekansı, ωgc) fazın −180°'ye olan uzaklığıdır; sisteme ne kadar ek gecikme eklenebileceğini gösterir.
+
+```text
+GM = −20 · log10( |G(jωpc)| )   [dB]
+PM = 180° + ∠G(jωgc)
+```
+Minimum fazlı bir sistem için GM > 0 dB ve PM > 0° ise kapalı çevrim kararlıdır.
+
+### Örnek: faz kesim frekansı
+Faz: `∠G = −90° − atan(ω) − atan(ω/10)`. −180° için:
+```text
+atan(ω) + atan(ω/10) = 90°  →  ω · (ω/10) = 1  →  ωpc = √10 ≈ 3,16 rad/s
+```
+
+### Bu frekansta genlik
+```text
+|G| = 10 / (ω · √(ω² + 1) · √(ω² + 100))
+    = 10 / (3,16 · 3,32 · 10,49) = 10 / 110 ≈ 0,091
+GM  = 20 · log10(110 / 10) = 20 · log10(11) ≈ 20,8 dB
+```
+Kazanç 11 kat artırılabilir; yani K = 110'da sistem kararlılık sınırına gelir. Routh-Hurwitz ile kontrol: karakteristik denklem `s³ + 11s² + 10s + K = 0` → `11 · 10 > K` → `K < 110`. İki yöntem aynı sonucu verir.
+
+### Pratik hedefler
+- **PM: 45°–60°**, **GM: ≥ 6 dB** genel kabul gören değerlerdir.
+- PM yaklaşık olarak sönüm oranıyla ilişkilidir: `ζ ≈ PM / 100` (PM < 70° için). PM = 45° yaklaşık %20–25 aşım demektir.
+- **Ölü zaman** (`e^(−sT)`) genliği değiştirmez ama fazı `ωT` radyan azaltır; bu yüzden gecikmeli proseslerde PM hızla kaybolur.
+
+### Bode çizimi kuralları (asimptotik)
+- Orijinde kutup (1/s): −20 dB/dekad, −90° sabit
+- Her gerçek kutup: kırılma frekansından sonra −20 dB/dekad, faz −90°'ye iner (kırılmada −45°)
+- Her gerçek sıfır: +20 dB/dekad, faz +90°'ye çıkar
+
+```python
+import math
+import control as ct
+G = ct.tf([10], [1, 11, 10, 0])
+gm, pm, wpc, wgc = ct.margin(G)
+print(20 * math.log10(gm), pm)  # ~20.8 dB, PM ~ 47°
+```$md$, null, $md$hard$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$kararli-durum-hatasi-ve-sistem-tipi-nedir-birim-geri-beslemeli-g-s-10-s-s-2-sist$md$, $md$Kararlı durum hatası ve sistem tipi nedir? Birim geri beslemeli G(s) = 10 / (s(s+2)) sisteminin basamak ve rampa girişlerdeki hatasını bulun.$md$, $md$**Kararlı durum hatası**, geçici rejim bittikten sonra referans ile çıkış arasında kalan farktır. **Sistem tipi**, açık çevrim transfer fonksiyonundaki **orijindeki kutup (integratör) sayısıdır**; hangi giriş türünü hatasız izleyebileceğini belirler.
+
+### Hata sabitleri (birim geri besleme)
+```text
+Kp = lim s→0  G(s)          → basamak:  e = 1 / (1 + Kp)
+Kv = lim s→0  s · G(s)      → rampa:    e = 1 / Kv
+Ka = lim s→0  s² · G(s)     → parabol:  e = 1 / Ka
+```
+
+### Tip ve hata tablosu
+| Sistem tipi | Basamak | Rampa | Parabol |
+| --- | --- | --- | --- |
+| Tip 0 | 1 / (1 + Kp) | Sonsuz | Sonsuz |
+| Tip 1 | 0 | 1 / Kv | Sonsuz |
+| Tip 2 | 0 | 0 | 1 / Ka |
+
+### Örnek
+`G(s) = 10 / (s(s + 2))`: orijinde bir kutup var → **Tip 1**.
+```text
+Kp = ∞          → basamak hatası = 0
+Kv = lim s·10/(s(s+2)) = 10 / 2 = 5  → rampa hatası = 1/5 = 0,2
+Ka = 0          → parabol hatası = ∞
+```
+Yani bu sistem sabit bir konumu hatasız takip eder, ama 1 birim/s hızla değişen referansı 0,2 birim geriden takip eder.
+
+### Pratik yorum
+- PID'deki **integral terimi**, sistem tipini bir artırır; bu yüzden PI kontrolcü basamak hatasını sıfırlar.
+- Hatayı sadece kazancı artırarak azaltmak (Kv'yi büyütmek) kararlılık payını düşürür; bunun yerine **faz geciktirici (lag) kompanzatör** düşük frekans kazancını artırırken faz payını korur.
+- Bu analiz yalnızca **kapalı çevrim kararlı** sistemler için geçerlidir; kararsız sistemde son değer teoremi kullanılamaz.$md$, null, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$bir-pid-kontrolcuyu-sahada-nasil-ayarlarsiniz-ziegler-nichols-yontemini-ve-prati$md$, $md$Bir PID kontrolcüyü sahada nasıl ayarlarsınız? Ziegler-Nichols yöntemini ve pratik sorunları anlatın.$md$, $md$En bilinen başlangıç yöntemi **Ziegler-Nichols**'tır; ancak verdiği ayarlar agresiftir (yaklaşık 1/4 sönümlü, %25 civarı aşım), bu yüzden genelde başlangıç noktası olarak kullanılıp sonra ince ayar yapılır.
+
+### 1. Kritik kazanç (kapalı çevrim) yöntemi
+1. I ve D kapatılır, yalnızca P ile çalışılır.
+2. Kp yavaşça artırılarak sabit genlikli sürekli salınım elde edilir: bu kazanç **Ku**, salınım periyodu **Tu**'dur.
+3. Tablodan parametreler bulunur:
+
+| Kontrolcü | Kp | Ti | Td |
+| --- | --- | --- | --- |
+| P | 0,5 · Ku | - | - |
+| PI | 0,45 · Ku | Tu / 1,2 | - |
+| PID | 0,6 · Ku | Tu / 2 | Tu / 8 |
+
+Örnek: Ku = 8, Tu = 4 s:
+```text
+Kp = 0,6 · 8 = 4,8
+Ti = 4 / 2 = 2 s   → Ki = Kp / Ti = 2,4 1/s
+Td = 4 / 8 = 0,5 s → Kd = Kp · Td = 2,4 s
+```
+
+### 2. Basamak cevabı (açık çevrim) yöntemi
+Proses manuelde tutulup çıkışa basamak verilir; cevap **K (kazanç), L (ölü zaman), T (zaman sabiti)** ile FOPDT modeline uydurulur. ZN, Cohen-Coon veya daha dengeli **SIMC / IMC (lambda tuning)** kuralları kullanılır. Gerçek tesiste sürekli salınım riskli olduğu için bu yöntem veya PLC/DCS'lerin **otomatik ayar (relay auto-tune)** fonksiyonu tercih edilir.
+
+### Sahadaki pratik sorunlar
+- **Integral windup**: vana %100'e dayandığında integral birikmeye devam eder, sonra büyük aşım olur → anti-windup (clamping, back-calculation).
+- **Türev gürültüsü**: ölçüm gürültüsünü büyütür → türevi filtrelemek (N = 8–20) ve türevi hatadan değil **ölçümden** almak; setpoint basamağında "derivative kick" önlenir.
+- **Bumpless transfer**: manuelden otomatiğe geçişte çıkışın zıplamaması.
+- Örnekleme süresi, prosesin baskın zaman sabitinin yaklaşık 1/10'undan küçük olmalı.
+- Sıcaklık ve seviye kontrolünde çoğu zaman **PI yeterlidir**; D terimi gürültü nedeniyle kapalı tutulur.
+- Büyük ölü zamanlı proseslerde Smith predictor veya kaskad kontrol düşünülür.$md$, $md$PID terimlerinin etkisini bilmek temel kabul edilir; fark yaratan, windup ve türev filtresi gibi sahada karşılaşılan sorunları anlatmaktır. 'Hangi döngüde D kullanmazsınız?' sorusuna hazırlıklı olun.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$plc-nedir-tarama-dongusu-scan-cycle-nasil-calisir-scada-sistemi-hangi-katmanlard$md$, $md$PLC nedir, tarama döngüsü (scan cycle) nasıl çalışır? SCADA sistemi hangi katmanlardan oluşur?$md$, $md$**PLC (Programmable Logic Controller)**, endüstriyel ortam için tasarlanmış, girişleri okuyup programa göre çıkışları süren gerçek zamanlı bir kontrol bilgisayarıdır. **SCADA (Supervisory Control and Data Acquisition)** ise geniş bir alandaki PLC/RTU'lardan veri toplayan, operatöre izleme ve uzaktan kumanda imkanı veren üst seviye yazılım ve haberleşme sistemidir.
+
+### PLC bileşenleri
+- CPU (işlemci ve bellek), güç kaynağı
+- Dijital ve analog giriş/çıkış (I/O) modülleri (24 V DC sinyaller, 4–20 mA, 0–10 V, PT100)
+- Haberleşme modülleri (Profinet, EtherNet/IP, Modbus TCP/RTU, Profibus)
+- Programlama: IEC 61131-3 dilleri (Ladder, FBD, ST, SFC, IL); Türkiye'de sahada en yaygın platformlar Siemens TIA Portal (S7-1200/1500), Schneider ve Rockwell'dir.
+
+### Tarama döngüsü
+1. **Girişleri oku**: tüm fiziksel girişler giriş görüntü tablosuna kopyalanır.
+2. **Programı çalıştır**: program yukarıdan aşağı, soldan sağa bir kez işlenir; sonuçlar çıkış görüntü tablosuna yazılır.
+3. **Çıkışları güncelle**: görüntü tablosu fiziksel çıkışlara aktarılır.
+4. **Haberleşme ve tanılama** işleri yapılır, döngü başa döner.
+
+Tipik tarama süresi 1–50 ms'dir. Tarama süresinden kısa bir darbe kaçırılabilir; bu durumda hızlı sayıcı (HSC) veya kesme (interrupt) girişi kullanılır. Watchdog, taramanın belirli süreyi aşmasını izler.
+
+### SCADA katmanları
+| Katman | İçerik |
+| --- | --- |
+| Saha | Sensör, transmitter, vana, kesici, motor |
+| Kontrol | PLC, RTU, koruma röleleri (IED) |
+| Haberleşme | Fiber, radyo, GSM; Modbus, DNP3, IEC 60870-5-104, IEC 61850 |
+| Sunucu | SCADA sunucusu, historian (geçmiş veri), alarm yönetimi |
+| Operatör | HMI ekranları, raporlar, uzaktan kumanda |
+
+Türkiye'de dağıtım şirketleri ve TEİAŞ, trafo merkezlerini çoğunlukla **IEC 60870-5-104** ve **IEC 61850** protokolleriyle SCADA'ya bağlar. Fabrikalarda PLC ile SCADA/MES arasında **OPC UA** giderek standart hale gelmektedir. Siber güvenlik için IEC 62443 referans alınır.$md$, null, $md$easy$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
+  ($md$bir-motoru-start-ve-stop-butonlariyla-calistiran-muhurleme-seal-in-devresini-lad$md$, $md$Bir motoru start ve stop butonlarıyla çalıştıran mühürleme (seal-in) devresini ladder diyagramı ile yazın. Stop butonu neden NC bağlanır?$md$, $md$Mühürleme (self-holding) devresinde start butonu kısa süre basılınca motor çıkışı enerjilenir ve **kendi kontağı** start butonuna paralel olduğundan buton bırakılsa da çalışmaya devam eder. Stop butonu veya termik açınca devre kopar ve mühür çözülür.
+
+### Giriş/çıkış listesi
+| Adres | Açıklama | Fiziksel kontak |
+| --- | --- | --- |
+| I0.0 | Start butonu | NO |
+| I0.1 | Stop butonu | NC |
+| I0.2 | Termik röle (aşırı yük) | NC (95-96) |
+| Q0.0 | Motor kontaktörü | - |
+
+### Ladder diyagramı
+```text
+      I0.0        I0.1        I0.2              Q0.0
+ |----] [----+----] [---------] [-------------( )----|
+ |   Start   |    Stop(NC)   Termik(NC)       Motor  |
+ |           |                                       |
+ |    Q0.0   |                                       |
+ |----] [----+                                       |
+ |   Mühür                                           |
+```
+Stop ve termik fiziksel olarak **NC** bağlı olduğundan normalde girişleri "1" gelir; programda bunlar **normalde açık kontak (] [)** ile sorgulanır. Butona basılınca veya termik açınca giriş "0" olur ve basamak kopar.
+
+### Structured Text karşılığı
+```text
+Motor := (Start OR Motor) AND Stop_NC AND Termik_NC;
+```
+
+### Neden stop NC bağlanır? (fail-safe)
+- Stop butonunun kablosu koparsa veya klemens gevşerse giriş "0" olur ve motor **durur**. NO bağlansaydı kablo kopuşunda stop komutu hiçbir zaman PLC'ye ulaşmaz, motor durdurulamazdı.
+- Aynı mantıkla termik, limit switch ve kapı switch'leri genelde NC bağlanır.
+
+### Pratik notlar
+- **Acil stop** yalnızca PLC girişi üzerinden yapılmaz; kontaktör bobinini doğrudan kesen donanımsal devre veya **emniyet rölesi / safety PLC** (EN ISO 13849, IEC 62061) ile yapılır.
+- Kontaktörün yardımcı kontağı geri besleme olarak okunup "çalıştı" bilgisi doğrulanabilir; komut verildiği halde geri bilgi gelmezse arıza alarmı üretilir.
+- Enerji kesilip geri geldiğinde mühürleme devresi düşük olduğundan motor kendiliğinden kalkmaz; bu istenen güvenlik davranışıdır. Set/Reset (latch) bobini kalıcı bellekte tutulursa bu güvenlik kaybolabilir.$md$, $md$Görüşmeciler çoğu zaman bilerek 'stop butonu NC ise programda neden NO kontak kullandınız?' diye sorar. Fiziksel kontak ile programdaki kontak sembolünün farklı şeyler olduğunu net açıklayın.$md$, $md$medium$md$, $md$elektrik-elektronik-muhendisi$md$, $md$kontrol-sistemleri$md$),
   ($md$gomulu-linux-bir-kartin-acilis-boot-surecini-guc-verildigi-andan-kullanici-uygul$md$, $md$Gömülü Linux bir kartın açılış (boot) sürecini güç verildiği andan kullanıcı uygulamasına kadar anlatın.$md$, $md$Tipik bir ARM tabanlı gömülü Linux kartı şu zinciri izler: **Boot ROM → SPL/ilk aşama bootloader → U-Boot → Linux kernel (+ device tree) → rootfs → init → uygulamalar**.
 
 1. **Boot ROM**: SoC içinde fabrikada yazılı koddur. Boot pinlerine veya eFuse'lara bakarak boot kaynağını (eMMC, SD, QSPI, USB, UART) seçer ve ilk aşama bootloader'ı dahili SRAM'e yükler.

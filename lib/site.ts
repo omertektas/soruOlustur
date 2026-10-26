@@ -4,7 +4,7 @@ export const siteConfig = {
   name: "DevMülakat",
   shortDescription: "Yazılım mülakat soruları ve cevapları",
   description:
-    "Frontend, backend, full stack, yapay zeka, oyun geliştirme, network ve gömülü sistemler mülakat soruları; kod örnekleri ve ipuçlarıyla kısa, net cevaplar.",
+    "Frontend, backend, full stack, yapay zeka, oyun geliştirme, network, gömülü sistemler ve elektrik-elektronik mülakat soruları; kod örnekleri ve ipuçlarıyla kısa, net cevaplar.",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oftechsolutions.com").replace(/\/+$/, ""),
   locale: "tr_TR",
   publisher: "OFTECHSOLUTIONS",

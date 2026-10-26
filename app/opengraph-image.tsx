@@ -26,7 +26,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ marginTop: 32, fontSize: 40, color: "#0e6f63" }}>Yazılım mülakat soruları ve cevapları</div>
         <div style={{ marginTop: 24, fontSize: 28, color: "#5a6763" }}>
-          Frontend · Backend · Full Stack · Yapay Zeka · Game Dev · Network · Embedded
+          Frontend · Backend · Full Stack · Yapay Zeka · Game Dev · Network · Embedded · EE
         </div>
       </div>
     ),
