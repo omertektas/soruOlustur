@@ -25,7 +25,7 @@ export default async function HomePage() {
           Mühendislik mülakatlarına <mark>hazırlıklı</mark> gir
         </h1>
         <p className="lede">
-          Frontend, backend, full stack, yapay zeka, oyun geliştirme, network, gömülü sistemler ve elektrik-elektronik mühendisliği mülakatlarında sorulan sorular;
+          Frontend, backend, full stack, mobil, yapay zeka, oyun geliştirme, network, gömülü sistemler ve elektrik-elektronik mühendisliği mülakatlarında sorulan sorular;
           kod örnekleri ve mülakat ipuçlarıyla birlikte, kısa ve net cevaplar.
         </p>
         <form action={routes.search()} method="get" className="hero-search" role="search">

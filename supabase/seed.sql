@@ -1,10 +1,11 @@
--- DevMülakat — initial content (751 questions)
+-- DevMülakat — initial content (859 questions)
 -- Run AFTER schema.sql. Idempotent (safe to run again).
 
 insert into public.professions (slug, name, short_name, description, sort_order) values
   ($md$frontend-developer$md$, $md$Frontend Developer$md$, $md$Frontend$md$, $md$JavaScript, TypeScript, React, Next.js, HTML & CSS, tarayıcı, performans, erişilebilirlik, test ve frontend sistem tasarımı üzerine frontend mülakat soruları.$md$, 10),
   ($md$backend-developer$md$, $md$Backend Developer$md$, $md$Backend$md$, $md$Node.js, Python, Java & Spring, C# & .NET, SQL ve veritabanları, API tasarımı, Docker ve ölçeklenebilir sistemler üzerine backend mülakat soruları.$md$, 20),
   ($md$full-stack-developer$md$, $md$Full Stack Developer$md$, $md$Full Stack$md$, $md$Web güvenliği, web mimarisi, sistem tasarımı, bulut & deploy ve Git: uçtan uca uygulama geliştirme üzerine full stack mülakat soruları.$md$, 30),
+  ($md$mobile-developer$md$, $md$Mobil Geliştirici (Mobile Developer)$md$, $md$Mobil$md$, $md$Android & Kotlin, iOS & Swift, Flutter, React Native, mobil mimari ve sistem tasarımı, performans, test, yayın ve güvenlik üzerine mobil geliştirici mülakat soruları.$md$, 35),
   ($md$yazilim-muhendisi$md$, $md$Yazılım Mühendisi$md$, $md$Yazılım Müh.$md$, $md$Algoritmalar, veri yapıları, OOP ve tasarım desenleri, işletim sistemleri, yazılım süreçleri ve davranışsal sorular: her yazılım pozisyonunun temeli.$md$, 40),
   ($md$game-developer$md$, $md$Oyun Geliştirici (Game Developer)$md$, $md$Game Dev$md$, $md$Unity ve C#, Unreal ve C++, oyun programlama, oyun matematiği ve grafik/render üzerine oyun geliştirici mülakat soruları.$md$, 50),
   ($md$network-engineer$md$, $md$Network Mühendisi$md$, $md$Network$md$, $md$OSI ve TCP/IP, alt ağlar, yönlendirme ve anahtarlama, OSPF, BGP, ağ güvenliği, kablosuz ve bulut ağları üzerine network mühendisi mülakat soruları.$md$, 60),
@@ -63,6 +64,13 @@ insert into public.topics (slug, name) values
   ($md$sayisal-elektronik$md$, $md$Sayısal Elektronik$md$),
   ($md$elektrik-makineleri$md$, $md$Elektrik Makineleri$md$),
   ($md$guc-elektronigi$md$, $md$Güç Elektroniği$md$),
+  ($md$android-kotlin$md$, $md$Android & Kotlin$md$),
+  ($md$ios-swift$md$, $md$iOS & Swift$md$),
+  ($md$flutter-dart$md$, $md$Flutter & Dart$md$),
+  ($md$react-native$md$, $md$React Native$md$),
+  ($md$mobil-mimari$md$, $md$Mobil Mimari & Sistem Tasarımı$md$),
+  ($md$mobil-performans-ve-test$md$, $md$Mobil Performans & Test$md$),
+  ($md$mobil-yayin-ve-guvenlik$md$, $md$Yayın & Güvenlik$md$),
   ($md$devre-analizi$md$, $md$Devre Analizi$md$),
   ($md$elektronik$md$, $md$Elektronik$md$),
   ($md$guc-sistemleri$md$, $md$Güç Sistemleri$md$),
@@ -17237,6 +17245,3535 @@ Pratik kurallar:
 - Blok formatları için texture boyutları blok boyutunun katı olmalıdır; ikinin kuvveti boyutlar en güvenli seçenektir.
 - Unity'de platform bazlı override'lar (Android/iOS sekmesi), Unreal'da texture group ve compression settings ile yönetilir.
 - Disk/indirme boyutu için ayrıca Crunch veya Basis Universal (KTX2) gibi süper sıkıştırma katmanları kullanılabilir.$md$, $md$Bellek hesabını (genişlik x yükseklik x 4 byte x 4/3) kafadan yapabilmek ve 'PNG neden yetmez?' sorusunu yanıtlamak iyi izlenim bırakır.$md$, $md$medium$md$, $md$game-developer$md$, $md$grafik-render$md$),
+  ($md$mobilde-mvc-mvp-ve-mvvm-arasindaki-fark-nedir-neden-massive-view-controller-prob$md$, $md$Mobilde MVC, MVP ve MVVM arasındaki fark nedir? Neden "Massive View Controller" problemi ortaya çıkar?$md$, $md$Üçü de UI'ı iş mantığından ayırmayı hedefler; fark, View ile mantık katmanının **nasıl konuştuğudur**.
+
+| Desen | Ara katman | View ile ilişki | Mobil örnek |
+| --- | --- | --- | --- |
+| MVC | Controller | Controller View'u doğrudan günceller | UIKit `UIViewController` |
+| MVP | Presenter | Presenter bir `View` interface'i üzerinden çağrı yapar (`view.showLoading()`) | Eski Android projeleri |
+| MVVM | ViewModel | ViewModel View'u bilmez; View state'i gözlemler (binding) | Android Jetpack ViewModel + StateFlow, SwiftUI `@Observable` |
+
+### Massive View Controller
+iOS'ta `UIViewController` hem view yaşam döngüsünü hem ağ çağrısını, hem veri dönüşümünü, hem navigasyonu üstlenince binlerce satırlık, test edilemeyen sınıflar oluşur. Android'de aynı şey "God Activity" olarak görülür. Sebep: platformun Controller'ı View'a çok sıkı bağlı olmasıdır.
+
+### MVVM neden mobilde standart oldu?
+- ViewModel, Android'de configuration change'te (ekran döndürme) hayatta kalır.
+- View'a referans tutmadığı için memory leak riski azalır ve unit test kolaylaşır.
+- Compose/SwiftUI gibi declarative UI'lar doğal olarak "state gözlemle, çiz" modeline uyar.
+
+```kotlin
+class ProfileViewModel(private val repo: UserRepository) : ViewModel() {
+    private val _state = MutableStateFlow<ProfileState>(ProfileState.Loading)
+    val state: StateFlow<ProfileState> = _state
+    fun load(id: String) = viewModelScope.launch {
+        _state.value = runCatching { repo.getUser(id) }
+            .fold({ ProfileState.Data(it) }, { ProfileState.Error(it.message) })
+    }
+}
+```$md$, $md$Ezber tanım yerine şunu söyleyin: MVP'de Presenter View'u bilir, MVVM'de ViewModel View'u bilmez. Sık takip sorusu: "ViewModel'e Context/UIView geçirirsen ne olur?" (leak + test zorluğu).$md$, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$mvi-ve-unidirectional-data-flow-udf-nedir-mvvm-den-farki-ne-ne-zaman-tercih-eder$md$, $md$MVI ve unidirectional data flow (UDF) nedir? MVVM'den farkı ne, ne zaman tercih edersiniz?$md$, $md$UDF'de veri **tek yönde** akar: kullanıcı **intent/action** üretir → bir reducer mevcut **state**'ten yeni state üretir → UI yalnızca bu state'i çizer. MVI, bu fikrin mobile uyarlanmış hâlidir (Model-View-Intent). Benzerleri: Redux, iOS'ta The Composable Architecture (TCA), Flutter'da BLoC.
+
+### MVVM'den farkı
+- MVVM'de ViewModel'de çok sayıda bağımsız observable (`isLoading`, `items`, `error`) olabilir; bunlar tutarsız kombinasyonlara düşebilir (hem loading hem error).
+- MVI'da ekranın **tek bir immutable state** nesnesi vardır; her değişiklik bir action ile olur. Bu, durumu tahmin edilebilir, loglanabilir ve "time-travel" debug edilebilir kılar.
+- Tek seferlik olaylar (toast, navigasyon) ayrı bir "effect/side effect" kanalıyla verilir.
+
+```kotlin
+data class SearchState(val query: String = "", val loading: Boolean = false,
+                       val results: List<Item> = emptyList(), val error: String? = null)
+sealed interface SearchAction {
+    data class QueryChanged(val q: String) : SearchAction
+    data class Loaded(val items: List<Item>) : SearchAction
+}
+fun reduce(s: SearchState, a: SearchAction) = when (a) {
+    is SearchAction.QueryChanged -> s.copy(query = a.q, loading = true, error = null)
+    is SearchAction.Loaded -> s.copy(loading = false, results = a.items)
+}
+```
+
+### Ne zaman?
+- Karmaşık, çok adımlı ekranlar (checkout, form wizard, chat) → MVI/TCA bug'ları azaltır.
+- Basit liste/detay ekranları → MVVM + tek `UiState` data class'ı genelde yeterlidir; MVI boilerplate getirir.
+
+Pratikte birçok ekip "MVVM ama tek state + UDF" hibritini kullanır; Google'ın Android Architecture Guide'ı da bu yaklaşımı önerir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$clean-architecture-i-bir-mobil-uygulamaya-nasil-uygularsiniz-her-ekran-icin-usec$md$, $md$Clean Architecture'ı bir mobil uygulamaya nasıl uygularsınız? Her ekran için UseCase yazmak gerekli mi?$md$, $md$Mobilde Clean Architecture genelde üç katmana indirgenir ve **bağımlılıklar içe doğru** akar:
+
+1. **Presentation**: View (Compose/SwiftUI/Flutter widget) + ViewModel/Presenter/BLoC.
+2. **Domain**: Saf iş kuralları, entity'ler, UseCase'ler, repository **interface**'leri. Platform kütüphanesi (Android SDK, UIKit) içermez.
+3. **Data**: Repository implementasyonu, API client (Retrofit/URLSession/Dio), local DB (Room/Core Data/SwiftData/Drift), DTO → domain mapper'ları.
+
+```text
+UI -> ViewModel -> UseCase -> Repository (interface)
+                                  ^
+                    RepositoryImpl -> Remote + Local data source
+```
+
+### Faydaları
+- Domain katmanı JVM/Swift unit testleriyle cihaz olmadan test edilir.
+- API değişince sadece data katmanındaki mapper değişir.
+- Feature modülleri arasında domain paylaşılabilir; KMP projelerinde domain + data ortak kod olur.
+
+### UseCase her zaman gerekli mi?
+Hayır. Google'ın güncel Android rehberi domain katmanını **opsiyonel** olarak tanımlar. UseCase şu durumlarda değer katar:
+- Birden fazla ViewModel'in tekrar ettiği mantık (ör. `GetDiscountedPriceUseCase`).
+- Birden çok repository'yi birleştiren akışlar (sepeti doğrula + stok kontrolü + ödeme).
+
+Sadece `repo.getUser()` çağıran `GetUserUseCase` yazmak "pass-through" boilerplate'tir; ekipler bunu bilinçli olarak atlayabilir.
+
+### Yaygın hatalar
+- DTO'ları doğrudan UI'a taşımak (backend alan adı değişince UI kırılır).
+- Domain katmanında `Context`, `UIImage` gibi platform tipleri kullanmak.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$repository-pattern-ve-single-source-of-truth-mobilde-ne-anlama-gelir-offline-oku$md$, $md$Repository pattern ve "single source of truth" mobilde ne anlama gelir? Offline okuma destekli bir haber uygulamasında veri akışını nasıl kurarsınız?$md$, $md$Repository, verinin nereden geldiğini (ağ, DB, cache) UI'dan saklayan katmandır. **Single source of truth (SSOT)** ise UI'ın her zaman **tek bir kaynaktan** (genelde local DB) okumasıdır; ağ yalnızca bu kaynağı günceller.
+
+### Offline-first haber uygulaması akışı
+1. UI, repository'den bir `Flow`/`AsyncSequence`/`Stream` gözlemler; bu stream doğrudan local DB'den (Room, SQLite, Core Data, Drift/Isar) gelir.
+2. Ekran açılınca repository arka planda ağdan güncel makaleleri çeker ve DB'ye yazar.
+3. DB değişince stream otomatik yeni listeyi yayar; UI kendiliğinden güncellenir.
+4. Ağ yoksa kullanıcı son kaydedilen haberleri görür, üstte "Çevrimdışı – son güncelleme 10:42" bandı gösterilir.
+
+```kotlin
+class ArticleRepository(private val api: NewsApi, private val dao: ArticleDao) {
+    fun articles(): Flow<List<Article>> = dao.observeAll()   // SSOT
+    suspend fun refresh() {
+        val remote = api.latest()
+        dao.upsertAll(remote.map { it.toEntity() })
+        dao.deleteOlderThan(days = 7)                         // eviction
+    }
+}
+```
+
+### Offline okuma için ek kararlar
+- **Ne indirilecek?** Başlık + metin + küçük görseller; büyük medyayı yalnızca Wi-Fi'da prefetch (WorkManager / BGTaskScheduler ile).
+- **Ne kadar saklanacak?** Yaş veya boyut bazlı eviction (ör. 7 gün, 200 MB).
+- **Tazelik**: Her kayıtta `fetchedAt`; belirli süreden eskiyse arka planda yenile (stale-while-revalidate).
+- **Kaydedilenler**: Kullanıcının "sonra oku" dediği makaleler eviction'dan muaf tutulur.
+
+Bu model, ekranın hızlı açılmasını (önce cache), tutarlılığı ve kolay test edilebilirliği sağlar.$md$, $md$Sık yapılan hata: UI'ın hem ağdan hem DB'den ayrı ayrı veri alıp birleştirmesi. "UI sadece DB'yi dinler" cümlesini net söyleyin.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$offline-first-bir-uygulamada-kullanicinin-cevrimdisi-yaptigi-degisiklikleri-sunu$md$, $md$Offline-first bir uygulamada kullanıcının çevrimdışı yaptığı değişiklikleri sunucuyla nasıl senkronize edersiniz? Çakışmaları (conflict) nasıl çözersiniz?$md$, $md$Temel yaklaşım: yazmaları önce **local DB + outbox (pending operations) tablosuna** kaydetmek, UI'ı hemen güncellemek (optimistic update) ve bağlantı gelince outbox'ı sırayla sunucuya göndermek.
+
+### Senkronizasyon mekanizması
+1. Her değişiklik `outbox`'a yazılır: `id (UUID)`, `entityId`, `operation`, `payload`, `createdAt`, `retryCount`.
+2. Bir sync worker (Android WorkManager + network constraint, iOS BGTaskScheduler / uygulama foreground olunca) outbox'ı FIFO sırayla gönderir.
+3. Her istek **idempotency key** (outbox `id`) taşır; ağ koparsa ve tekrar gönderilirse sunucu aynı işlemi iki kez uygulamaz.
+4. Başarılı olanlar silinir; hata alanlar exponential backoff ile tekrar denenir, kalıcı hatalar (400/409) kullanıcıya gösterilir.
+5. Aşağı yönlü değişiklikler için `since=<lastSyncToken>` ile delta sync yapılır.
+
+### Çakışma çözüm stratejileri
+| Strateji | Nasıl | Uygun olduğu yer |
+| --- | --- | --- |
+| Last-write-wins | En son timestamp kazanır | Profil ayarı gibi düşük riskli alanlar |
+| Optimistic locking | Kayıtta `version`; sunucu eski versiyonla gelen yazmayı 409 ile reddeder | Sipariş, stok, finans |
+| Alan bazlı merge | Farklı alanlar değiştiyse ikisi birleşir, aynı alan çakışırsa kural/kullanıcı | Not, kişi kartı |
+| Kullanıcıya sor | İki versiyonu göster | Doküman düzenleme |
+| CRDT / OT | Matematiksel olarak birleşen veri yapıları | Ortak düzenleme (Figma, Notion benzeri) |
+
+### Dikkat edilecekler
+- Cihaz saatine güvenmeyin; mümkünse sunucu tarafı versiyon/sequence kullanın.
+- Silme işlemleri için tombstone (`deletedAt`) tutun, yoksa silinen kayıt sonraki sync'te geri gelir.
+- Local'de oluşturulan kayıtlar için client-side UUID üretin; geçici ID → sunucu ID eşlemesinden kaçınırsınız.
+- Hazır çözümler: Firebase Firestore offline persistence, Realm/Atlas Device Sync (Eylül 2025'te kullanımdan kaldırıldı, yeni projede kullanılmamalı), PowerSync, CouchDB/PouchDB.$md$, $md$Mülakatçılar idempotency ve tombstone kavramlarını duymak ister. "Last-write-wins her zaman yeterli" demeyin; veri türüne göre strateji seçtiğinizi gösterin.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$sonsuz-kaydirmali-infinite-scroll-bir-feed-de-pagination-i-nasil-tasarlarsiniz-o$md$, $md$Sonsuz kaydırmalı (infinite scroll) bir feed'de pagination'ı nasıl tasarlarsınız? Offset mi cursor mı?$md$, $md$Mobil feed'lerde genelde **cursor (keyset) pagination** tercih edilir; offset pagination yeni içerik eklendiğinde kayma, tekrar eden veya atlanan öğeler üretir.
+
+| Yöntem | İstek | Sorun / Avantaj |
+| --- | --- | --- |
+| Offset | `?offset=40&limit=20` | Basit; ama başa yeni post gelince aynı öğe iki kez gelir, büyük offset DB'de yavaş |
+| Page number | `?page=3` | Offset ile aynı sorunlar |
+| Cursor | `?after=eyJpZCI6...&limit=20` | Stabil, hızlı; rastgele sayfaya atlama yok |
+
+### İstemci tarafı tasarım
+- Listenin sonuna ~5 öğe kala bir sonraki sayfayı iste (prefetch distance).
+- Aynı cursor için ikinci istek atma (request de-duplication), `isLoading` ve `endReached` durumlarını tut.
+- Sayfaları local DB'ye yaz, UI DB'den okusun (offline + hızlı açılış). Android'de **Paging 3 + RemoteMediator** bunu hazır sunar; iOS'ta `onAppear` ile son hücreyi tetikleme, Flutter'da `infinite_scroll_pagination`.
+- Hata olursa listenin altında "Tekrar dene" hücresi göster; tüm ekranı hata ekranına çevirme.
+- Pull-to-refresh: en üstten yeni cursor ile çek, eskileri temizle veya birleştir.
+
+```kotlin
+val feed: Flow<PagingData<Post>> = Pager(
+    config = PagingConfig(pageSize = 20, prefetchDistance = 5),
+    remoteMediator = FeedRemoteMediator(api, db),
+    pagingSourceFactory = { db.postDao().pagingSource() }
+).flow.cachedIn(viewModelScope)
+```
+
+### API sözleşmesi
+```text
+GET /feed?after=<cursor>&limit=20
+{ "items": [...], "next_cursor": "abc", "has_more": true }
+```$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$mobil-uygulamalarda-dependency-injection-neden-kullanilir-android-ios-ve-flutter$md$, $md$Mobil uygulamalarda dependency injection neden kullanılır? Android, iOS ve Flutter'da hangi araçları tercih edersiniz?$md$, $md$DI, bir sınıfın bağımlılıklarını (API client, repository, DB) kendisinin oluşturması yerine **dışarıdan almasıdır**. Mobilde temel faydaları: test sırasında sahte (fake) bağımlılık verebilmek, yaşam döngüsüne uygun scope'lar (app, ekran, oturum) yönetmek ve modüller arası bağımlılığı gevşetmek.
+
+```kotlin
+// DI olmadan: test edilemez, her seferinde yeni client
+class LoginViewModel : ViewModel() { private val api = RetrofitClient.create() }
+
+// DI ile
+@HiltViewModel
+class LoginViewModel @Inject constructor(private val auth: AuthRepository) : ViewModel()
+```
+
+### Platformlara göre araçlar
+| Platform | Araç | Not |
+| --- | --- | --- |
+| Android | Hilt (Dagger üzerine) | Compile-time, Google önerisi, ViewModel/WorkManager entegrasyonu |
+| Android / KMP | Koin | Runtime service locator tarzı, kurulumu kolay, KMP desteği |
+| iOS | Constructor injection, Factory, Swinject, TCA `@Dependency` | Swift'te çoğu ekip manuel DI + composition root kullanır |
+| Flutter | get_it, Riverpod, Provider | Riverpod hem DI hem state yönetimi |
+
+### Scope örnekleri
+- `@Singleton`: OkHttp client, DB.
+- Oturum scope'u: kullanıcı çıkış yapınca yok edilmesi gereken veriler.
+- Ekran scope'u: ViewModel'e özel nesneler.
+
+Compile-time DI (Hilt/Dagger) hataları build sırasında yakalar; runtime çözümler (Koin, get_it) daha hızlı kurulur ama eksik bağımlılık uygulama çalışırken crash olarak çıkar.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$buyuk-bir-mobil-uygulamayi-modullere-feature-modules-nasil-bolersiniz-bunun-buil$md$, $md$Büyük bir mobil uygulamayı modüllere (feature modules) nasıl bölersiniz? Bunun build süresine ve ekip çalışmasına etkisi nedir?$md$, $md$Modülerleştirme, tek bir `app` modülü yerine kodu bağımsız derlenen modüllere bölmektir. Trendyol, Uber, Airbnb gibi büyük ekipler yüzlerce modülle çalışır.
+
+### Tipik yapı
+```text
+:app                 -> sadece composition root, navigasyon grafiği
+:feature:home        -> ekranlar + ViewModel
+:feature:checkout
+:feature:checkout-api -> diğer modüllerin göreceği interface/route tanımları
+:core:network  :core:database  :core:designsystem  :core:analytics
+```
+
+### Kurallar
+- Feature modülleri **birbirine doğrudan bağımlı olmaz**; iletişim `-api` modülleri, navigasyon route'ları veya DI ile olur (api/impl ayrımı).
+- `core` modülleri feature'lara bağımlı olamaz (döngü yasak).
+- Android'de Gradle `implementation` (sızdırmaz) tercih edilir, `api` sadece gerekirse. iOS'ta Swift Package Manager local package'ları, Tuist; Flutter'da melos ile çoklu package.
+
+### Faydaları
+- **Build süresi**: Değişmeyen modüller cache'ten gelir, incremental build hızlanır, modüller paralel derlenir.
+- **Sahiplik**: Her squad kendi modülünün sahibidir, merge conflict azalır, CODEOWNERS ile review.
+- **Test**: Modül bazlı test ve "demo app" ile feature tek başına çalıştırılabilir.
+- **Dinamik teslim**: Android'de Play Feature Delivery ile bazı modüller sonradan indirilebilir.
+
+### Maliyetleri
+- Çok küçük modüller Gradle konfigürasyon süresini artırır.
+- Ortak kodu nereye koyacağınız tartışma yaratır; `core:common` çöplüğe dönüşebilir.
+- Navigasyon ve DI daha fazla soyutlama ister.
+
+Başlangıç için "katman bazlı" değil "feature bazlı" bölmek ve ilk olarak en çok değişen/en büyük feature'ı ayırmak pratik bir yoldur.$md$, $md$Gerçek bir metrikle cevaplamak etkilidir: "Modüllere ayırdıktan sonra incremental build 4 dakikadan 50 saniyeye indi" gibi. Feature-to-feature bağımlılığı nasıl engellediğinizi (lint kuralı, Gradle convention plugin) anlatın.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$deep-link-universal-link-ve-android-app-link-arasindaki-fark-nedir-deep-link-ler$md$, $md$Deep link, Universal Link ve Android App Link arasındaki fark nedir? Deep link'leri destekleyen bir navigasyon mimarisini nasıl kurarsınız?$md$, $md$- **Custom scheme deep link** (`myapp://product/42`): Kolay ama başka bir uygulama aynı scheme'i kaydedebilir, uygulama yüklü değilse çalışmaz.
+- **iOS Universal Links / Android App Links** (`https://shop.com/product/42`): Normal HTTPS link'idir; alan adının sahibi olduğunuz doğrulanır. Uygulama yüklüyse açılır, değilse web sayfasına düşer. Güvenli ve tercih edilen yöntemdir.
+- **Deferred deep link**: Uygulama yüklü değilken tıklanan link'in hedefi, kurulumdan sonra ilk açılışta açılır (Branch, AppsFlyer, Adjust gibi servisler; Firebase Dynamic Links Ağustos 2025'te kapatıldı).
+
+### Doğrulama dosyaları
+```text
+iOS:     https://shop.com/.well-known/apple-app-site-association  (+ Associated Domains entitlement)
+Android: https://shop.com/.well-known/assetlinks.json (SHA-256 imza parmak izi) + intent-filter android:autoVerify="true"
+```
+
+### Navigasyon mimarisi
+1. Tüm giriş noktalarını (link, push bildirimi, widget, shortcut) **tek bir router**'a yönlendir: `URL -> Route` parse edilir.
+2. Route'lar tipli tanımlanır (Navigation Compose type-safe routes, SwiftUI `NavigationStack(path:)`, Flutter `go_router`).
+3. Router gerekli **back stack**'i sentezler: `product/42` açılınca altında Home olmalı ki geri tuşu uygulamadan çıkmasın.
+4. **Ön koşullar**: Login gerekiyorsa hedef route saklanır, login sonrası kaldığı yerden devam edilir.
+5. Geçersiz/eski link'ler için güvenli fallback (ana sayfa + bilgi mesajı).
+
+```kotlin
+composable<ProductRoute>(deepLinks = listOf(navDeepLink<ProductRoute>(basePath = "https://shop.com/product")))
+{ ProductScreen(it.toRoute<ProductRoute>().id) }
+```
+
+Deep link parametreleri dışarıdan gelen **güvenilmez girdidir**; doğrulanmadan WebView'a URL veya ödeme ekranına tutar olarak aktarılmamalıdır.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$instagram-benzeri-bir-fotograf-feed-inin-mobil-istemcisini-tasarlayin$md$, $md$Instagram benzeri bir fotoğraf feed'inin mobil istemcisini tasarlayın.$md$, $md$Mobil system design mülakatında çerçeve: gereksinimler → yüksek seviye diyagram → API → veri katmanı → derin dalış.
+
+### 1. Gereksinimler
+- Fonksiyonel: sonsuz feed, beğeni, yorum sayısı, gönderi detayı, pull-to-refresh.
+- Fonksiyonel olmayan: hızlı ilk açılış (cache'ten), akıcı 60/120 fps kaydırma, zayıf ağda çalışma, offline son feed'i gösterme, düşük veri tüketimi.
+- Kapsam dışı: post yükleme, story, DM (zaman kalırsa).
+
+### 2. Bileşenler
+```text
+FeedScreen -> FeedViewModel -> FeedRepository -> [FeedApi (REST/GraphQL), FeedDao (SQLite)]
+ImageLoader (memory LRU + disk cache) <- CDN
+LikeQueue (outbox) -> SyncWorker
+Analytics (impression tracking, batched)
+```
+
+### 3. API
+```text
+GET  /v1/feed?after=<cursor>&limit=20   -> items[], next_cursor
+POST /v1/posts/{id}/like  (Idempotency-Key header)
+```
+Her post için CDN'de birden çok çözünürlük (`thumb`, `720w`, `1080w`), `blurhash` placeholder ve `width/height` (layout kaymasını önler).
+
+### 4. Derin dalış
+- **Pagination**: cursor tabanlı, sona 5 öğe kala prefetch, sayfalar DB'ye yazılır (SSOT).
+- **Görseller**: Ekran genişliğine uygun boyutu iste, decode'u arka planda yap, görünürden çıkan isteği iptal et; Coil/Glide, Kingfisher/SDWebImage, `cached_network_image`. Sonraki 2-3 post'un görsellerini prefetch et.
+- **Beğeni**: Optimistic UI (kalp anında kırmızı), outbox'a yaz, başarısızsa geri al. Sayıyı sunucudan gelenle uzlaştır.
+- **Video**: Görünür alanda %50'den fazlaysa otomatik oynat, tek player havuzu, HLS/DASH adaptive bitrate.
+- **Performans**: Liste hücre recycling (`LazyColumn` key, `UICollectionView` diffable data source), sabit yükseklik hesaplama.
+- **Zayıf ağ**: Hücresel/Data Saver modunda düşük çözünürlük, istek önceliklendirme (görünür görsel > prefetch).
+- **Gerçek zamanlılık**: Yeni postlar için polling yerine açılışta/refresh'te kontrol + "Yeni gönderiler" butonu; WebSocket bu kullanım için gereksiz.
+
+### 5. Metrikler
+Time to first post, scroll jank oranı, görsel yükleme süresi, crash-free sessions.$md$, $md$Doğrudan çizmeye başlamayın; önce 3-5 dakika gereksinim ve kapsam sorun (yalnız istemci mi, API da mı?). weeeBox/mobile-system-design reposundaki çerçeve tam olarak bu sırayı önerir.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$whatsapp-benzeri-bir-mesajlasma-uygulamasinin-mobil-tarafini-tasarlayin-gercek-z$md$, $md$WhatsApp benzeri bir mesajlaşma uygulamasının mobil tarafını tasarlayın. Gerçek zamanlı iletim, offline gönderim ve bildirimleri nasıl ele alırsınız?$md$, $md$### Gereksinimler
+Birebir ve grup sohbet, mesaj durumları (gönderiliyor/iletildi/okundu), offline yazma, uygulama kapalıyken bildirim, sohbet geçmişinin hızlı açılması.
+
+### Gerçek zamanlı kanal
+| Yöntem | Kullanım |
+| --- | --- |
+| WebSocket (veya MQTT) | Uygulama foreground'dayken çift yönlü, düşük gecikme |
+| Push (APNs/FCM) | Uygulama arka planda/kapalıyken; OS uzun ömürlü soket açık tutmaya izin vermez |
+| REST | Geçmiş mesaj sayfalama, medya yükleme |
+
+Foreground'da WebSocket açılır; kopunca exponential backoff + jitter ile yeniden bağlanılır, bağlanınca `since=<lastSeq>` ile kaçırılan mesajlar çekilir. Arka planda soket kapatılır, yeni mesaj push ile bildirilir.
+
+### Mesaj gönderim akışı (offline queue)
+1. Kullanıcı gönderir → mesaj client-side UUID ile local DB'ye `status = pending` yazılır, UI'da saat ikonu.
+2. Outbox worker soket/REST üzerinden gönderir; sunucu aynı UUID için idempotent davranır.
+3. Sunucu `ack(serverSeq, timestamp)` döner → `sent`. Karşı taraf alınca `delivered`, açınca `read` event'i gelir.
+4. Ağ yoksa mesaj kuyrukta kalır; bağlantı gelince sırayla gönderilir.
+
+### Sıralama
+Cihaz saatine güvenilmez; sohbet içinde sunucunun atadığı **monoton sequence** ile sıralanır. Pending mesajlar en altta gösterilir.
+
+### Local depolama
+SQLite (Room/GRDB/Drift): `conversations`, `messages (conversationId, seq index)`, FTS ile arama. Sohbet ekranı DB'den sayfalanır, böylece ilk açılış anında olur.
+
+### Bildirimler
+- iOS'ta Notification Service Extension ile şifreli payload cihazda çözülüp gösterilir (uçtan uca şifrelemede sunucu içeriği göremez).
+- Android'de FCM data message + `MessagingStyle` bildirim, inline reply.
+- Kullanıcı o sohbet ekranındaysa bildirim bastırılır.
+
+### Medya
+Önce thumbnail + metadata gönderilir, büyük dosya arka planda resumable upload ile (URLSession background, WorkManager).
+
+### Güvenlik
+Uçtan uca şifreleme (Signal Protocol), anahtarlar Keychain/Keystore'da.$md$, $md$Mülakatçılar özellikle "uygulama arka plandayken mesaj nasıl gelir?" ve "mesaj iki kez gönderilirse?" sorularını sorar. Push + idempotent UUID cevabı hazır olsun.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$uber-bitaksi-benzeri-bir-uygulamada-surucunun-konum-guncellemelerini-mobil-taraf$md$, $md$Uber/BiTaksi benzeri bir uygulamada sürücünün konum güncellemelerini mobil tarafta nasıl tasarlarsınız? Pil ve veri tüketimini nasıl dengelersiniz?$md$, $md$İki taraf vardır: **sürücü uygulaması** konumu sürekli üretir ve gönderir, **yolcu uygulaması** yakın sürücüleri ve atanan sürücünün hareketini izler.
+
+### Sürücü tarafı: konum toplama
+- Android: Fused Location Provider, `PRIORITY_HIGH_ACCURACY` yalnızca aktif yolculukta; konum takibi için `foregroundServiceType="location"` olan bir **foreground service** ve kalıcı bildirim zorunlu.
+- iOS: `CLLocationManager` + "Always" izni, `allowsBackgroundLocationUpdates = true`, `UIBackgroundModes: location`; Apple incelemesi bu kullanımın gerekçesini ister.
+
+### Adaptif frekans (pil dengesi)
+| Durum | Güncelleme sıklığı | Doğruluk |
+| --- | --- | --- |
+| Çevrimdışı/mola | Gönderme yok | - |
+| Müsait, beklemede | 15-30 sn veya 50-100 m hareket | Balanced |
+| Yolcuya gidiyor / yolculukta | 2-5 sn | High |
+| Araç duruyor | Aralığı uzat (hareket algılama) | Düşük |
+
+### Gönderim
+- Konumlar küçük bir buffer'da toplanır, **batch** halinde gönderilir (ör. 3 noktayı tek istekte); payload compact (protobuf, delta encoding).
+- Kanal: aktif yolculukta kalıcı WebSocket/MQTT, diğer durumlarda periyodik HTTPS.
+- Ağ yoksa noktalar local'de kuyrukta tutulur, geldiğinde yüklenir (ücret hesabı ve rota kaydı için önemli).
+
+### Yolcu tarafı: harita gösterimi
+- Sunucu, atanan sürücünün konumunu ~2-4 sn'de bir WebSocket/SSE ile iter.
+- İstemci iki nokta arasında **interpolasyon** ve map-matching sonrası yönle araç ikonunu akıcı hareket ettirir; aksi hâlde ikon zıplar.
+- Yakındaki sürücüler için geohash/H3 hücresine abone olunur, tam liste yerine yalnızca değişiklikler alınır.
+
+### Kenar durumları
+GPS sapması (accuracy > 50 m olan noktaları at), tünel, OS'un uygulamayı öldürmesi (Android OEM batarya optimizasyonları), izin geri alınması, saat farkı (sunucu timestamp'i).$md$, $md$Adaptif frekans tablosu ve interpolasyon, adayın gerçekten saha deneyimi olup olmadığını gösterir. Platform kısıtlarını (foreground service tipi, iOS background mode) bilmek önemli puan kazandırır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$kullanicinin-zayif-agda-buyuk-bir-fotograf-video-yukledigi-bir-ozelligi-guvenili$md$, $md$Kullanıcının zayıf ağda büyük bir fotoğraf/video yüklediği bir özelliği güvenilir hale getirmek için ne yaparsınız (retry, arka plan, devam ettirme)?$md$, $md$Hedef: kullanıcı uygulamayı kapatsa, ağ değişse veya kopsa bile yükleme **tekrarlanmadan ve kaybolmadan** tamamlansın.
+
+### 1. Yüklemeden önce
+- Cihazda sıkıştır/yeniden boyutlandır (ör. 12 MP yerine 2048 px, HEIC/WebP; video için transcoding). Bu tek başına yükleme süresini %70-90 azaltabilir.
+- Dosyayı uygulamanın kendi dizinine kopyala; galeri URI'si sonradan erişilemez olabilir.
+- Yükleme işini local DB'ye kaydet (`uploadId`, dosya yolu, durum, alınan byte).
+
+### 2. Arka planda çalıştırma
+- Android: **WorkManager** + `NetworkType.CONNECTED` constraint, uzun işler için `setForeground` ile ilerleme bildirimi (expedited/long-running worker).
+- iOS: `URLSession` **background configuration** ile `uploadTask(with:fromFile:)`; uygulama askıya alınsa da OS yüklemeyi sürdürür ve bitince uygulamayı uyandırır.
+- Flutter: `background_downloader` veya platform kanalıyla native çözümler.
+
+### 3. Resumable upload
+Dosyayı parçalara (ör. 5-8 MB) bölüp her parçayı ayrı yükle; kopunca sadece eksik parçalar gönderilir.
+```text
+POST /uploads            -> { uploadId, chunkSize }
+PUT  /uploads/{id}?part=3   (Content-Range)
+GET  /uploads/{id}       -> alınan parçalar
+POST /uploads/{id}/complete
+```
+Standartlar: **tus** protokolü, S3 multipart upload (presigned URL ile doğrudan S3'e), Google resumable upload.
+
+### 4. Retry politikası
+- Geçici hatalar (timeout, 5xx, 429): exponential backoff + jitter (1s, 2s, 4s... maks 5 dk), `Retry-After` başlığına uy.
+- Kalıcı hatalar (400, 413, 401 sonrası refresh başarısız): durdur, kullanıcıya göster.
+- `complete` isteği **idempotency key** ile; iki kez gönderilse de tek post oluşur.
+
+### 5. UX
+İlerleme çubuğu, "Wi-Fi'da yükle" seçeneği, başarısız yüklemeyi tekrar deneme butonu, gönderinin yerel önizlemeyle hemen akışta görünmesi (optimistic).$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$eski-uygulama-surumlerini-kullanan-kullanicilar-varken-api-yi-nasil-versiyonlars$md$, $md$Eski uygulama sürümlerini kullanan kullanıcılar varken API'yi nasıl versiyonlarsınız? Zorunlu güncelleme (forced update) ve BFF yaklaşımını açıklayın.$md$, $md$Web'den farklı olarak mobilde **istemciyi siz güncelleyemezsiniz**; kullanıcılar aylarca eski sürümde kalabilir. Bu yüzden API değişiklikleri geriye uyumlu olmalı ve eski sürümleri yönetecek bir mekanizma gerekir.
+
+### Geriye uyumluluk kuralları
+- Yeni alan eklemek güvenlidir; alan silmek, tipini veya anlamını değiştirmek kırıcıdır.
+- İstemci bilinmeyen alanları ve bilinmeyen enum değerlerini **yok saymalı** (ör. `UNKNOWN` fallback). Aksi halde yeni bir sipariş durumu eski uygulamada crash yaratır.
+- Kırıcı değişiklikte yeni versiyon: `/v2/orders` veya `Accept: application/vnd.app.v2+json`.
+- Her istekte `X-App-Version`, `X-Platform`, `X-OS-Version` başlıkları gönderilir; backend bu bilgiyle davranışı ayarlar ve sürüm dağılımını izler.
+
+### Zorunlu ve önerilen güncelleme
+Uygulama açılışta bir config endpoint'i (veya Firebase Remote Config) okur:
+```text
+GET /app-config?platform=android&version=5.12.0
+{ "min_supported": "5.8.0", "recommended": "5.14.0", "store_url": "..." }
+```
+- `version < min_supported` → kapatılamayan "Güncelle" ekranı (güvenlik açığı, kırık API).
+- `version < recommended` → kapatılabilir banner.
+- Android'de **Play In-App Updates** API (immediate/flexible) yerel UI sağlar; iOS'ta App Store linkine yönlendirilir.
+- Bu mekanizma ilk sürümden itibaren uygulamada olmalı, sonradan eklenemez.
+
+### Backend for Frontend (BFF)
+Mobil için ayrı bir API katmanı: birden çok mikroservisi birleştirip ekrana özel, küçük payload'lar döner. Faydaları: daha az istek (mobil gecikme), versiyon uyarlamasını tek yerde yapma, platforma özel alanlar. Bir adım ötesi **server-driven UI**: ekran yapısını sunucu JSON ile tanımlar (Airbnb Ghost Platform, Trendyol ve Getir'in benzer yaklaşımları); yeni kampanya ekranları store review beklemeden yayınlanabilir.$md$, $md$"min_supported" mekanizmasının ilk sürümde olması gerektiğini söylemek gerçek deneyim işaretidir. Bilinmeyen enum değerinde crash, mülakatlarda sık anlatılan bir prod hikâyesidir.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-mimari$md$),
+  ($md$cold-warm-ve-hot-start-arasindaki-fark-nedir-uygulamanin-acilis-suresini-nasil-o$md$, $md$Cold, warm ve hot start arasındaki fark nedir? Uygulamanın açılış süresini nasıl ölçer ve iyileştirirsiniz?$md$, $md$- **Cold start**: Uygulama süreci yok; OS süreci oluşturur, `Application`/`AppDelegate` başlatılır, ilk ekran çizilir. En yavaş ve optimize edilmesi gereken senaryo.
+- **Warm start**: Süreç bellekte ama Activity/scene yeniden oluşturulmalı (ör. geri tuşuyla çıkılıp tekrar açılınca).
+- **Hot start**: Süreç ve ekran bellekte; uygulama sadece öne gelir.
+
+### Ölçüm
+- Android: Logcat'teki `Displayed` / TTID (time to initial display) ve `reportFullyDrawn()` ile TTFD; Macrobenchmark `StartupTimingMetric`; Play Console Android vitals. Google'ın referansı: cold start 5 sn üstü "aşırı".
+- iOS: Xcode Organizer "Launch Time", Instruments "App Launch" şablonu, MetricKit `MXAppLaunchMetric`. Apple ilk kareyi 400 ms civarında hedeflemeyi önerir.
+- Flutter: `flutter run --trace-startup`, ilk frame zamanı.
+
+### İyileştirme teknikleri
+1. **Application/AppDelegate'i hafiflet**: Analytics, reklam, crash SDK dışındaki init'leri lazy yap veya ilk frame sonrasına ertele (Android App Startup kütüphanesi).
+2. **Ana thread'de I/O yapma**: Disk, SharedPreferences okuma, DB migration'ı arka plana al.
+3. **Android Baseline Profiles**: Kritik kod yollarını AOT derletir; Google %20-30'a varan iyileşme raporlar. R8 full mode da yardımcı olur.
+4. **iOS**: Dinamik framework sayısını azalt (static linking/mergeable libraries), `+load` ve ağır static initializer'lardan kaçın.
+5. **İlk ekranı cache'ten göster**: Ağ beklemeden son veriyi DB'den çiz, sonra güncelle.
+6. Splash ekranında yapay bekleme yapma; Android 12+ SplashScreen API'si kullan.
+
+```kotlin
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        Crashlytics.init(this)                // kritik
+        appScope.launch(Dispatchers.Default) { AdsSdk.init(this@App) } // ertelenebilir
+    }
+}
+```$md$, $md$Rakamlarla konuşun: "Cold start P50'yi 1.8 sn'den 1.1 sn'ye indirdik, en büyük kazanç 3 SDK'nın lazy init'i ve Baseline Profile oldu" gibi. Ölçmeden optimizasyon yapmadığınızı vurgulayın.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$jank-nedir-60-hz-ve-120-hz-ekranlarda-frame-butcesi-nedir-ve-kaydirmadaki-takilm$md$, $md$Jank nedir? 60 Hz ve 120 Hz ekranlarda frame bütçesi nedir ve kaydırmadaki takılmaları nasıl tespit edip çözersiniz?$md$, $md$Jank, bir karenin ekranın yenileme süresi içinde hazırlanamaması ve **frame drop** yaşanmasıdır; kullanıcı bunu takılma olarak görür.
+
+| Yenileme hızı | Kare başına bütçe |
+| --- | --- |
+| 60 Hz | 16.6 ms |
+| 90 Hz | 11.1 ms |
+| 120 Hz (ProMotion, flagship Android) | 8.3 ms |
+
+Bu süre içinde ana/UI thread'de ölçüm (measure), layout, çizim kaydı ve render thread/GPU işleri bitmelidir.
+
+### Yaygın sebepler
+- Ana thread'de JSON parse, disk/DB erişimi, büyük görsel decode.
+- Liste hücrelerinde gereksiz yeniden oluşturma: Compose'da stabil olmayan parametreler yüzünden aşırı recomposition, `LazyColumn`'da `key` vermemek; SwiftUI'da büyük `body` yeniden hesaplamaları; Flutter'da `build` içinde ağır iş.
+- Derin view hiyerarşisi ve overdraw.
+- Görselleri gösterilecek boyuttan çok büyük yüklemek.
+- GC baskısı (kaydırma sırasında çok nesne üretmek).
+
+### Araçlar
+- Android: Perfetto/System Trace, Android Studio Profiler, JankStats, Macrobenchmark `FrameTimingMetric`, Compose Layout Inspector (recomposition sayıları).
+- iOS: Instruments **Animation Hitches** ve Time Profiler, MetricKit hitch metrikleri.
+- Flutter: DevTools Performance görünümü (UI ve raster thread ayrı), `--profile` modunda ölç.
+
+### Çözüm örnekleri
+```kotlin
+LazyColumn {
+    items(posts, key = { it.id }) { post -> PostRow(post) }   // stabil key
+}
+```
+- Ağır işleri `Dispatchers.Default` / `Task.detached` / Flutter `compute()` isolate'ine taşı.
+- Görsel decode'u hedef boyuta göre yap; prefetch kullan.
+- Ölçümü **release benzeri build**'de yap; debug build her zaman yavaştır.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$mobil-uygulamalarda-memory-leak-ler-en-cok-nereden-kaynaklanir-android-ve-ios-ta$md$, $md$Mobil uygulamalarda memory leak'ler en çok nereden kaynaklanır? Android ve iOS'ta nasıl tespit edersiniz?$md$, $md$Memory leak, artık kullanılmayan bir nesnenin hâlâ referans tutulduğu için serbest bırakılamamasıdır. Mobilde bellek kısıtlı olduğundan leak'ler OOM crash'lerine ve OS'un uygulamayı arka planda öldürmesine yol açar.
+
+### Android'de tipik sebepler
+- Uzun ömürlü nesnelerin (singleton, static alan, ViewModel) `Activity`, `Fragment` view'u veya `Context` tutması.
+- Kayıt olup silinmeyen listener/callback'ler (sensor, BroadcastReceiver, location).
+- `GlobalScope` veya yaşam döngüsüne bağlı olmayan coroutine'lerin ekranı referanslaması.
+- Fragment'ta `binding`'i `onDestroyView`'da null'lamamak.
+
+### iOS'ta tipik sebepler
+- **Retain cycle**: Closure'ın `self`'i strong yakalaması ve `self`'in de closure'ı tutması.
+- Delegate'in `weak` tanımlanmaması.
+- `Timer`, `NotificationCenter` block observer'ları, Combine `sink` saklanan cancellable'lar.
+
+```swift
+// Retain cycle
+viewModel.onUpdate = { self.tableView.reloadData() }
+// Doğru
+viewModel.onUpdate = { [weak self] in self?.tableView.reloadData() }
+```
+
+### Tespit araçları
+| Platform | Araç |
+| --- | --- |
+| Android | LeakCanary (debug build'de otomatik heap dump ve leak trace), Android Studio Memory Profiler, heap dump analizi |
+| iOS | Xcode Memory Graph Debugger, Instruments Leaks ve Allocations, `deinit` içine log |
+| Flutter | DevTools Memory sekmesi, `leak_tracker` paketi; `StreamSubscription`, `AnimationController`, `TextEditingController` dispose edilmeli |
+
+### Leak dışı bellek sorunları
+Büyük bitmap'leri tam çözünürlükte decode etmek, sınırsız in-memory cache. Çözüm: boyutlandırılmış decode, LRU cache, `onTrimMemory` / `didReceiveMemoryWarning` ile cache temizliği.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$mobil-uygulamanin-pil-tuketimini-azaltmak-icin-nelere-dikkat-edersiniz-arka-plan$md$, $md$Mobil uygulamanın pil tüketimini azaltmak için nelere dikkat edersiniz? Arka plan işlerini nasıl planlarsınız?$md$, $md$Pil tüketiminin ana kaynakları: **radyo (hücresel/Wi-Fi) uyanmaları, GPS, CPU wakelock'ları, ekran/animasyonlar ve sensörler**. Hücresel radyo bir istekten sonra saniyelerce yüksek güç modunda kalır; bu yüzden çok sayıda küçük istek tek büyük istekten daha pahalıdır.
+
+### Pratik kurallar
+1. **Ağ isteklerini birleştir (batching)**: Analytics event'lerini toplayıp periyodik gönder, polling yerine push kullan.
+2. **Konum**: Gereken en düşük doğruluğu ve en uzun aralığı seç; iş bitince güncellemeleri durdur. iOS'ta significant-change, Android'de geofencing gibi düşük güç API'leri.
+3. **Arka plan işini OS'a bırak**: Android'de `WorkManager` (constraint: Wi-Fi, şarjda, cihaz boşta); Doze ve App Standby Buckets bu işleri gruplar, elle wakelock ve `AlarmManager` exact alarm'dan kaçının. iOS'ta `BGAppRefreshTask` ve `BGProcessingTask` (`requiresExternalPower`, `requiresNetworkConnectivity`); zamanlamayı OS belirler.
+4. **Ekran görünür değilse dur**: Görünmeyen ekranlarda animasyon, sensör ve flow toplama işlemini durdur (`repeatOnLifecycle(STARTED)`, SwiftUI `scenePhase`).
+5. **Gereksiz yeniden çizimleri azalt**: Sürekli çalışan animasyonlar ve yüksek frame rate GPU'yu yorar.
+6. **Karanlık mod** OLED ekranlarda tüketimi azaltır.
+
+```kotlin
+val request = PeriodicWorkRequestBuilder<SyncWorker>(6, TimeUnit.HOURS)
+    .setConstraints(Constraints(requiredNetworkType = NetworkType.UNMETERED, requiresCharging = true))
+    .build()
+WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("sync", ExistingPeriodicWorkPolicy.KEEP, request)
+```
+
+### Ölçüm
+Android: Battery Historian, Android Studio Power Profiler, Play Console vitals (excessive wakeups, stuck partial wakelocks; Google Play 2025-2026'da aşırı wakelock'u kalite sinyali olarak işaretlemeye başladı). iOS: Xcode Energy Organizer, MetricKit `MXCPUMetric`/`MXLocationActivityMetric`.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$mobil-uygulamada-ag-kullanimini-nasil-optimize-edersiniz-http-caching-mobilde-na$md$, $md$Mobil uygulamada ağ kullanımını nasıl optimize edersiniz? HTTP caching mobilde nasıl çalışır?$md$, $md$Mobil ağlar yüksek gecikmeli, değişken ve kotalıdır; amaç **daha az istek, daha küçük payload, akıllı cache**.
+
+### Teknikler
+- **HTTP caching**: Sunucu `Cache-Control: max-age=300` ve `ETag` döner. OkHttp (`Cache`), `URLCache` ve Dio cache interceptor bunları uygular. Süre dolunca istemci `If-None-Match: <etag>` gönderir; değişmediyse sunucu gövdesiz `304 Not Modified` döner.
+- **Sıkıştırma**: gzip/Brotli response sıkıştırma; JSON yerine protobuf (gRPC) büyük listelerde boyutu ciddi düşürür.
+- **Görseller**: Cihaz ekranına uygun boyut ve WebP/AVIF; CDN ile.
+- **Batching ve de-duplication**: Aynı veriye aynı anda giden istekleri tekilleştir, ekranın ihtiyacını tek istekte al (BFF/GraphQL).
+- **Pagination**: Tüm listeyi değil sayfa sayfa çek.
+- **HTTP/2 ve HTTP/3 (QUIC)**: Bağlantı yeniden kullanımı ve multiplexing; ağ değişiminde (Wi-Fi → 4G) QUIC bağlantısı korunur. Cronet ve URLSession HTTP/3 destekler.
+- **Ağ durumuna göre davranış**: Ölçülü (metered) bağlantıda veya Data Saver/Low Data Mode açıkken prefetch'i kapat, düşük kaliteli medya iste.
+- **Timeout ve retry**: Makul timeout, yalnızca idempotent isteklerde exponential backoff ile retry.
+
+```kotlin
+val client = OkHttpClient.Builder()
+    .cache(Cache(File(context.cacheDir, "http"), 50L * 1024 * 1024)) // 50 MB
+    .build()
+```
+
+### Ölçüm
+Android Studio Network Inspector, Charles/Proxyman, Flipper; Firebase Performance Monitoring ile gerçek kullanıcıların istek süreleri ve payload boyutları.$md$, $md$ETag/304 akışını adım adım anlatabilmek bekleniyor. iOS Low Data Mode (`allowsConstrainedNetworkAccess`) veya Android `isActiveNetworkMetered` gibi platform detayları artı puandır.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$uygulama-boyutunu-apk-ipa-kucultmek-icin-hangi-teknikleri-kullanirsiniz$md$, $md$Uygulama boyutunu (APK/IPA) küçültmek için hangi teknikleri kullanırsınız?$md$, $md$Uygulama boyutu indirme dönüşümünü doğrudan etkiler; özellikle hücresel veriyle indirmede ve düşük depolamalı cihazlarda büyük uygulamalar daha az yüklenir.
+
+### Android
+- **Android App Bundle (AAB)**: Play, cihaza yalnızca gereken ABI, ekran yoğunluğu ve dil kaynaklarını gönderir. Yeni uygulamalar için 2021'den beri zorunlu.
+- **R8** ile code shrinking, obfuscation ve optimizasyon (`isMinifyEnabled = true`), `isShrinkResources = true` ile kullanılmayan kaynakları sil.
+- Play Feature Delivery ile nadir kullanılan özellikleri on-demand modül yap.
+- Native kütüphanelerde gereksiz ABI'leri çıkar.
+
+### iOS
+- **App Thinning** (slicing, on-demand resources) App Store tarafından otomatik uygulanır; asset'leri Asset Catalog'da tutmak gerekir.
+- Release'de `-Osize` optimizasyonu, dead code stripping, debug sembollerinin ayrılması (dSYM).
+- Kullanılmayan framework ve büyük üçüncü parti SDK'ları kaldır.
+
+### Flutter / React Native
+- `flutter build appbundle --split-debug-info --obfuscate`, `--split-per-abi` (APK için); kullanılmayan font/ikon tree-shaking'i otomatik.
+- Hermes motoru RN'de bundle boyutunu ve açılışı iyileştirir.
+
+### Ortak
+- Görselleri WebP/AVIF/SVG (vector drawable) yap, büyük medyayı uygulamaya gömme, ilk açılışta indir.
+- Lottie animasyonları ve fontları gözden geçir.
+- Her PR'da boyutu ölç ve CI'da bütçe koy.
+
+```bash
+# Android: AAB içeriğini analiz et
+bundletool build-apks --bundle=app-release.aab --output=app.apks
+bundletool get-size total --apks=app.apks
+```
+Android Studio APK Analyzer ve Xcode App Size Report (`-exportOptionsPlist` ile "App Thinning Size Report") hangi dosyanın yer kapladığını gösterir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$crash-reporting-nasil-calisir-crashlytics-veya-sentry-kurarken-symbolication-dsy$md$, $md$Crash reporting nasıl çalışır? Crashlytics veya Sentry kurarken symbolication (dSYM, mapping dosyası) neden önemlidir?$md$, $md$Crash reporting SDK'sı uygulamada yakalanmayan exception'ları ve native sinyalleri (SIGSEGV vb.) yakalar, stack trace + cihaz bilgisi + breadcrumb'ları diske yazar ve **bir sonraki açılışta** sunucuya gönderir. Konsol benzer crash'leri gruplar, etkilenen kullanıcı sayısını ve sürüm dağılımını gösterir.
+
+### Symbolication
+Release build'lerde kod optimize ve obfuscate edildiği için ham stack trace okunamaz:
+```text
+at a.b.c.d(Unknown Source:12)        // R8 sonrası
+0x0000000104a1c3f4 MyApp + 312308     // iOS
+```
+- **Android**: R8 `mapping.txt` dosyası yüklenmelidir; Crashlytics Gradle plugin'i bunu otomatik yapar. NDK crash'leri için native semboller.
+- **iOS**: Her build'in **dSYM** dosyası yüklenmelidir (Xcode build phase script veya Fastlane `upload_symbols_to_crashlytics`).
+- **Flutter**: `--split-debug-info` ile çıkan sembol dosyaları yüklenmeli.
+Eksik sembol dosyası, prod'da crash'i gördüğünüz halde hangi satır olduğunu bilememeniz demektir.
+
+### Takip edilen metrikler
+- **Crash-free users / sessions**: İyi uygulamalarda %99.5+ hedeflenir.
+- **ANR oranı** (Android): Ana thread 5 sn bloklanırsa; Play Console'da "bad behavior" eşiği kullanıcı bazlı %0.47, crash için %1.09.
+- Non-fatal hatalar: `recordException` ile yakalanmış ama önemli hatalar.
+
+### İyi pratikler
+- Kişisel veri loglama (KVKK/GDPR); kullanıcı ID'si yerine anonim ID.
+- Breadcrumb ve custom key'ler: `screen=checkout`, `cart_size=3`.
+- Yeni sürümde crash eşiği aşılırsa alarm ve staged rollout'u durdurma.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$mobil-uygulamada-unit-test-integration-test-ve-ui-test-arasindaki-dengeyi-nasil$md$, $md$Mobil uygulamada unit test, integration test ve UI test arasındaki dengeyi nasıl kurarsınız? Espresso, XCUITest, Compose ve Flutter test araçlarını karşılaştırın.$md$, $md$Mobilde test piramidi aynı mantıkla çalışır ama UI testlerinin **emülatör/cihaz gerektirmesi** onları yavaş ve kırılgan yapar; bu yüzden mantığın büyük kısmı ViewModel/UseCase/Repository seviyesinde cihazsız test edilir.
+
+| Seviye | Ne test edilir | Araçlar | Çalışma ortamı |
+| --- | --- | --- | --- |
+| Unit (local) | ViewModel, reducer, mapper, UseCase | JUnit + Turbine + MockK, XCTest / Swift Testing, `flutter test` | JVM / simülatörsüz, saniyeler |
+| Component / screen | Tek ekranın UI davranışı | Compose UI test (Robolectric ile JVM'de de), ViewInspector, Flutter widget test | Hızlı, cihazsız mümkün |
+| Instrumented / E2E | Gerçek akış: login → sepet → ödeme | Espresso, UI Automator, XCUITest, Flutter `integration_test`, Maestro, Appium | Emülatör/cihaz, dakikalar |
+
+### Araç farkları
+- **Espresso**: Uygulama süreci içinde çalışır, UI thread'le otomatik senkronize olur (idling resources). White-box.
+- **XCUITest**: Ayrı bir süreçten accessibility ağacı üzerinden çalışır (black-box); uygulama koduna erişemez, `launchArguments` ile mock modunu açarsınız.
+- **Compose testing**: Semantics ağacı üzerinde `onNodeWithText`, `performClick`.
+- **Flutter**: Widget testleri cihaz olmadan çok hızlı çalışır; integration test gerçek cihazda.
+- **Maestro**: YAML ile platformlar arası, kurulumu kolay E2E; 2025'te popülerleşti.
+
+```kotlin
+@get:Rule val rule = createComposeRule()
+@Test fun showsErrorWhenLoginFails() {
+    rule.setContent { LoginScreen(state = LoginState(error = "Hatalı şifre")) }
+    rule.onNodeWithText("Hatalı şifre").assertIsDisplayed()
+}
+```
+
+### Önerilen denge
+Çok sayıda unit test, kritik ekranlar için screen/snapshot testleri, yalnızca para kazandıran akışlar (onboarding, login, checkout) için birkaç E2E test. UI'da sabit `Thread.sleep` yerine bekleme mekanizmaları; elementlere `testTag`/`accessibilityIdentifier` verin.$md$, $md$"Flaky UI testleriyle nasıl başa çıkıyorsunuz?" sorusuna hazırlıklı olun: animasyonları kapatma, idling resource, sabit test verisi, Android Test Orchestrator, yeniden deneme yerine kök sebebi düzeltme.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$mobil-testlerde-ag-katmanini-nasil-mock-larsiniz-snapshot-screenshot-testing-ned$md$, $md$Mobil testlerde ağ katmanını nasıl mock'larsınız? Snapshot (screenshot) testing nedir, ne zaman kullanılır?$md$, $md$### Ağı mock'lama seçenekleri
+1. **Repository/API interface'ini fake ile değiştirmek** (DI sayesinde): En hızlı ve en yaygın; ViewModel testleri için ideal.
+2. **Sahte HTTP sunucusu**: Gerçek HTTP client'ın serialization, header ve hata davranışını test eder. Android'de OkHttp **MockWebServer**, iOS'ta özel bir `URLProtocol` alt sınıfı ile `URLSession` isteklerini yakalamak, Flutter'da `http_mock_adapter` (Dio) veya `MockClient` (`package:http`).
+3. **UI/E2E testlerinde**: Uygulamayı `launchArguments`/build flavor ile mock moduna almak, veya WireMock gibi bir stub sunucusu.
+
+```kotlin
+val server = MockWebServer().apply {
+    enqueue(MockResponse().setResponseCode(200).setBody("""{"id":1,"name":"Ada"}"""))
+    enqueue(MockResponse().setResponseCode(503))
+    start()
+}
+val api = Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(json).build().create(UserApi::class.java)
+assertEquals("Ada", api.getUser(1).name)
+assertEquals("/users/1", server.takeRequest().path)
+```
+Bu şekilde timeout, 401 → token refresh, bozuk JSON, yavaş ağ (`setBodyDelay`) gibi senaryoları deterministik test edebilirsiniz.
+
+### Snapshot (screenshot) testing
+Bir ekranın veya bileşenin render edilmiş görüntüsü referans PNG ile karşılaştırılır; piksel farkı varsa test kırılır.
+- Araçlar: Paparazzi ve Roborazzi (Android, JVM'de emülatörsüz), Compose Preview Screenshot Testing; iOS'ta swift-snapshot-testing (Point-Free); Flutter'da golden testleri (`matchesGoldenFile`).
+- **Ne zaman?** Design system bileşenleri, karanlık mod, büyük font (dynamic type), RTL dil, farklı ekran boyutları gibi çok sayıda görsel varyasyonu ucuza korumak için.
+- **Dikkat**: Referans görüntüler aynı ortamda üretilmeli (font render farkları), değişiklikler PR'da görsel diff ile gözden geçirilmeli. Davranış testinin yerini tutmaz.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$yeni-surumu-yayinladiktan-sonra-crash-orani-belirli-android-cihazlarda-aniden-ar$md$, $md$Yeni sürümü yayınladıktan sonra crash oranı belirli Android cihazlarda aniden arttı. Adım adım nasıl ilerlersiniz? Gerçek cihaz testleri ve device farm'ları nasıl kullanırsınız?$md$, $md$### 1. Etkiyi sınırla
+- Staged rollout'u **durdur** (Play Console "Halt rollout", App Store Connect "Pause phased release").
+- Sorun belirli bir özelliğe bağlıysa remote config/feature flag ile o özelliği kapat (kill switch).
+- Ekip ve destek kanalına durum bilgisi ver.
+
+### 2. Veriyi incele
+- Crashlytics/Sentry: Hangi crash grubu yeni? Sürüm, cihaz modeli, üretici, Android sürümü, RAM, ilk görülme zamanı.
+- Örnek: Sadece Android 14 + belirli bir OEM (ör. Xiaomi/Samsung) cihazlarda `ForegroundServiceStartNotAllowedException` veya WebView sürümüne bağlı crash.
+- Breadcrumb'lar ve custom key'lerle crash öncesi kullanıcı akışını bul.
+- Play Console Android vitals'ta ANR ve native crash'leri de kontrol et; ANR trace'leri ana thread blokajını gösterir.
+- Önceki sürümle diff: Bu sürümde değişen SDK, `targetSdk` yükseltmesi, yeni izin veya R8 kuralı var mı? R8 yeni bir sınıfı silmiş/yeniden adlandırmış olabilir (`ClassNotFoundException` sadece release'de).
+
+### 3. Yeniden üret
+- Aynı cihaz/OS kombinasyonunu **device farm**'da çalıştır: Firebase Test Lab, AWS Device Farm, BrowserStack App Live/Automate, Sauce Labs. Firebase Test Lab'da Robo test hızlı bir keşif sağlar.
+- Gerçek cihaz gerekir çünkü OEM ROM değişiklikleri, agresif batarya yönetimi, GPU sürücüleri ve bellek sınırları emülatörde görülmez.
+- Release build ile test et (minify açık).
+
+### 4. Düzelt ve yayınla
+- Kök sebebi düzelten hotfix + regresyon testi (mümkünse o cihaz matrisi CI'da).
+- Hotfix'i yine kademeli yayınla (%1 → %5 → %20), crash-free metriğini izle.
+
+### 5. Önleme (post-mortem)
+- CI'da kritik akışları farklı API seviyelerinde ve popüler OEM cihazlarda device farm'da çalıştır.
+- Yeni sürümler için otomatik alarm: crash-free users eşik altına düşerse rollout'u durdur.
+- Hatalı olmayan, suçlamasız bir post-mortem dokümanı.$md$, $md$Bu davranışsal + teknik bir sorudur; önce kullanıcı etkisini durdurmayı (rollout halt, kill switch) söylemek, hemen kod debug'ına atlamaktan daha olgun bir cevaptır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-performans-ve-test$md$),
+  ($md$bir-uygulamayi-app-store-ve-google-play-e-yayinlama-sureci-nasil-isler-test-kana$md$, $md$Bir uygulamayı App Store ve Google Play'e yayınlama süreci nasıl işler? Test kanalları (TestFlight, internal/closed testing) ne işe yarar?$md$, $md$### iOS – App Store
+1. Apple Developer Program üyeliği (yıllık ücret), App Store Connect'te uygulama kaydı (bundle ID).
+2. Release build'i dağıtım sertifikası ve provisioning profile ile imzalayıp `.ipa` olarak yükle (Xcode Organizer, `xcodebuild`, Fastlane, Transporter).
+3. **TestFlight**: Internal tester'lar (ekip, en fazla 100) review beklemeden test eder; external tester'lar (10.000'e kadar) için kısa bir beta review gerekir.
+4. Metadata: ekran görüntüleri, açıklama, gizlilik politikası URL'si, **App Privacy** ("nutrition label") bilgileri, yaş derecelendirmesi.
+5. App Review'a gönder (genelde 24-48 saat). Onay sonrası manuel, otomatik veya **phased release** (7 güne yayılan kademeli otomatik güncelleme) ile yayınla.
+
+### Android – Google Play
+1. Play Console hesabı (tek seferlik ücret), uygulama oluştur, **Play App Signing**'i etkinleştir.
+2. Upload key ile imzalanmış **AAB** yükle; `targetSdk` Play'in güncel gereksinimini karşılamalı (31 Ağustos 2026'dan itibaren yeni uygulama ve güncellemeler için API 36 / Android 16; gereksinim her yıl bir seviye artar).
+3. Test kanalları: **Internal testing** (100 kişiye kadar, dakikalar içinde), **Closed testing** (seçili gruplar), **Open testing** (herkese açık beta). 2023 sonrası açılan kişisel hesaplar üretime çıkmadan önce en az 12 tester ile 14 gün closed test yapmak zorunda.
+4. Store listing, Data safety formu, içerik derecelendirmesi, hedef kitle bilgileri.
+5. Production'a gönder, review sonrası **staged rollout** yüzdesiyle yayınla.
+
+### Ortak noktalar
+- Sürüm numarası: kullanıcıya görünen (`versionName` / `CFBundleShortVersionString`) ve her yüklemede artması gereken build numarası (`versionCode` / `CFBundleVersion`).
+- Gizlilik politikası ve hesap silme imkânı (hesap oluşturulabiliyorsa) her iki mağazada da zorunlu; release notes ise önerilir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$code-signing-mobilde-nasil-calisir-android-keystore-play-app-signing-ve-ios-sert$md$, $md$Code signing mobilde nasıl çalışır? Android keystore, Play App Signing ve iOS sertifika/provisioning profile kavramlarını açıklayın.$md$, $md$Code signing, uygulamanın **kimin tarafından üretildiğini** ve **değiştirilmediğini** kanıtlar. OS, güncellemenin aynı geliştiriciden geldiğini imza ile doğrular.
+
+### Android
+- Uygulama, keystore (`.jks`) içindeki özel anahtarla imzalanır (APK Signature Scheme v2/v3/v4).
+- **Play App Signing** (yeni uygulamalar için zorunlu): Google asıl **app signing key**'i güvenli altyapısında saklar; siz yalnızca **upload key** ile imzalayıp yüklersiniz. Upload key kaybolursa Play Console üzerinden sıfırlanabilir; eskiden imza anahtarını kaybetmek uygulamayı güncelleyememek demekti.
+- App Links ve Google Sign-In gibi servisler için **app signing key'in SHA-256** parmak izi kullanılır (upload key'inki değil); yaygın bir hata kaynağıdır.
+
+```kotlin
+signingConfigs {
+    create("release") {
+        storeFile = file(System.getenv("KEYSTORE_PATH"))
+        storePassword = System.getenv("KEYSTORE_PASSWORD")
+        keyAlias = "upload"
+        keyPassword = System.getenv("KEY_PASSWORD")
+    }
+}
+```
+
+### iOS
+| Kavram | Açıklama |
+| --- | --- |
+| Certificate | Apple'ın imzaladığı geliştirici kimliği (Development veya Distribution); özel anahtar Mac'in keychain'inde |
+| App ID / Bundle ID | Uygulamanın kimliği ve yetenekleri (push, Sign in with Apple, App Groups) |
+| Entitlements | Uygulamanın istediği yetenekler |
+| Provisioning profile | Sertifika + App ID + (development/ad hoc için) cihaz UDID listesi + entitlement'ları bağlayan dosya |
+
+Dağıtım türleri: Development, Ad Hoc (kayıtlı cihazlar), App Store (TestFlight dahil), Enterprise.
+
+### CI'da yönetim
+- Anahtar ve şifreler repo'ya konmaz; CI secret'larında (base64 keystore) tutulur.
+- iOS'ta **Fastlane match** sertifika ve profilleri şifreli bir git repo'sunda/bulutta senkronize eder; ya da Xcode Cloud / App Store Connect API key ile otomatik imzalama.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$app-store-veya-google-play-incelemesinde-uygulamalarin-en-sik-reddedilme-sebeple$md$, $md$App Store veya Google Play incelemesinde uygulamaların en sık reddedilme sebepleri nelerdir?$md$, $md$### Apple App Store (App Review Guidelines)
+- **2.1 App Completeness**: Crash, kırık linkler, placeholder içerik; login gerektiren uygulamalarda inceleme ekibine **demo hesap** verilmemesi. En sık red sebebidir.
+- **2.3 Accurate Metadata**: Ekran görüntülerinin uygulamayı yansıtmaması, gizli özellikler.
+- **3.1.1 In-App Purchase**: Dijital içerik/abonelik satışında Apple IAP dışı ödeme kullanmak (fiziksel ürün ve hizmetler hariç; ABD ve AB'de 2024-2025 düzenlemeleriyle bazı istisnalar var).
+- **4.2 Minimum Functionality**: Sadece bir web sitesini saran WebView uygulamaları.
+- **4.8 Login Services**: Üçüncü parti sosyal giriş varsa gizlilik odaklı eşdeğer bir seçenek (ör. Sign in with Apple) sunmamak.
+- **5.1.1 Data Collection**: Uygulamada hesap oluşturulabiliyorsa **uygulama içinden hesap silme** imkânı olmaması; izin metinlerinin (`NSCameraUsageDescription` vb.) belirsiz olması; gerekmeden kişisel veri istemek.
+- **5.1.2**: Kullanıcıyı ATT izni olmadan cihazlar arası takip etmek.
+- Privacy manifest ve required reason API beyanlarının eksik olması (2024'ten beri).
+
+### Google Play
+- **Data safety** formunun gerçek veri toplama davranışıyla uyuşmaması (SDK'ların topladıkları dahil).
+- Hassas izinler: `READ_SMS`, `QUERY_ALL_PACKAGES`, arka plan konumu, `MANAGE_EXTERNAL_STORAGE` için gerekçe beyanı olmaması veya çekirdek işlevle ilgisiz kullanım.
+- Hedef API seviyesinin güncel gereksinimin altında olması.
+- Yanıltıcı metadata, telif/marka ihlali, eksik gizlilik politikası.
+- Foreground service tiplerinin (Android 14+) beyan edilmemesi.
+
+### Kaçınma yolları
+Gönderimden önce kontrol listesi, demo hesap ve inceleme notu, izin açıklamalarını spesifik yazmak, Resolution Center'da kibar ve açıklayıcı yanıt.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$mobilde-staged-rollout-ve-feature-flag-leri-nasil-kullanirsiniz-yayindaki-bir-ha$md$, $md$Mobilde staged rollout ve feature flag'leri nasıl kullanırsınız? Yayındaki bir hatayı store review beklemeden nasıl durdurursunuz?$md$, $md$Mobilde yanlış bir sürümü **geri alamazsınız**: kullanıcının cihazına inen sürüm orada kalır ve hotfix yine review'dan geçmek zorundadır. Bu yüzden riski iki mekanizmayla yönetiriz.
+
+### 1. Staged / phased rollout
+- **Google Play**: Production'da yüzde ile yayın (%1 → %5 → %20 → %50 → %100); istediğiniz anda **halt** edilebilir. Halt edilen sürümü almış kullanıcılar onda kalır.
+- **App Store**: Phased release otomatik güncellemeleri 7 güne yayar (%1, 2, 5, 10, 20, 50, 100); 30 güne kadar duraklatılabilir. Mağazadan manuel güncelleyen herkes yine yeni sürümü alır.
+- Her adımda crash-free users, ANR, kritik iş metrikleri (checkout dönüşümü) izlenir; eşik aşılırsa durdurulur.
+
+### 2. Feature flag / remote config
+Kod uygulamaya **kapalı olarak** gönderilir, sunucudan açılır:
+```kotlin
+if (remoteConfig.getBoolean("new_checkout_enabled")) NewCheckout() else LegacyCheckout()
+```
+- Araçlar: Firebase Remote Config, LaunchDarkly, Statsig, Optimizely veya şirket içi config servisi.
+- **Kill switch**: Sorunlu bir özellik saniyeler içinde kapatılır, hotfix beklenmez.
+- **Kademeli açma**: Kullanıcıların %5'ine, belirli ülkeye, iç çalışanlara.
+- **A/B test**: Aynı flag ile varyantlar ve metrik karşılaştırma.
+- Trunk-based development'ı mümkün kılar: yarım kalan özellik main'e merge edilir ama kapalı kalır.
+
+### Dikkat edilecekler
+- Flag değeri gelmezse (offline, ilk açılış) **güvenli varsayılan** kullan ve son değeri cache'le.
+- Eski flag'leri temizle; yüzlerce ölü flag teknik borçtur.
+- Apple kuralları: Review sonrası uygulamanın amacını değiştiren gizli özellik açmak (2.3.1, 2.5.2 kapsamında) yasaktır; flag'ler mevcut özellikleri kademeli açmak için kullanılmalı.$md$, $md$Play'deki halt ile App Store'daki pause arasındaki farkı (App Store'da manuel güncelleyen kullanıcıların yine aldığını) bilmek detaycı bir cevap sayılır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$bir-mobil-uygulama-icin-ci-cd-pipeline-ini-nasil-kurarsiniz-fastlane-bitrise-git$md$, $md$Bir mobil uygulama için CI/CD pipeline'ını nasıl kurarsınız? Fastlane, Bitrise, GitHub Actions ve EAS'ın rolü nedir?$md$, $md$Mobil CI/CD'nin web'den farkları: iOS build'leri için **macOS runner** gerekir, imzalama anahtarları güvenle yönetilmelidir, dağıtım store API'leri üzerinden olur ve build'ler uzun sürer.
+
+### Tipik pipeline
+1. **PR'da**: Lint (ktlint/detekt, SwiftLint, `flutter analyze`), unit testler, snapshot testleri, debug build, uygulama boyutu kontrolü.
+2. **main'e merge**: Release build, imzalama, internal dağıtım (Firebase App Distribution, TestFlight internal, Play internal track), sembol dosyalarını crash aracına yükleme.
+3. **Tag/release branch**: Versiyon ve build numarası artırma, store'a yükleme, release notes, staged rollout başlatma.
+4. Gecelik: E2E testleri device farm'da.
+
+### Araçlar
+| Araç | Rol |
+| --- | --- |
+| Fastlane | Build, imzalama (`match`), test, `pilot`/`deliver` (App Store), `supply` (Play) adımlarını script'leyen araç |
+| GitHub Actions / GitLab CI | Genel CI orkestrasyonu; macOS runner'lar pahalı |
+| Bitrise, Codemagic, Xcode Cloud | Mobile özel CI/CD; hazır adımlar, imzalama yönetimi |
+| EAS Build/Submit (Expo) | React Native/Expo uygulamaları için bulutta build ve store'a gönderim, EAS Update ile OTA JS güncellemesi |
+
+```yaml
+name: android-release
+on: { push: { tags: ["v*"] } }
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - run: echo "$KEYSTORE_B64" | base64 -d > upload.jks
+        env: { KEYSTORE_B64: "${{ secrets.KEYSTORE_B64 }}" }
+      - run: bundle exec fastlane android deploy track:internal
+        env:
+          KEYSTORE_PATH: upload.jks
+          PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
+```
+
+### İyi pratikler
+- Build numarasını CI çalıştırma numarasından üret.
+- Gradle/CocoaPods/SPM cache ile süreyi kısalt.
+- Store kimlik doğrulaması için kişisel hesap yerine App Store Connect API key ve Play service account kullan.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$push-notification-akisi-uctan-uca-nasil-calisir-apns-ve-fcm-de-token-yonetimi-ve$md$, $md$Push notification akışı uçtan uca nasıl çalışır? APNs ve FCM'de token yönetimi ve mesaj tipleri nelerdir?$md$, $md$### Akış
+1. Uygulama kullanıcıdan bildirim izni ister (iOS'ta her zaman, Android 13+'ta `POST_NOTIFICATIONS` runtime izni).
+2. Uygulama platform servisine kaydolur ve bir **device token** alır: iOS'ta APNs token, Android'de FCM registration token. (FCM, iOS'ta da APNs üzerinden çalışabilir.)
+3. Uygulama token'ı kullanıcı ID'si ve platform bilgisiyle **kendi backend'ine** gönderir.
+4. Backend bildirim göndermek istediğinde APNs (HTTP/2, `.p8` token tabanlı auth) veya **FCM HTTP v1 API** (OAuth service account; legacy API Haziran 2024'te kapatıldı) çağırır.
+5. Platform servisi cihaza iletir; OS bildirimi gösterir veya uygulamayı uyandırır.
+
+### Token yönetimi
+- Token değişebilir (yeniden kurulum, veri temizleme, geri yükleme): `onNewToken` / `didRegisterForRemoteNotificationsWithDeviceToken` her çağrıldığında backend'i güncelle.
+- Logout'ta token'ı kullanıcıdan ayır; aksi hâlde başka kullanıcının bildirimi gelir.
+- Gönderimde `410 Unregistered` / `UNREGISTERED` dönen token'ları sil.
+- Bir kullanıcının birden çok cihazı olabilir.
+
+### Mesaj tipleri
+| Tip | Davranış |
+| --- | --- |
+| Notification (alert) | OS gösterir; uygulama kapalıyken bile |
+| Data message (FCM) | Uygulamaya iletilir, uygulama işler ve gerekirse bildirimi kendisi oluşturur |
+| Silent / background push (iOS `content-available: 1`) | Uygulamayı kısa süre uyandırır; OS kısıtlar, garanti yok |
+| Rich (iOS Notification Service Extension, Android BigPicture) | Görsel ekleme, içerik şifre çözme |
+
+```json
+{ "message": { "token": "fcm-token", "notification": { "title": "Siparişin yolda", "body": "Kurye 10 dk içinde" },
+  "data": { "deeplink": "https://shop.com/orders/123" }, "android": { "priority": "high" } } }
+```
+
+### Dikkat
+Bildirime tıklayınca açılan ekran deep link router'ından geçmeli; Android'de bildirim kanalları (8.0+) tanımlanmalı; hassas veri payload'a konmamalı.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$mobil-uygulamada-access-token-sifre-veya-api-anahtari-gibi-hassas-verileri-nered$md$, $md$Mobil uygulamada access token, şifre veya API anahtarı gibi hassas verileri nerede saklarsınız? Keychain ve Android Keystore farkı nedir?$md$, $md$Hassas veriler **düz metin depolarda** (SharedPreferences, UserDefaults, plist, SQLite, Flutter `shared_preferences`) saklanmamalıdır; root/jailbreak'li cihazda veya yedeklerden kolayca okunur. Doğru yer platformun güvenli depolarıdır.
+
+| Platform | Mekanizma | Ne yapar |
+| --- | --- | --- |
+| iOS | **Keychain** | Küçük sırları (token, şifre) şifreli saklar; erişim seviyesi `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` gibi ayarlanır; Secure Enclave ile biyometrik koruma |
+| Android | **Keystore** | Kriptografik **anahtarları** donanım destekli (TEE/StrongBox) saklar, anahtar dışarı çıkarılamaz; veriyi bu anahtarla şifreleyip başka yerde tutarsınız |
+| Flutter / RN | `flutter_secure_storage`, `react-native-keychain`, Expo SecureStore | Arka planda Keychain/Keystore kullanır |
+
+Fark: Keychain doğrudan **veri** saklar; Android Keystore **anahtar** saklar ve şifreleme işlemini güvenli donanımda yapar. Android'de `EncryptedSharedPreferences` (Jetpack Security) yaygındı ancak kütüphane 2025'te deprecated oldu; öneri Keystore anahtarıyla doğrudan şifreleme veya DataStore + Tink kullanmaktır.
+
+### Kurallar
+- **API secret'ı uygulamaya gömmeyin**: APK/IPA'dan dakikalar içinde çıkarılır. Gizli anahtar gerektiren çağrılar backend üzerinden yapılmalı; istemcide yalnızca kısıtlanmış anahtarlar (ör. paket adı/bundle ID ile sınırlı Maps key) olabilir.
+- Kısa ömürlü access token + refresh token kullanın; refresh token güvenli depoda.
+- Logout'ta güvenli depoyu temizleyin. iOS'ta Keychain verisi uygulama silinse de kalabilir; ilk açılışta temizlemeyi düşünün.
+- Android'de hassas dosyaları `allowBackup`/backup kurallarıyla yedekten hariç tutun.
+- Biyometrik koruma için `BiometricPrompt` + `CryptoObject` ve iOS `LAContext` + access control flag'leri.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$certificate-pinning-nedir-mobilde-nasil-uygulanir-riskleri-nelerdir-ve-sertifika$md$, $md$Certificate pinning nedir, mobilde nasıl uygulanır? Riskleri nelerdir ve sertifika yenilendiğinde uygulamanın kırılmasını nasıl önlersiniz?$md$, $md$Certificate pinning, uygulamanın sunucuya bağlanırken yalnızca OS'un güvendiği herhangi bir CA'yı değil, **önceden bilinen belirli bir sertifikayı veya public key'i** kabul etmesidir. Amaç, kullanıcının cihazına sahte bir root CA yüklenerek (kurumsal proxy, zararlı profil, Charles/mitmproxy) yapılan **MITM** saldırılarını engellemektir.
+
+### Ne pinlenir?
+- Leaf sertifikanın tamamı: Her yenilemede değişir, önerilmez.
+- **Public key (SPKI) hash'i**: Sertifika yenilense de aynı anahtar kullanılırsa geçerli kalır. Tercih edilen yöntem.
+- Ara (intermediate) CA'nın anahtarı: Daha esnek, daha az sıkı.
+
+### Uygulama
+```kotlin
+val pinner = CertificatePinner.Builder()
+    .add("api.shop.com", "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=") // mevcut anahtar
+    .add("api.shop.com", "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=") // yedek anahtar
+    .build()
+val client = OkHttpClient.Builder().certificatePinner(pinner).build()
+```
+- Android alternatif: `network_security_config.xml` içinde `<pin-set expiration="2027-01-01">`.
+- iOS: `Info.plist` içinde `NSPinnedDomains` (iOS 14+) veya `URLSessionDelegate` ile `SecTrust` kontrolü; TrustKit gibi kütüphaneler.
+- Flutter: Dio'da `IOHttpClientAdapter` + `validateCertificate` ile sertifika/public key hash kontrolü veya `http_certificate_pinning` gibi paketler. `badCertificateCallback`'ten `true` döndürmek pinning değildir, doğrulamayı tamamen kapatır.
+
+### Riskler ve önlemler
+- **En büyük risk**: Sertifika/anahtar değiştiğinde eski sürümdeki tüm kullanıcılar bağlanamaz ve bunu uygulama güncellemesi olmadan düzeltemezsiniz.
+- Önlemler: Her zaman en az bir **yedek pin** (offline saklanan backup key) ekleyin; pin-set'e expiration tarihi koyun; sertifika rotasyonunu backend ekibiyle planlayın; pin değerlerini remote config ile güncellenebilir yapmak (imzalı config ile) bir seçenektir.
+- Pinning hatalarını izleyin (rapor endpoint'i).
+
+### Güncel tartışma
+Google'ın Android dokümantasyonu, sunucu tarafı değişikliklerde uygulamayı kırma riski nedeniyle genel uygulamalar için pinning'i önermiyor; Certificate Transparency ve OS seviyesindeki korumalar birçok tehdidi kapsıyor. Bankacılık, ödeme ve sağlık uygulamalarında ise OWASP MASVS (MASVS-NETWORK-2) kapsamında hâlâ beklenir. Pinning Frida gibi araçlarla root'lu cihazda atlatılabildiği için tek başına yeterli değildir.$md$, $md$Yedek pin ve rotasyon planından bahsetmeyen bir cevap eksik sayılır. "Pinning'i nasıl atlatırlar?" (Frida, objection) takip sorusuna da hazır olun.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$owasp-mobile-top-10-2024-listesinde-neler-var-kendi-uygulamanizda-bunlara-karsi$md$, $md$OWASP Mobile Top 10 (2024) listesinde neler var? Kendi uygulamanızda bunlara karşı hangi önlemleri alırsınız?$md$, $md$OWASP Mobile Top 10'un 2024 sürümü (2016'dan sonraki ilk büyük güncelleme) şu riskleri içerir:
+
+| Kod | Risk | Örnek önlem |
+| --- | --- | --- |
+| M1 | Improper Credential Usage | Hardcoded API key yok; token'lar Keychain/Keystore'da |
+| M2 | Inadequate Supply Chain Security | SDK'ları denetle, bağımlılıkları sabitle, SBOM, imzalı build |
+| M3 | Insecure Authentication/Authorization | Yetki kontrolü backend'de; istemcideki `isAdmin` bayrağına güvenme |
+| M4 | Insufficient Input/Output Validation | Deep link, WebView, SQL ve intent girdilerini doğrula |
+| M5 | Insecure Communication | Sadece TLS, cleartext trafiği kapat (ATS, `usesCleartextTraffic=false`), gerekirse pinning |
+| M6 | Inadequate Privacy Controls | Veri minimizasyonu, loglarda kişisel veri yok, izinleri gerektiği kadar iste |
+| M7 | Insufficient Binary Protections | Obfuscation (R8, Swift için araçlar), tamper/hook tespiti, App Attest/Play Integrity |
+| M8 | Security Misconfiguration | `debuggable=false`, `exported` component'leri kısıtla, yedekleme kuralları |
+| M9 | Insecure Data Storage | Hassas veriyi şifrele, cache/screenshot/klavye cache'ine dikkat |
+| M10 | Insufficient Cryptography | Kendi kriptonu yazma; AES-GCM, platform API'leri, güçlü rastgelelik |
+
+### Pratik kontrol listesi
+- Android'de `android:exported` açık Activity/Service/Provider'ları gözden geçir; dışarıdan gelen Intent'leri doğrula.
+- WebView'da `setJavaScriptEnabled` ve `addJavascriptInterface` kullanımını sınırla, sadece güvenilir domain yükle.
+- Hassas ekranlarda (kart bilgisi) Android `FLAG_SECURE`, iOS'ta app switcher görüntüsünü bulanıklaştırma.
+- Log'larda token ve kişisel veri bırakma; release'de log seviyesini düşür.
+- Statik analiz (MobSF), bağımlılık taraması ve periyodik pentest.
+
+Daha ayrıntılı doğrulama için OWASP **MASVS** (standart) ve **MASTG** (test rehberi) kullanılır; bankacılık uygulamalarında MAS-L2 + MAS-R (resilience) profilleri hedeflenir (MASVS v2 ile seviyeler MASTG'deki test profillerine taşındı).$md$, $md$Tüm listeyi ezbere saymak yerine 3-4 maddeyi kendi projenizden somut örnekle anlatmak daha değerlidir. 2024 listesindeki yeni madde olan supply chain riskini (kötü niyetli SDK) mutlaka anmanız beklenir.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$uygulamaniz-tersine-muhendislik-reverse-engineering-root-jailbreak-ve-tamper-sal$md$, $md$Uygulamanız tersine mühendislik (reverse engineering), root/jailbreak ve tamper saldırılarına karşı nasıl korunur? Bu önlemlerin sınırları nedir?$md$, $md$Temel ilke: **İstemci kontrol edilemez bir ortamdır.** Saldırgan APK/IPA'yı indirip decompile edebilir (jadx, apktool, Hopper, Ghidra), runtime'da fonksiyonları hook'layabilir (Frida, objection) ve değiştirilmiş bir kopya dağıtabilir. Önlemler saldırının **maliyetini artırır**, imkânsız kılmaz; asıl güvenlik backend'de olmalıdır.
+
+### Katmanlı savunma
+1. **Obfuscation**: Android'de R8 (sınıf/metod adlarını kısaltır, kullanılmayan kodu siler); daha güçlüsü için DexGuard/Guardsquare, iOS için iXGuard veya benzeri araçlar; Flutter'da `--obfuscate`. String şifreleme, kontrol akışı karıştırma.
+2. **Root/jailbreak tespiti**: `su` binary, Magisk izleri, Cydia/Sileo dosyaları, yazılabilir sistem dizinleri, sandbox dışına yazma denemesi. Kütüphaneler: RootBeer, IOSSecuritySuite, `freeRASP`. Kolayca atlatılabilir (Magisk DenyList, Shamiko).
+3. **Tamper ve debugger tespiti**: İmza doğrulama, `ptrace`/debugger kontrolü, Frida port/kütüphane taraması.
+4. **Platform attestation (en etkili olan)**: Android'de **Play Integrity API** (SafetyNet Attestation'ın yerini aldı) cihazın ve uygulamanın orijinal olduğunu Google imzalı bir token ile kanıtlar; iOS'ta **App Attest** (DeviceCheck) Secure Enclave'de anahtar üretir ve Apple uygulamanın gerçek olduğunu doğrular. Token **sunucuda doğrulanır**; istemcideki `if (rooted)` kontrolü ise hook'la tek satırda devre dışı bırakılır. Firebase App Check bu iki mekanizmayı Firebase/backend çağrıları için paketler.
+
+```text
+App -> Play Integrity / App Attest -> imzalı token -> Backend doğrular -> verdict'e göre izin/ret/ek doğrulama
+```
+
+### Tepki stratejisi
+Uygulamayı hemen kapatmak yerine riski backend'e bildirip işlem bazlı karar vermek (ödeme için ek OTP, kampanya kuponunu engelleme) daha dengelidir; root'lu meşru kullanıcıları da kaybetmezsiniz. Bankacılık uygulamaları ise genelde düzenleyici gereği (BDDK gibi) daha katıdır.
+
+### Sınırlar
+- Uygulamaya gömülü hiçbir sır gerçekten gizli değildir.
+- Fiyat, indirim, oyun skoru gibi kararlar istemcide verilmemeli; sunucu her isteği yeniden doğrulamalı.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$mobilde-izinler-ve-gizlilik-nasil-yonetilir-android-runtime-izinleri-ios-app-tra$md$, $md$Mobilde izinler ve gizlilik nasıl yönetilir? Android runtime izinleri, iOS App Tracking Transparency, privacy manifest ve KVKK/GDPR açısından nelere dikkat edersiniz?$md$, $md$### Android runtime izinleri
+- Tehlikeli izinler (kamera, konum, mikrofon, kişiler, bildirim [13+]) çalışma zamanında istenir; kullanıcı reddedebilir, "bir daha sorma" seçebilir veya izni sonradan ayarlardan kaldırabilir.
+- İzni **ihtiyaç anında ve bağlam içinde** isteyin; gerekirse önce açıklama (`shouldShowRequestPermissionRationale`).
+- Konum: Önce yaklaşık/tam ve foreground, arka plan konumunu ayrıca ve gerekçeyle isteyin.
+- Mümkünse izinsiz alternatifleri kullanın: **Photo Picker** (galeri izni gerektirmez), kamera intent'i, Credential Manager.
+
+```kotlin
+val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    if (granted) startScan() else showManualEntry()
+}
+Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) { Text("QR Tara") }
+```
+
+### iOS
+- Her izin için `Info.plist`'te açık ve spesifik bir açıklama metni (`NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription`) zorunlu; eksikse uygulama crash olur, belirsizse review reddeder.
+- **App Tracking Transparency (ATT)**: Kullanıcıyı diğer şirketlerin uygulama/sitelerinde takip etmek veya IDFA'ya erişmek için `ATTrackingManager.requestTrackingAuthorization` ile izin alınmalı. Red edilirse IDFA sıfırdır; atribüsyon için SKAdNetwork/AdAttributionKit.
+- **Privacy manifest** (`PrivacyInfo.xcprivacy`, Mayıs 2024'ten beri zorunlu): Toplanan veri türleri, tracking domain'leri ve "required reason API" kullanımları (UserDefaults, disk alanı, dosya zaman damgası, sistem açılış süresi) beyan edilir. Yaygın üçüncü parti SDK'ların kendi manifest'i ve imzası olmalıdır.
+
+### Mağaza beyanları
+App Store "App Privacy" etiketi ve Google Play "Data safety" formu, kullandığınız SDK'ların (analytics, reklam, crash) topladığı verileri de kapsamalıdır.
+
+### KVKK / GDPR
+- Açık rıza ve aydınlatma metni; analytics/reklam SDK'larını **rıza alınmadan başlatmayın** (consent management, Google Consent Mode v2).
+- Veri minimizasyonu ve saklama süresi; kullanıcının verilerini silme ve dışa aktarma hakkı (uygulama içi hesap silme zaten mağaza zorunluluğu).
+- Yurt dışına veri aktarımı (KVKK'da 2024 değişiklikleriyle güncellenen kurallar) ve bulut/SDK sağlayıcılarının sunucu lokasyonu.
+- Loglarda ve crash raporlarında kişisel veri tutmama.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$mobil-yayin-ve-guvenlik$md$),
+  ($md$flutter-da-statelesswidget-ile-statefulwidget-arasindaki-fark-nedir-hangisini-ne$md$, $md$Flutter'da StatelessWidget ile StatefulWidget arasındaki fark nedir? Hangisini ne zaman seçersiniz?$md$, $md$**StatelessWidget** oluşturulduktan sonra kendi içinde değişen bir veri tutmaz; çıktısı yalnızca constructor parametrelerine ve bağlı olduğu `InheritedWidget`'lara (ör. `Theme.of`) bağlıdır. **StatefulWidget** ise zamanla değişen ve widget yeniden oluşturulsa bile korunması gereken veriyi ayrı bir `State` nesnesinde tutar.
+
+### Temel noktalar
+- Widget'ların kendisi her zaman **immutable**'dır. StatefulWidget'ta değişen şey widget değil, ona bağlı uzun ömürlü `State` nesnesidir.
+- `setState()` çağrısı State'i "dirty" olarak işaretler; bir sonraki frame'de `build()` yeniden çalışır.
+- StatefulWidget; `TextEditingController`, `AnimationController`, `ScrollController`, `StreamSubscription` gibi **oluşturulup dispose edilmesi gereken** kaynaklar için de gerekir.
+
+```dart
+class Counter extends StatefulWidget {
+  const Counter({super.key});
+  @override
+  State<Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  int _count = 0;
+  @override
+  Widget build(BuildContext context) => TextButton(
+        onPressed: () => setState(() => _count++),
+        child: Text('Sayı: $_count'),
+      );
+}
+```
+
+### Seçim kuralı
+Varsayılan olarak StatelessWidget ile başlarım. Yalnızca o widget'a ait yerel UI state (seçili sekme, form alanı, animasyon) veya yaşam döngüsü yönetilmesi gereken bir controller varsa StatefulWidget'a geçerim. Ekranlar arası paylaşılan iş verisi ise widget state'inde değil, bir state management çözümünde (Riverpod, BLoC vb.) tutulmalıdır.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$bir-state-nesnesinin-yasam-dongusunu-lifecycle-sirasiyla-anlatin-initstate-didch$md$, $md$Bir State nesnesinin yaşam döngüsünü (lifecycle) sırasıyla anlatın. initState, didChangeDependencies, didUpdateWidget ve dispose'da ne yapılır?$md$, $md$Sıra kabaca şöyledir: `createState` → `initState` → `didChangeDependencies` → `build` → (güncellemelerde `didUpdateWidget` / `setState` → `build`) → `deactivate` → `dispose`.
+
+| Metot | Ne zaman çağrılır | Tipik kullanım |
+| --- | --- | --- |
+| `initState` | State ağaca ilk eklendiğinde, bir kez | Controller oluşturma, stream'e abone olma |
+| `didChangeDependencies` | initState'ten hemen sonra ve bağlı InheritedWidget değişince | `Theme.of`, `MediaQuery.of` gibi context bağımlı işlemler |
+| `build` | Her rebuild'de, çok sık | Sadece UI üretmek; yan etki yok |
+| `didUpdateWidget(old)` | Parent aynı tip ve key ile yeni widget verdiğinde | Değişen parametreye göre controller'ı güncellemek |
+| `deactivate` | Element ağaçtan çıkarıldığında (geri eklenebilir) | Nadiren kullanılır |
+| `dispose` | State kalıcı olarak yok edilirken | Controller, subscription, timer temizliği |
+
+Hot reload sırasında ayrıca `reassemble` çağrılır.
+
+```dart
+class _PlayerState extends State<Player> {
+  late final VideoController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoController(widget.url);
+  }
+
+  @override
+  void didUpdateWidget(covariant Player oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) _controller.load(widget.url);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose(); // dispose'da super en sonda çağrılır
+  }
+}
+```
+
+### Dikkat edilecekler
+- `initState` içinde `context` ile `InheritedWidget` okunmaz (`Theme.of(context)` gibi); bunun yeri `didChangeDependencies`'tir.
+- `dispose` sonrasında `setState` çağırmak hata verir. Async bir işlemden sonra `if (!mounted) return;` kontrolü yapılmalıdır.
+- `build` içinde ağ isteği başlatmak klasik hatadır; build defalarca çalışabilir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-daki-widget-element-ve-renderobject-agaclarini-aciklayin-neden-uc-ayri-a$md$, $md$Flutter'daki Widget, Element ve RenderObject ağaçlarını açıklayın. Neden üç ayrı ağaç var?$md$, $md$Flutter UI'ı üç katmanlı tutar: **Widget** tarifi (ne çizilecek), **Element** canlı örnek ve eşleşme (ağaçtaki yeri), **RenderObject** ise layout, paint ve hit-test işini yapar. Bu ayrım, widget'ların ucuz ve immutable olarak her frame'de yeniden oluşturulabilmesini, pahalı nesnelerin ise korunmasını sağlar.
+
+### Katmanlar
+- **Widget ağacı:** Hafif, immutable konfigürasyon nesneleri. `build()` her çalıştığında yeniden oluşturulur, maliyeti düşüktür.
+- **Element ağacı:** Her widget'ın ağaçtaki konumunu temsil eder ve uzun ömürlüdür. `State` nesnesi Element'e bağlıdır. `BuildContext` aslında Element'in kendisidir.
+- **RenderObject ağacı:** Sadece `RenderObjectWidget`'lar (ör. `Padding`, `Opacity`, `RichText`) oluşturur. Boyut hesaplama (constraints aşağı, sizes yukarı), çizim ve dokunma testini yapar. Oluşturması ve layout'u pahalıdır.
+
+### Rebuild sırasında ne olur?
+Yeni widget geldiğinde Element `Widget.canUpdate(old, new)` kontrolü yapar: **runtimeType ve key** aynıysa Element ve RenderObject korunur, yalnızca yeni konfigürasyonla güncellenir (`updateRenderObject`). Farklıysa eski alt ağaç atılır ve yenisi oluşturulur; bu durumda State de kaybolur.
+
+```text
+Widget:        Container  ->  Padding     ->  Text
+Element:       StatelessElement -> SingleChildRenderObjectElement -> StatelessElement
+RenderObject:                    RenderPadding  ->  RenderParagraph
+```
+
+`Container` ve `Text` gibi widget'ların kendi RenderObject'i yoktur; onlar başka widget'lara build olur.
+
+### Pratik sonuçları
+- Koşullu olarak widget tipini değiştirmek (`isLoading ? A() : B()`) alt ağacın state'ini sıfırlar.
+- `const` widget'lar aynı örnek olduğu için Element güncellemesi bile atlanabilir.
+- Key'ler, Element eşleşmesini konuma değil kimliğe göre yapmak için vardır.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$asagidaki-kodda-ne-yanlis-buildcontext-kullanimiyla-ilgili-hatalari-duzeltin$md$, $md$Aşağıdaki kodda ne yanlış? BuildContext kullanımıyla ilgili hataları düzeltin.$md$, $md$```dart
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ElevatedButton(
+        onPressed: () async {
+          await authService.login();
+          Navigator.of(context).pushReplacementNamed('/home');
+          Scaffold.of(context).showSnackBar(
+            const SnackBar(content: Text('Hoş geldin')),
+          );
+        },
+        child: const Text('Giriş'),
+      ),
+    );
+  }
+}
+```
+
+İki sorun var:
+
+1. **Async gap sonrası context kullanımı:** `await` sırasında kullanıcı geri tuşuna basabilir ve widget ağaçtan çıkabilir. Bu durumda `context` artık geçerli bir Element'i temsil etmez. Flutter 3.7+ ile `context.mounted` kontrolü yapılmalıdır; `use_build_context_synchronously` lint'i de bunu uyarır.
+2. **Yanlış context ile `Scaffold.of`:** `build` metodunun `context`'i Scaffold'un **üstündedir**; `Scaffold.of(context)` yukarı doğru arar ve Scaffold'u bulamaz. Ayrıca SnackBar göstermek artık `ScaffoldMessenger`'ın işidir (`Scaffold.showSnackBar` kaldırıldı).
+
+```dart
+onPressed: () async {
+  final messenger = ScaffoldMessenger.of(context); // await öncesi yakala
+  final navigator = Navigator.of(context);
+  await authService.login();
+  if (!context.mounted) return;
+  navigator.pushReplacementNamed('/home');
+  messenger.showSnackBar(const SnackBar(content: Text('Hoş geldin')));
+},
+```
+
+### BuildContext nedir?
+BuildContext, widget'ın Element ağacındaki konumuna bir referanstır. `X.of(context)` çağrıları bu konumdan **yukarı** doğru en yakın ilgili ata (ancestor) widget'ı arar. Bu yüzden bir widget'ın altındaki bir şeye ulaşmak gerektiğinde `Builder` widget'ı veya ayrı bir alt widget kullanılarak yeni, daha aşağıdaki bir context elde edilir.$md$, $md$Mülakatta 'context ağacın neresinde?' sorusunu kendinize sorun. Builder ile çözüm ve context.mounted, beklenen iki anahtar kelimedir.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-da-key-ne-ise-yarar-asagidaki-listede-ogeleri-silince-yanlis-checkbox-is$md$, $md$Flutter'da Key ne işe yarar? Aşağıdaki listede öğeleri silince yanlış checkbox işaretli kalıyor; neden ve nasıl düzeltirsiniz?$md$, $md$Key, Flutter'ın rebuild sırasında eski Element'i yeni widget ile **konum yerine kimlik üzerinden** eşleştirmesini sağlar. Aynı tipte, kendi state'i olan kardeş widget'lar yer değiştirdiğinde, silindiğinde veya eklendiğinde key gerekir.
+
+```dart
+// Hatalı
+Column(
+  children: todos.map((t) => TodoTile(todo: t)).toList(),
+)
+// TodoTile bir StatefulWidget ve "checked" bilgisini kendi State'inde tutuyor.
+```
+
+İlk öğe silinince Flutter yeni listeyi eskisiyle **sırayla** karşılaştırır. Tipler aynı olduğu için 0. Element artık 2. todo'yu gösterir ama State'i (checked bilgisi) silinen öğeninkidir. Sonuç: işaretler kayar.
+
+```dart
+// Doğru
+Column(
+  children: todos.map((t) => TodoTile(key: ValueKey(t.id), todo: t)).toList(),
+)
+```
+
+### Key türleri
+| Key | Ne zaman |
+| --- | --- |
+| `ValueKey(id)` | Benzersiz ve kararlı bir değer varsa (en yaygın) |
+| `ObjectKey(obj)` | Kimlik nesnenin kendisiyse |
+| `UniqueKey()` | Her build'de yeni kimlik; state'i bilinçli olarak sıfırlamak için |
+| `GlobalKey` | Tüm uygulamada tekil; state'e dışarıdan erişim (`GlobalKey<FormState>`) veya widget'ı ağacın başka yerine taşırken state'i korumak |
+
+### Dikkat
+- Index'i key yapmak (`ValueKey(index)`) sorunu çözmez; silmede yine kayar.
+- `GlobalKey` pahalıdır ve gereksiz kullanımı kötü bir kokudur; çoğu durumda callback veya state management daha temizdir.
+- Her build'de `UniqueKey()` vermek alt ağacın sürekli yeniden oluşmasına ve performans kaybına yol açar.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$hot-reload-ile-hot-restart-arasindaki-fark-nedir-bunu-mumkun-kilan-jit-aot-derle$md$, $md$Hot reload ile hot restart arasındaki fark nedir? Bunu mümkün kılan JIT/AOT derleme ve debug/profile/release build modları nasıl çalışır?$md$, $md$**Hot reload**, değişen Dart kodunu çalışan Dart VM'e enjekte eder ve widget ağacını yeniden build eder; **uygulama state'i korunur**. **Hot restart** ise kodu yeniden yükler, `main()`'i baştan çalıştırır ve **state sıfırlanır**, ama native taraf yeniden derlenmez. Native kod, plugin ekleme veya `Info.plist`/`AndroidManifest` değişiklikleri için tam yeniden build gerekir.
+
+### Hot reload'ın yansıtmadığı değişiklikler
+- `main()` veya `initState()` içindeki kodlar (zaten çalışmış olur)
+- Global ve static değişken başlangıç değerleri
+- Bir sınıfı enum'a çevirmek gibi tip yapısı değişiklikleri, generic tip değişiklikleri
+
+### JIT ve AOT
+- **Debug mode** Dart'ı **JIT** ile çalıştırır. Kod çalışma anında derlendiği için hot reload mümkündür; assert'ler açıktır, DevTools bağlanabilir. Performans gerçek değildir.
+- **Profile mode** **AOT** derlenir ama DevTools ve tracing açıktır. Performans ölçümü burada yapılır; emulator/simulator'da desteklenmez, gerçek cihaz gerekir.
+- **Release mode** **AOT** ile native makine koduna derlenir; assert'ler, debug bilgisi ve hot reload yoktur. Hızlı açılış ve küçük boyut sağlar.
+
+```bash
+flutter run                 # debug (JIT, hot reload)
+flutter run --profile       # performans ölçümü
+flutter build apk --release # AOT, mağaza build'i
+```
+
+### Flavors
+Aynı kod tabanından dev/staging/prod gibi farklı ortamlar için Android `productFlavors` ve iOS scheme'leri kullanılır; Dart tarafında konfigürasyon `--dart-define` veya `--dart-define-from-file` ile verilir.
+
+```bash
+flutter run --flavor staging -t lib/main_staging.dart --dart-define-from-file=env/staging.json
+```
+
+Not: Flutter 3.35 ile web'de de stateful hot reload varsayılan hale geldi.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$const-constructor-ne-ise-yarar-ve-rebuild-performansini-nasil-etkiler$md$, $md$const constructor ne işe yarar ve rebuild performansını nasıl etkiler?$md$, $md$`const` ile oluşturulan bir widget **derleme zamanında** sabitlenir ve aynı argümanlarla her kullanımda **aynı örnek** (canonicalized instance) paylaşılır. Parent rebuild olduğunda Flutter eski ve yeni widget'ın aynı nesne olduğunu görür ve o alt ağacın build'ini tamamen atlar.
+
+```dart
+// Her rebuild'de yeni nesneler oluşur ve alt ağaç yeniden build edilir
+Padding(padding: EdgeInsets.all(16), child: Text('Başlık'))
+
+// Tek örnek, rebuild'de atlanır
+const Padding(padding: EdgeInsets.all(16), child: Text('Başlık'))
+```
+
+### Koşullar
+- Sınıfın tüm alanları `final` olmalı ve constructor `const` olarak tanımlanmalıdır.
+- Tüm argümanlar da derleme zamanı sabiti olmalıdır. `Text(user.name)` const olamaz.
+- `prefer_const_constructors` lint'i (flutter_lints) eksik `const`'ları gösterir.
+
+### Faydaları
+- Gereksiz build çağrıları ve nesne oluşturma azalır, GC baskısı düşer.
+- Büyük ve statik alt ağaçları (ikonlar, başlıklar, boşluklar) bir kez oluşturup unutursunuz.
+
+### Sınırları
+`const` tek başına "her şeyi hızlandırmaz". Asıl kazanç, `setState`'i olabildiğince aşağıdaki küçük widget'larda çağırmak ve büyük build metotlarını küçük widget sınıflarına bölmekle gelir. Yardımcı metot (`Widget _buildHeader()`) yerine ayrı widget sınıfı yazmak, const ve Element eşleşmesinden yararlanmayı mümkün kılar.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$inheritedwidget-nedir-ve-nasil-calisir-theme-of-context-veya-provider-bunu-nasil$md$, $md$InheritedWidget nedir ve nasıl çalışır? Theme.of(context) veya Provider bunu nasıl kullanır?$md$, $md$**InheritedWidget**, veriyi ağaçta aşağıya **prop drilling yapmadan** iletmeyi ve o veri değiştiğinde **yalnızca ona bağımlı olan** widget'ları yeniden build etmeyi sağlayan temel mekanizmadır. `Theme.of`, `MediaQuery.of`, `Navigator.of` ve Provider paketi bunun üzerine kuruludur.
+
+### Çalışma şekli
+1. Bir alt widget `context.dependOnInheritedWidgetOfExactType<T>()` çağırır. Element ağacında en yakın `T` bulunur (O(1), her Element ata InheritedWidget'ların haritasını tutar) ve çağıran widget **bağımlı** olarak kaydedilir.
+2. InheritedWidget yeni bir örnekle değiştirildiğinde `updateShouldNotify(old)` çağrılır.
+3. `true` dönerse tüm bağımlıların `didChangeDependencies` ve `build` metotları tetiklenir.
+
+```dart
+class UserScope extends InheritedWidget {
+  const UserScope({super.key, required this.user, required super.child});
+  final User user;
+
+  static User of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<UserScope>()!.user;
+
+  @override
+  bool updateShouldNotify(UserScope old) => user != old.user;
+}
+```
+
+### Önemli ayrıntılar
+- InheritedWidget **immutable**'dır; kendi başına state değiştiremez. Değişim için genellikle üstüne bir StatefulWidget konur. Provider'ın `ChangeNotifierProvider`'ı tam olarak bunu paketler.
+- `getInheritedWidgetOfExactType` (veya Provider'da `context.read`) bağımlılık kaydetmez; sadece bir kez okumak, ör. bir callback içinde, için kullanılır.
+- `MediaQuery.of(context)` tüm MediaQuery değişikliklerinde (klavye açılması dahil) rebuild eder. Flutter 3.10+ ile `MediaQuery.sizeOf(context)` gibi aspect tabanlı metotlar (InheritedModel) yalnızca ilgili alan değişince rebuild eder.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-da-state-management-icin-setstate-provider-riverpod-bloc-cubit-ve-getx-a$md$, $md$Flutter'da state management için setState, Provider, Riverpod, BLoC/Cubit ve GetX arasında nasıl seçim yaparsınız? Trade-off'ları nelerdir?$md$, $md$Tek doğru yoktur; seçim **state'in kapsamına, ekip büyüklüğüne ve test edilebilirlik ihtiyacına** göre yapılır. Ben genellikle yerel UI state için `setState`, uygulama state'i için Riverpod veya BLoC kullanırım.
+
+| Yaklaşım | Güçlü yanı | Zayıf yanı | Uygun olduğu durum |
+| --- | --- | --- | --- |
+| `setState` | Sıfır bağımlılık, basit | Paylaşılan state'te prop drilling, iş mantığı UI'a karışır | Tek widget'a ait geçici state |
+| Provider | InheritedWidget üzerine ince katman, öğrenmesi kolay | Context'e bağlı, runtime'da `ProviderNotFoundException` | Küçük-orta uygulamalar, mevcut projeler |
+| Riverpod (3.x) | Compile-time güvenli, context'siz okuma, `autoDispose`, async state (`AsyncValue`), kolay override ile test | Kavram sayısı fazla, codegen (`@riverpod`) build_runner gerektirir | Çoğu yeni proje |
+| BLoC / Cubit | Event ve state ayrımı net, öngörülebilir akış, büyük ekiplerde tutarlılık, `bloc_test` | Boilerplate fazla (özellikle Bloc) | Kurumsal, büyük ekip, katı mimari |
+| GetX | Çok hızlı başlangıç, az kod | Global ve "sihirli" yapı, test ve bakım zorluğu, bağımlılıkların gizlenmesi | Prototip; büyük projelerde genelde tercih edilmez |
+
+### Karar verirken sorduğum sorular
+- State yerel mi (bir switch'in açık olması) yoksa uygulama genelinde mi (oturum, sepet)?
+- **Server state** mi (API cache, loading/error) yoksa **client state** mi? Server state için Riverpod'un `FutureProvider`/`AsyncNotifier` yapısı çok işe yarar.
+- Ekipte ne biliniyor, kurumsal standart var mı? Türkiye'de bankacılık ve büyük ürün ekiplerinde BLoC, yeni projelerde Riverpod sık görülür.
+- Test: iş mantığını widget'sız birim testi yazabiliyor muyum?
+
+### Riverpod örneği
+```dart
+@riverpod
+Future<List<Product>> products(Ref ref) async {
+  final api = ref.watch(apiProvider);
+  return api.fetchProducts();
+}
+
+// UI
+final products = ref.watch(productsProvider);
+return products.when(
+  data: (list) => ProductList(list),
+  loading: () => const CircularProgressIndicator(),
+  error: (e, _) => ErrorView(e),
+);
+```
+
+Önemli olan kütüphane değil, **iş mantığını UI'dan ayırmak**, state'i tek kaynaktan yönetmek ve gereksiz rebuild'leri sınırlamaktır.$md$, $md$'X en iyisidir' demek yerine trade-off anlatın. GetX hakkındaki eleştirileri bilmek ve neden tercih etmediğinizi gerekçelendirmek iyi bir sinyaldir.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$cubit-ile-bloc-arasindaki-fark-nedir-bir-arama-ekrani-icin-state-leri-sealed-cla$md$, $md$Cubit ile Bloc arasındaki fark nedir? Bir arama ekranı için state'leri sealed class olan basit bir Cubit yazın.$md$, $md$İkisi de `flutter_bloc` paketinin parçasıdır ve state'i bir `Stream` olarak yayar. **Cubit**'te UI doğrudan metot çağırır (`cubit.search('x')`) ve Cubit `emit()` ile yeni state yayar. **Bloc**'ta UI **event** gönderir (`bloc.add(SearchChanged('x'))`), Bloc event'leri state'e dönüştürür. Bloc daha fazla boilerplate getirir ama event'ler üzerinde `debounce`, `restartable`, `droppable` gibi **event transformer**'lar ve tam izlenebilirlik sağlar.
+
+```dart
+sealed class SearchState {}
+class SearchInitial extends SearchState {}
+class SearchLoading extends SearchState {}
+class SearchSuccess extends SearchState {
+  SearchSuccess(this.items);
+  final List<Product> items;
+}
+class SearchFailure extends SearchState {
+  SearchFailure(this.message);
+  final String message;
+}
+
+class SearchCubit extends Cubit<SearchState> {
+  SearchCubit(this._repo) : super(SearchInitial());
+  final ProductRepository _repo;
+
+  Future<void> search(String query) async {
+    if (query.trim().isEmpty) return emit(SearchInitial());
+    emit(SearchLoading());
+    try {
+      final items = await _repo.search(query);
+      if (isClosed) return;
+      emit(SearchSuccess(items));
+    } catch (e) {
+      if (!isClosed) emit(SearchFailure('Arama başarısız'));
+    }
+  }
+}
+```
+
+UI tarafında Dart 3 switch ile tüm durumlar zorunlu olarak ele alınır:
+
+```dart
+BlocBuilder<SearchCubit, SearchState>(
+  builder: (context, state) => switch (state) {
+    SearchInitial() => const Text('Aramaya başlayın'),
+    SearchLoading() => const CircularProgressIndicator(),
+    SearchSuccess(:final items) => ProductList(items),
+    SearchFailure(:final message) => Text(message),
+  },
+)
+```
+
+### Ne zaman hangisi?
+- Basit akışlar için Cubit yeterlidir.
+- Hızlı yazılan aramada eski isteklerin sonucu yeni sonucun üstüne yazılabilir (race condition). Bunu Bloc'ta `restartable()` transformer ile, Cubit'te ise istek sayacı veya iptal mantığıyla çözmek gerekir.
+- Navigasyon ve SnackBar gibi tek seferlik yan etkiler `BlocBuilder` yerine `BlocListener` ile yapılır.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$dart-ta-future-ile-stream-farki-nedir-async-ve-yield-ne-ise-yarar-asagidaki-kodu$md$, $md$Dart'ta Future ile Stream farkı nedir? async* ve yield ne işe yarar? Aşağıdaki kodun çıktısı nedir?$md$, $md$**Future** gelecekte **tek bir** değer (veya hata) üretir; **Stream** zaman içinde **sıfır veya daha fazla** değer üretir. `async` fonksiyon Future döndürür, `async*` fonksiyon ise Stream döndürür ve değerleri `yield` ile yayar.
+
+```dart
+Stream<int> countdown(int from) async* {
+  for (var i = from; i > 0; i--) {
+    await Future.delayed(const Duration(seconds: 1));
+    yield i;
+  }
+}
+
+await for (final n in countdown(3)) print(n); // 3, 2, 1
+```
+
+### Event loop sorusu
+```dart
+import 'dart:async';
+
+void main() {
+  print('A');
+  Future(() => print('B'));
+  scheduleMicrotask(() => print('C'));
+  Future.value().then((_) => print('D'));
+  print('E');
+}
+```
+
+Çıktı: **A, E, C, D, B**
+
+- Önce senkron kod çalışır: `A`, `E`.
+- Dart isolate'inin iki kuyruğu vardır: **microtask queue** ve **event queue**. Event queue'daki her olaydan önce microtask kuyruğu tamamen boşaltılır.
+- `scheduleMicrotask` ve tamamlanmış bir Future'a bağlanan `.then` microtask'tır: `C`, sonra `D`.
+- `Future(() => ...)` event queue'ya eklenir: en son `B`.
+
+### Stream türleri
+- **Single-subscription** (varsayılan): tek dinleyici, ör. dosya okuma, HTTP response.
+- **Broadcast**: birden çok dinleyici, ör. kullanıcı olayları. `StreamController.broadcast()`.
+
+Flutter'da `FutureBuilder`/`StreamBuilder` ile UI'a bağlanır. `StreamSubscription`'ı `dispose`'da `cancel()` etmemek bellek sızıntısının klasik sebebidir. Ayrıca `FutureBuilder`'a `future: api.fetch()` yazmak her rebuild'de yeni istek atar; future `initState`'te bir kez oluşturulmalıdır.$md$, $md$Event loop sorularında 'microtask kuyruğu her event'ten önce tamamen boşaltılır' kuralını söyleyin; microtask'ları sonsuz zincirlemenin UI'ı kilitleyebileceğini eklemek artı puandır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$buyuk-bir-json-i-parse-ederken-ui-donuyor-dart-ta-isolate-ler-nedir-compute-ve-i$md$, $md$Büyük bir JSON'ı parse ederken UI donuyor. Dart'ta isolate'ler nedir, compute ve Isolate.run ile bunu nasıl çözersiniz?$md$, $md$Dart tek iş parçacıklı bir event loop ile çalışır: `async/await` **eşzamanlılık** (concurrency) sağlar ama **paralellik** sağlamaz. 5 MB'lık bir JSON'ı `jsonDecode` etmek ana isolate'te 100 ms sürüyorsa, bu süre boyunca frame üretilemez ve jank olur (60 fps için frame bütçesi ~16 ms). Çözüm, CPU yoğun işi **ayrı bir isolate**'e taşımaktır.
+
+### Isolate nedir?
+- Kendi belleği (heap) ve event loop'u olan bağımsız bir çalışma birimidir. Thread'lerden farkı **bellek paylaşmaması**dır; bu yüzden lock ve data race yoktur.
+- İletişim mesajlarla (`SendPort`/`ReceivePort`) olur ve mesajlar kopyalanır. `Isolate.exit` ile sonuç kopyalanmadan devredilebilir.
+
+### Tek seferlik iş: Isolate.run (Dart 2.19+) veya compute
+```dart
+Future<List<Product>> parseProducts(String body) {
+  return Isolate.run(() {
+    final list = jsonDecode(body) as List;
+    return list.map((e) => Product.fromJson(e)).toList();
+  });
+}
+// Flutter'da eşdeğeri: compute(_parse, body); compute artık Isolate.run'ı sarar.
+```
+
+### Uzun ömürlü iş
+Sürekli görüntü işleme, şifreleme veya büyük senkronizasyon gibi işlerde her seferinde isolate oluşturmak maliyetlidir. `Isolate.spawn` ile kalıcı bir worker kurulur ve port'lar üzerinden mesajlaşılır.
+
+### Dikkat edilecekler
+- Closure'a gereksiz büyük nesneler yakalatmak hepsinin kopyalanmasına yol açar.
+- Isolate'ler arası `BuildContext`, widget veya açık soket gibi nesneler gönderilemez.
+- Arka plan isolate'inde platform kanalı/plugin kullanmak için Flutter 3.7+ ile `BackgroundIsolateBinaryMessenger.ensureInitialized(token)` gerekir.
+- Web'de isolate yoktur; `compute` ana thread'de çalışır (web worker gerekir).
+- Önce ölçün: küçük JSON'larda isolate oluşturma maliyeti kazançtan büyük olabilir. DevTools'ta UI thread'deki uzun frame'ler doğru teşhisi verir.$md$, $md$Mülakatçı 'async yazdım, neden hâlâ donuyor?' diye sorabilir. async'in işi başka thread'e taşımadığını net söylemek beklenen cevaptır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$dart-null-safety-de-ve-late-ne-anlama-gelir-late-i-ne-zaman-kullanirsiniz$md$, $md$Dart null safety'de ?, !, ?? ve late ne anlama gelir? late'i ne zaman kullanırsınız?$md$, $md$Dart 3 ile **sound null safety** zorunludur: bir tip varsayılan olarak null olamaz, null alabilmesi için `?` ile işaretlenir. Derleyici null olabilecek değerlerin kontrol edilmeden kullanılmasını engeller.
+
+| Sözdizimi | Anlamı |
+| --- | --- |
+| `String?` | Null olabilir (nullable) tip |
+| `name!` | "Bu null değil" diye derleyiciye söz vermek; yanılırsan runtime hatası |
+| `name ?? 'Misafir'` | Null ise varsayılan değer |
+| `name ??= 'Misafir'` | Null ise ata |
+| `user?.name` | Null-aware erişim; user null ise sonuç null |
+| `late` | Non-nullable değişkene sonradan, ilk kullanımdan önce değer atanacağına söz vermek |
+
+```dart
+String? city;
+print(city?.length ?? 0); // 0
+
+class _MapState extends State<MapPage> {
+  late final MapController _controller; // initState'te atanacak
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MapController();
+  }
+}
+
+late final config = loadExpensiveConfig(); // ilk erişimde hesaplanır (lazy)
+```
+
+### late ne zaman?
+- Değer constructor'da değil, `initState` gibi bir yaşam döngüsü metodunda atanıyorsa.
+- Pahalı bir hesaplamayı ilk kullanıma kadar ertelemek (lazy initialization) için.
+
+### Dikkat
+- Atanmadan okunan `late` değişken `LateInitializationError` fırlatır; yani `late` derleme zamanı kontrolünü runtime'a erteler.
+- `!` operatörünü her yere serpmek null safety'nin faydasını yok eder; önce `if (x != null)` ile **type promotion** tercih edilmelidir.
+- Type promotion public alanlarda çalışmaz (getter override edilebilir); Dart 3.2+ ile yalnızca private final alanlarda çalışır. Çözüm: alanı yerel değişkene atamak.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$dart-3-teki-sealed-class-records-ve-pattern-matching-nedir-api-sonucunu-modelley$md$, $md$Dart 3'teki sealed class, records ve pattern matching nedir? API sonucunu modelleyen bir örnek yazın.$md$, $md$Dart 3 (2023) ile gelen bu üç özellik birlikte **cebirsel veri tipleri** gibi çalışır: `sealed` ile kapalı bir tip hiyerarşisi tanımlanır, `switch` ifadesinde derleyici **tüm alt tiplerin ele alındığını (exhaustiveness)** kontrol eder; records ile ayrı sınıf yazmadan birden fazla değer döndürülür.
+
+### Sealed class + pattern matching
+```dart
+sealed class Result<T> {}
+final class Success<T> extends Result<T> {
+  Success(this.data);
+  final T data;
+}
+final class Failure<T> extends Result<T> {
+  Failure(this.error, {this.code});
+  final String error;
+  final int? code;
+}
+
+String describe(Result<User> r) => switch (r) {
+      Success(:final data) => 'Merhaba ${data.name}',
+      Failure(code: 401) => 'Oturum süresi doldu',
+      Failure(:final error) => 'Hata: $error',
+    };
+```
+
+Yeni bir alt tip (`Loading`) eklenirse, onu ele almayan her `switch` **derleme hatası** verir. Bu, state ve hata modellemesinde runtime sürprizlerini ortadan kaldırır.
+
+- `sealed` sınıf doğrudan örneklenemez ve alt sınıfları **aynı library (dosya)** içinde olmalıdır.
+- Diğer class modifier'lar: `final` (dışarıda extend/implement edilemez), `base`, `interface`, `mixin class`.
+
+### Records
+```dart
+(double lat, double lng) parseLocation(String s) {
+  final parts = s.split(',');
+  return (double.parse(parts[0]), double.parse(parts[1]));
+}
+
+final (lat, lng) = parseLocation('41.01,28.97'); // destructuring
+({String name, int age}) user = (name: 'Ayşe', age: 30); // named fields
+```
+
+Records value-equality'ye sahiptir ve immutable'dır; ama public API'lerde çok alanlı veriler için isimli sınıf daha okunaklıdır.
+
+### Diğer pattern'ler
+```dart
+if (json case {'type': 'user', 'id': int id}) print(id);
+final label = switch (score) { >= 90 => 'A', >= 70 => 'B', _ => 'C' };
+```
+
+Dart 3.10 ile gelen dot shorthands (`.center` yazımı) da bağlamdan tipi çıkararak kodu kısaltır.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$dart-ta-mixin-ve-extension-method-nedir-extends-implements-ve-with-arasindaki-fa$md$, $md$Dart'ta mixin ve extension method nedir? extends, implements ve with arasındaki fark nedir?$md$, $md$**Mixin**, kalıtım hiyerarşisine girmeden bir sınıfa davranış (metot ve alan) eklemenin yoludur. **Extension method** ise kaynak koduna dokunmadan mevcut bir tipe (ör. `String`, `BuildContext`) yeni metot eklemeyi sağlar.
+
+| Anahtar kelime | Anlamı |
+| --- | --- |
+| `extends` | Tek bir sınıftan kalıtım; implementasyon ve constructor zinciri miras alınır |
+| `implements` | Sınıfı arayüz olarak kullanmak; tüm üyeler yeniden yazılmalı |
+| `with` | Bir veya daha fazla mixin'in üyelerini sınıfa karıştırmak |
+
+```dart
+mixin Logger {
+  void log(String msg) => print('[${runtimeType}] $msg');
+}
+
+// on: bu mixin sadece State alt sınıflarında kullanılabilir
+mixin AutoDisposeTimer<T extends StatefulWidget> on State<T> {
+  Timer? timer;
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+}
+
+class _HomeState extends State<Home> with Logger, AutoDisposeTimer<Home> { /* ... */ }
+```
+
+Flutter'da en bilinen örnek `SingleTickerProviderStateMixin`'dir (AnimationController için `vsync`). Birden fazla mixin olduğunda sıralama önemlidir: en sağdaki mixin en son uygulanır ve `super` çağrıları sağdan sola zincirlenir.
+
+### Extension method
+```dart
+extension ContextX on BuildContext {
+  ThemeData get theme => Theme.of(this);
+  void showError(String m) =>
+      ScaffoldMessenger.of(this).showSnackBar(SnackBar(content: Text(m)));
+}
+
+extension on String {
+  bool get isValidEmail => contains('@') && contains('.');
+}
+
+context.showError('Bağlantı yok');
+```
+
+Extension'lar **statik olarak** çözülür: `dynamic` tipli değişkende çalışmaz ve gerçekte sınıfa üye eklemez, override edilemez. Dart 3.3 ile gelen **extension type**'lar ise bir tipi sıfır maliyetle saran (ör. `UserId` için `int`) ayrı bir özelliktir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-dan-native-kotlin-swift-koda-nasil-erisirsiniz-methodchannel-eventchanne$md$, $md$Flutter'dan native (Kotlin/Swift) koda nasıl erişirsiniz? MethodChannel, EventChannel, Pigeon ve FFI arasındaki farklar nelerdir?$md$, $md$Flutter, native API'lere **platform channels** ile erişir: Dart ve native taraf, isimli bir kanal üzerinden binary mesajlarla asenkron haberleşir. Tip güvenliği için **Pigeon**, C/C++ veya native kütüphanelere doğrudan bağlanmak için **dart:ffi** kullanılır.
+
+| Mekanizma | Kullanım |
+| --- | --- |
+| `MethodChannel` | İstek-cevap tarzı metot çağrısı (pil seviyesi, native SDK çağrısı) |
+| `EventChannel` | Native'den Dart'a sürekli olay akışı (sensör, konum, bağlantı durumu) |
+| `BasicMessageChannel` | Özel codec ile serbest mesajlaşma |
+| Pigeon | Dart'ta arayüz tanımlayıp tip güvenli Dart/Kotlin/Swift kodu üretmek |
+| `dart:ffi` (ffigen, jnigen) | C ABI ile senkron ve düşük maliyetli doğrudan çağrı |
+
+```dart
+const _channel = MethodChannel('com.example.app/battery');
+
+Future<int?> getBattery() async {
+  try {
+    return await _channel.invokeMethod<int>('getBatteryLevel');
+  } on PlatformException catch (e) {
+    debugPrint('Native hata: ${e.message}');
+    return null;
+  }
+}
+```
+
+```kotlin
+// MainActivity.kt
+MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.app/battery")
+  .setMethodCallHandler { call, result ->
+    if (call.method == "getBatteryLevel") result.success(readBattery())
+    else result.notImplemented()
+  }
+```
+
+### Dikkat edilecekler
+- Kanal adı ve metot adları string'dir; yazım hatası runtime'da `MissingPluginException` olarak çıkar. Bu yüzden büyük projelerde Pigeon tercih edilir.
+- Mesajlar `StandardMessageCodec` ile serileştirilir; desteklenen tipler sınırlıdır (null, bool, num, String, List, Map, Uint8List...).
+- Native handler platformun ana thread'inde çalışır; uzun iş yapılacaksa native tarafta arka plan thread'ine geçip sonucu ana thread'de `result`'a vermek gerekir.
+- Tekrar kullanılabilir hale getirmek için kodu bir **plugin paketi** (federated plugin) olarak ayırmak iyi pratiktir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-da-navigasyonu-nasil-yonetirsiniz-navigator-1-0-navigator-2-0-router-api$md$, $md$Flutter'da navigasyonu nasıl yönetirsiniz? Navigator 1.0, Navigator 2.0 (Router API) ve go_router arasındaki fark nedir?$md$, $md$**Navigator 1.0** imperative'dir: `Navigator.push/pop` ile bir route yığını yönetilir; basit uygulamalar için yeterlidir ama deep link ve web URL senkronizasyonu zordur. **Navigator 2.0 (Router API)** deklaratiftir: sayfa yığını uygulama state'inden türetilir (`RouterDelegate`, `RouteInformationParser`), ancak çok boilerplate içerir. **go_router** (Flutter ekibinin bakımını yaptığı paket) Router API'yi URL tabanlı, kullanımı kolay bir yapıya sarar ve bugün en yaygın tercihtir.
+
+```dart
+final router = GoRouter(
+  initialLocation: '/',
+  redirect: (context, state) {
+    final loggedIn = authNotifier.isLoggedIn;
+    final goingToLogin = state.matchedLocation == '/login';
+    if (!loggedIn && !goingToLogin) return '/login';
+    if (loggedIn && goingToLogin) return '/';
+    return null;
+  },
+  refreshListenable: authNotifier,
+  routes: [
+    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+    GoRoute(
+      path: '/',
+      builder: (_, __) => const HomePage(),
+      routes: [
+        GoRoute(
+          path: 'product/:id',
+          builder: (_, state) => ProductPage(id: state.pathParameters['id']!),
+        ),
+      ],
+    ),
+  ],
+);
+
+MaterialApp.router(routerConfig: router);
+```
+
+### Bilinmesi gerekenler
+- `context.go('/product/42')`: URL'ye göre yığını **yeniden kurar** (deep link mantığı). `context.push(...)`: mevcut yığının üstüne ekler ve geri dönüşte sonuç alınabilir.
+- `redirect` + `refreshListenable` ile auth guard yapılır.
+- Bottom navigation'da her sekmenin kendi yığınını koruması için `StatefulShellRoute.indexedStack` kullanılır.
+- Deep link için Android'de App Links (`assetlinks.json`), iOS'ta Universal Links (`apple-app-site-association`) yapılandırılır; go_router path'leri doğrudan eşleştirir.
+- Tip güvenli route'lar için `go_router_builder` ile codegen yapılabilir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$flutter-uygulamanizda-kaydirma-sirasinda-jank-var-nasil-teshis-edersiniz-impelle$md$, $md$Flutter uygulamanızda kaydırma sırasında jank var. Nasıl teşhis edersiniz? Impeller rendering engine bu konuda neyi değiştirdi?$md$, $md$Önce **profile modda, gerçek ve tercihen düşük seviye bir cihazda** ölçerim; debug mod ölçümleri yanıltıcıdır. DevTools'un Performance görünümünde frame'lerin **UI thread**'de mi (Dart: build, layout) yoksa **raster thread**'de mi (GPU'ya çizim) bütçeyi aştığına bakarım. Teşhis bu ayrıma göre değişir.
+
+### UI thread yavaşsa
+- Gereksiz geniş rebuild'ler: `setState` ağacın tepesinde. Çözüm: state'i aşağı taşımak, `const`, `select`/`buildWhen` ile seçici dinleme.
+- Uzun listede `ListView(children: [...])` kullanmak; yerine `ListView.builder` (lazy) ve sabit yükseklikte `itemExtent`/`prototypeItem`.
+- `build` içinde ağır hesap, JSON parse veya sıralama. Çözüm: önceden hesaplamak veya isolate'e taşımak.
+- DevTools "Track widget builds" ile hangi widget'ın kaç kez build edildiği görülür.
+
+### Raster thread yavaşsa
+- `saveLayer` tetikleyen pahalı efektler: `Opacity` (yerine `FadeTransition` veya rengin alpha'sı), `ClipRRect`/`ClipPath`, `ShaderMask`, `BackdropFilter`.
+- Büyük görselleri ekran boyutunda decode etmemek: `Image.network(url, cacheWidth: 400)`.
+- Sık değişen bir alanı `RepaintBoundary` ile izole etmek.
+
+### Impeller ne değiştirdi?
+Eski Skia backend'inde shader'lar **ilk kullanıldıklarında runtime'da derlenirdi**; bu da bir animasyon ilk kez oynarken "shader compilation jank" yaratırdı (SkSL warm-up gibi geçici çözümler vardı). **Impeller** tüm shader'ları **build sırasında önceden derler** ve Metal (iOS) / Vulkan (Android) gibi modern API'leri doğrudan kullanır; böylece en kötü frame süreleri öngörülebilir hale gelir.
+
+| Platform | Durum |
+| --- | --- |
+| iOS | 3.10'dan beri varsayılan; 3.29 ile Skia kaldırıldı, opt-out yok |
+| Android | 3.27'den beri Vulkan destekli (API 29+) cihazlarda varsayılan; desteklemeyen eski cihazlarda OpenGL ES backend'ine düşer (sürüme göre Skia veya Impeller GLES) |
+| Web | Hâlâ CanvasKit (Skia) |
+
+Impeller ilk-frame jank'ini çözer ama kötü yazılmış build mantığını veya aşırı `saveLayer` kullanımını çözmez.$md$, $md$Cevabı 'UI thread mi raster thread mi?' ayrımıyla kurun ve gerçek bir vakadan (ör. Opacity yerine FadeTransition ile raster süresini düşürmek) bahsedin.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$flutter-dart$md$),
+  ($md$react-native-nasil-calisir-webview-tabanli-hibrit-cercevelerden-farki-nedir-ve-h$md$, $md$React Native nasıl çalışır? WebView tabanlı hibrit çerçevelerden farkı nedir ve hangi thread'ler vardır?$md$, $md$React Native, React bileşenlerini **gerçek native UI bileşenlerine** (`View` için Android'de `ViewGroup`, iOS'ta `UIView`) dönüştürür. Uygulama mantığı JavaScript'te yazılır ve bir JS motoru (varsayılan **Hermes**) üzerinde çalışır; ekranda HTML/WebView değil native view'lar vardır. Cordova/Ionic gibi hibrit çözümlerden temel farkı budur.
+
+### Ana thread'ler
+- **JS thread:** React render ve reconciliation, iş mantığı, event handler'lar, `fetch` callback'leri burada çalışır. Bu thread meşgulse dokunmalara geç cevap verilir ve JS tabanlı animasyonlar takılır.
+- **UI (main) thread:** Native view'ları oluşturur ve çizer, dokunma olaylarını alır. Native animasyonlar ve native scroll burada akar.
+- **Layout (background) thread:** Flexbox layout'u **Yoga** motoru hesaplar. New Architecture'da (Fabric) render pipeline C++'tadır ve layout gerekirse senkron olarak da hesaplanabilir.
+
+### Akış (basitleştirilmiş)
+1. JS'te `setState` → React yeni ağacı hesaplar.
+2. Değişiklikler native tarafa aktarılır (eski mimaride bridge, yenisinde JSI ile).
+3. Yoga layout'u hesaplar, UI thread native view'ları günceller.
+
+```tsx
+export default function Hello() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center' }}>
+      <Text>Merhaba</Text>{/* iOS'ta UILabel benzeri native metin */}
+    </View>
+  );
+}
+```
+
+Bu yapı, React bilgisini mobilde kullanma ve kodun büyük kısmını iOS/Android arasında paylaşma imkanı verir. Ancak JS thread'i bloklamamak RN performansının temel kuralıdır.$md$, $md$'JS thread ile UI thread'in ayrı olması neden önemli?' takip sorusuna hazır olun: JS meşgulken native scroll yine akar ama onPress ve JS animasyonları takılır.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-deki-eski-bridge-mimarisi-ile-jsi-arasindaki-fark-nedir-bridge-nede$md$, $md$React Native'deki eski bridge mimarisi ile JSI arasındaki fark nedir? Bridge neden darboğaz oluşturuyordu?$md$, $md$Eski mimaride JS ve native taraf, **asenkron, toplu (batched) ve JSON ile serileştirilen** mesajlarla bir **bridge** üzerinden konuşurdu. **JSI (JavaScript Interface)** ise C++ ile yazılmış bir arayüzdür; JS'in native nesnelere **doğrudan referans tutmasını ve metotlarını senkron veya asenkron çağırmasını** sağlar, serileştirme gerekmez.
+
+| | Bridge (eski) | JSI (yeni) |
+| --- | --- | --- |
+| İletişim | Asenkron mesaj kuyruğu | Doğrudan fonksiyon çağrısı (host object/function) |
+| Veri | JSON'a serileştirilir, kopyalanır | Serileştirme yok; ArrayBuffer gibi veriler paylaşılabilir |
+| Senkron çağrı | Mümkün değil | Mümkün |
+| Native modül yükleme | Açılışta hepsi başlatılır | Lazy (TurboModules) |
+| Motor bağımlılığı | JSC ile sıkı bağlı | Motordan bağımsız (Hermes, JSC) |
+
+### Bridge neden darboğazdı?
+- Hızlı scroll sırasında `onScroll` olaylarının veya büyük veri listelerinin JSON'a çevrilip kuyruğa alınması gecikme yaratıyordu.
+- Her şey asenkron olduğu için bir view'ın boyutunu ölçüp **aynı frame'de** ona göre çizim yapmak (tooltip konumlandırma gibi) mümkün değildi; bu da "zıplama" efektlerine yol açıyordu.
+- Kuyruk tıkandığında JS ve native birbirini bekliyordu.
+
+### JSI'nin mümkün kıldıkları
+- `react-native-mmkv` gibi senkron storage, `react-native-reanimated` worklet'leri, VisionCamera frame processor'ları JSI sayesinde vardır.
+- New Architecture'ın üç parçası (TurboModules, Fabric, bridgeless) JSI üzerine kuruludur.
+
+Önemli not: Senkron çağrı mümkün diye her şeyi senkron yapmak doğru değildir. Uzun süren native işler (ağ, dosya I/O) JS thread'ini bloklar; bunlar yine Promise döndürmelidir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-new-architecture-nedir-fabric-turbomodules-codegen-ve-bridgeless-mo$md$, $md$React Native New Architecture nedir? Fabric, TurboModules, Codegen ve bridgeless mode neyi değiştirdi, migration sırasında nelere dikkat edersiniz?$md$, $md$New Architecture, React Native'in JSI üzerine yeniden yazılmış iç yapısıdır. **0.76 (Ekim 2024) ile varsayılan** oldu, **0.82 (Ekim 2025) ile kapatılamaz hale geldi** ve sonraki sürümlerde legacy kod tabanından kaldırılmaya devam ediyor. Bugün yeni bir RN projesi fiilen yalnızca New Architecture ile çalışır.
+
+### Parçalar
+- **Fabric:** Yeni render sistemi. Shadow tree C++'ta tutulur ve platformlar arasında paylaşılır. React 18+ concurrent özellikleri (`startTransition`, Suspense) desteklenir; `useLayoutEffect` içinde layout senkron okunabilir, böylece ölçüp aynı frame'de konumlandırma yapılabilir.
+- **TurboModules:** Native modüllerin yeni hali. JSI ile çağrılır, **ilk kullanımda lazy yüklenir** (açılış süresi kısalır) ve tip güvenlidir.
+- **Codegen:** TypeScript/Flow ile yazılmış spec dosyalarından C++, Objective-C++ ve Java/Kotlin glue kodunu build sırasında üretir. JS ile native arasındaki sözleşme derleme zamanında doğrulanır.
+- **Bridgeless mode:** Bridge tamamen devreden çıkar; hata yönetimi, timer'lar gibi bridge'e bağlı altyapılar JSI üzerine taşınmıştır.
+
+```ts
+// specs/NativeDeviceInfo.ts
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  getBatteryLevel(): Promise<number>;
+  getModel(): string; // senkron
+}
+export default TurboModuleRegistry.getEnforcing<Spec>('DeviceInfo');
+```
+
+### Migration'da dikkat ettiklerim
+1. **Kütüphane uyumluluğu:** `npx expo-doctor` veya React Native Directory'de New Architecture desteğini kontrol etmek; bakımı bırakılmış paketleri değiştirmek.
+2. **Kendi native modüllerimiz:** Interop layer'lara güvenmek yerine TurboModule / Fabric component olarak yeniden yazmak; interop desteğinin legacy kaldırıldıkça azaldığını unutmamak.
+3. **Davranış farkları:** `setNativeProps` gibi legacy API'ler, `UIManager` erişimleri, layout ölçüm zamanlamaları.
+4. **Ölçüm:** Migration öncesi ve sonrası TTI, açılış süresi, bellek ve crash oranını karşılaştırmak; kademeli rollout yapmak.
+
+New Architecture her performans sorununu çözmez; gereksiz re-render'lar ve ağır JS işleri aynı şekilde sorun yaratmaya devam eder.$md$, $md$Sürüm geçmişini (0.68 opt-in, 0.76 varsayılan, 0.82 zorunlu) kabaca bilmek ve 'gerçek bir projede migration yaptım, şu kütüphane sorun çıkardı' diyebilmek çok değerlidir.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$hermes-nedir-react-native-de-neden-varsayilan-javascript-motorudur$md$, $md$Hermes nedir? React Native'de neden varsayılan JavaScript motorudur?$md$, $md$**Hermes**, Meta'nın React Native için özel olarak geliştirdiği, mobil cihazlarda **hızlı açılış, düşük bellek ve küçük uygulama boyutu** hedefleyen JavaScript motorudur. 0.70'ten beri varsayılandır; 0.84 ile yeni nesil **Hermes V1** varsayılan oldu.
+
+### Neden hızlı açılır?
+JavaScriptCore veya V8 gibi motorlar kaynak kodu **uygulama açılırken** parse edip derler. Hermes ise JS'i **build sırasında bytecode'a** (AOT) derler. Uygulama açıldığında parse/compile aşaması atlanır ve bytecode dosyadan belleğe hızlıca eşlenir (mmap). Bu, özellikle düşük seviye Android cihazlarda **TTI (Time to Interactive)** süresini belirgin şekilde düşürür.
+
+### Diğer avantajları
+- Mobil için ayarlanmış, eşzamanlı çalışan bir garbage collector (Hades) ile daha az GC duraklaması.
+- Daha düşük bellek kullanımı ve daha küçük APK/IPA.
+- JSI ile tam uyum; React Native DevTools ile Chrome DevTools Protocol üzerinden debug ve sampling profiler desteği.
+
+### Bilinmesi gerekenler
+- Hermes, JIT kullanmadığı için uzun süren ağır hesaplamalarda V8 kadar hızlı olmayabilir; mobil uygulamalarda açılış ve bellek genelde daha kritiktir.
+- Bazı yeni JS özellikleri motor desteğine bağlıdır; Babel/Metro dönüşümleriyle çoğu karşılanır.
+
+```js
+// Uygulamanın Hermes ile çalıştığını kontrol etmek
+const isHermes = () => !!global.HermesInternal;
+```
+
+Production'da hata yığınlarını okumak için Hermes bytecode'una ait **source map**'lerin Sentry/Crashlytics'e yüklenmesi gerekir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$expo-ile-bare-react-native-arasindaki-fark-nedir-prebuild-cng-development-build$md$, $md$Expo ile bare React Native arasındaki fark nedir? Prebuild (CNG), development build ve EAS ne işe yarar?$md$, $md$**Expo**, React Native üzerine kurulu bir framework ve araç setidir. React Native resmi dokümantasyonu da artık yeni projeler için bir framework (pratikte Expo) kullanılmasını önerir. **Bare RN** ise `android/` ve `ios/` klasörlerini doğrudan sizin yönettiğiniz kurulumdur. Bugün eski "Expo'da native kod yazılamaz" bilgisi geçerli değildir; Expo projelerinde de istenen native kod ve kütüphane kullanılabilir.
+
+### Temel kavramlar
+- **Expo Go:** Hazır bir uygulama; hızlı deneme içindir ama sadece içindeki native modülleri destekler. Gerçek projeler için yetersizdir.
+- **Development build (`expo-dev-client`):** Projenin kendi native bağımlılıklarıyla derlenmiş debug uygulaması. Ekip içinde genelde bununla çalışılır.
+- **Continuous Native Generation (CNG) / prebuild:** `npx expo prebuild` komutu `app.json`/`app.config.ts` ve **config plugin**'lerden `android/` ve `ios/` klasörlerini üretir. Native klasörler genelde git'e konmaz; SDK yükseltmesi büyük ölçüde konfigürasyon güncellemesine dönüşür.
+- **EAS (Expo Application Services):** EAS Build (bulutta iOS/Android build ve imzalama), EAS Submit (mağazaya gönderme), EAS Update (OTA JS güncellemesi).
+- **Expo Router:** Dosya tabanlı navigasyon (React Navigation üzerine kurulu), deep link desteğiyle birlikte gelir.
+
+```bash
+npx create-expo-app@latest my-app
+npx expo install expo-camera          # SDK ile uyumlu sürümü kurar
+npx expo prebuild --clean             # native projeleri yeniden üret
+eas build --profile production --platform all
+```
+
+### Ne zaman bare?
+Native projede config plugin ile ifade edilemeyecek çok sayıda özelleştirme varsa veya mevcut büyük bir native uygulamaya RN gömülüyorsa (brownfield). Diğer çoğu durumda Expo + development build, daha az bakım maliyeti sunar.$md$, $md$'Expo kullanırsam native modül yazamam' diyen aday güncel değildir. Config plugin, Expo Modules API ve prebuild kavramlarını bilmek beklenir.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$asagidaki-flatlist-yavas-kaydiriliyor-ve-bos-alanlar-gorunuyor-sorunlari-bulun-v$md$, $md$Aşağıdaki FlatList yavaş kaydırılıyor ve boş alanlar görünüyor. Sorunları bulun ve optimize edin. FlashList ne zaman tercih edilir?$md$, $md$```tsx
+<FlatList
+  data={products}
+  renderItem={({ item, index }) => (
+    <ProductRow
+      key={index}
+      product={item}
+      style={{ padding: 12 }}
+      onPress={() => navigation.navigate('Detail', { id: item.id })}
+    />
+  )}
+/>
+```
+
+### Sorunlar
+1. `keyExtractor` yok ve key olarak index kullanılıyor. FlatList `key`'i `keyExtractor`'dan alır (yoksa `item.key`, o da yoksa index). Öğe eklenince veya silinince satırlar yanlış eşleşir ve gereksiz render olur.
+2. `renderItem`, inline `style` objesi ve `onPress` her render'da yeni referans; `ProductRow` memo'lu olsa bile her seferinde yeniden render olur.
+3. Sabit yükseklikli satırlar için `getItemLayout` verilmemiş; FlatList her öğeyi ölçmek zorunda kalır, `scrollToIndex` de güvenilir çalışmaz.
+4. Pencere ayarları (windowing) varsayılan; ağır satırlarda JS thread yetişemez ve boş alanlar (blank area) görülür.
+
+```tsx
+const ITEM_HEIGHT = 72;
+const ProductRow = memo(ProductRowBase);
+
+const renderItem = useCallback(
+  ({ item }: { item: Product }) => <ProductRow product={item} onPress={openDetail} />,
+  [openDetail], // openDetail de useCallback ile tanımlı, id'yi parametre olarak alır
+);
+
+<FlatList
+  data={products}
+  keyExtractor={(item) => item.id}
+  renderItem={renderItem}
+  getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
+  initialNumToRender={10}
+  maxToRenderPerBatch={10}
+  windowSize={7}           // varsayılan 21 ekran; düşürmek belleği azaltır
+  removeClippedSubviews    // özellikle Android'de faydalı
+/>
+```
+
+Ayrıca satırdaki görseller küçük boyutlu ve cache'li yüklenmelidir (ör. `expo-image`).
+
+### FlashList
+Shopify'ın **FlashList**'i satırları unmount etmek yerine **view'ları geri dönüştürür (recycling)**; ekran dışına çıkan view yeni öğenin verisiyle yeniden kullanılır. Bu, uzun ve karmaşık listelerde blank area'yı ve bellek kullanımını belirgin şekilde azaltır. v2 New Architecture için yeniden yazıldı ve artık `estimatedItemSize` gerektirmez. Recycling nedeniyle satır içindeki yerel state yeni öğeye "taşınabilir"; bu yüzden state ya veriden türetilmeli ya da `useRecyclingState` kullanılmalıdır. Farklı tipte satırlar için `getItemType` verilir.$md$, $md$Mülakatçılar önce 'nasıl ölçersiniz?' diye sorabilir: Perf Monitor'da JS FPS düşüşü ve React DevTools Profiler'da satırların tekrar render'ı, optimizasyondan önce gösterilmesi gereken kanıttır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-bir-native-modulu-nasil-yazarsiniz-bir-turbomodule-un-js-spec-in$md$, $md$React Native'de bir native modülü nasıl yazarsınız? Bir TurboModule'ün JS spec'inden native implementasyonuna kadar adımları anlatın.$md$, $md$Önce bunun gerçekten gerekli olup olmadığına bakarım: hazır bir kütüphane veya Expo modülü var mı? Yoksa iki ana yol vardır: **Codegen tabanlı TurboModule** (React Native'in kendi yolu) veya Swift/Kotlin ile daha az boilerplate sunan **Expo Modules API**.
+
+### TurboModule adımları
+1. **Spec yaz (TypeScript):** Dosya adı `Native` ön ekiyle başlamalıdır.
+```ts
+// specs/NativeSecureHash.ts
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  sha256(input: string): Promise<string>;
+  readonly getConstants: () => { algorithm: string };
+}
+export default TurboModuleRegistry.getEnforcing<Spec>('SecureHash');
+```
+2. **Codegen'i yapılandır:** `package.json` içine `codegenConfig` (`name`, `type: "modules"`, `jsSrcsDir`, Android `javaPackageName`) eklenir. Build sırasında Codegen, spec'ten C++ ve platform arayüzlerini (Android'de `NativeSecureHashSpec` abstract sınıfı, iOS'ta protokol) üretir.
+3. **Android (Kotlin):** Üretilen spec sınıfını extend eden modül ve onu kaydeden bir `BaseReactPackage` yazılır.
+```kotlin
+class SecureHashModule(ctx: ReactApplicationContext) : NativeSecureHashSpec(ctx) {
+  override fun getName() = NAME
+  override fun sha256(input: String, promise: Promise) {
+    try { promise.resolve(hash(input)) } catch (e: Exception) { promise.reject("HASH_ERR", e) }
+  }
+  companion object { const val NAME = "SecureHash" }
+}
+```
+4. **iOS (Objective-C++):** Üretilen protokolü uygulayan bir sınıf yazılır (`.mm`); Swift kod gerekirse bu sınıf üzerinden köprülenir.
+5. **JS'te kullan:** `import SecureHash from './specs/NativeSecureHash'; await SecureHash.sha256('x');`
+
+### Tasarım kararları
+- **Senkron mu asenkron mu?** JSI senkron dönüşe izin verir ama yalnızca çok hızlı işler (sabit okuma, küçük hesap) senkron olmalıdır. I/O, ağ ve kriptografi gibi işler Promise döndürmeli ve native tarafta arka plan thread'inde çalışmalıdır.
+- **Sürekli olaylar:** Native'den JS'e olay akışı için event emitter kullanılır ve listener'lar unmount'ta temizlenir.
+- **UI bileşeni gerekiyorsa** TurboModule değil, Fabric native component yazılır.
+- **Test:** Native kodun platform birim testleri ve JS tarafında modülün mock'lanması.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-navigation-da-stack-ve-tab-navigator-lari-nasil-kurgularsiniz-native-stack$md$, $md$React Navigation'da stack ve tab navigator'ları nasıl kurgularsınız? Native stack ile JS stack farkı nedir ve auth akışını nasıl yönetirsiniz?$md$, $md$React Navigation, RN'de fiili standart navigasyon kütüphanesidir (Expo Router da üzerine kuruludur). Tipik bir uygulamada **kök stack**'in içinde **bottom tab** navigator, her sekmenin içinde de kendi stack'i bulunur; modal ekranlar kök stack'te tanımlanır.
+
+### Native stack vs JS stack
+- `@react-navigation/native-stack`: iOS'ta `UINavigationController`, Android'de Fragment tabanlı **native** primitifleri kullanır (`react-native-screens`). Geçişler ve geri hareketi native hissettirir, performanslıdır. Varsayılan tercih budur.
+- `@react-navigation/stack`: Geçişler JS ve Reanimated/Animated ile yapılır; çok özelleştirilebilir ama daha maliyetlidir.
+
+### Auth akışı
+Önerilen yol, login olup olmamaya göre `navigate` ile yönlendirmek değil, **koşullu olarak farklı ekran gruplarını render etmektir**. Böylece login sonrası geri tuşu login ekranına dönmez.
+
+```tsx
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
+
+function HomeTabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+export function RootNavigator() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <SplashScreen />;
+  return (
+    <Stack.Navigator>
+      {user ? (
+        <>
+          <Stack.Screen name="Home" component={HomeTabs} options={{ headerShown: false }} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ presentation: 'modal' }} />
+        </>
+      ) : (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      )}
+    </Stack.Navigator>
+  );
+}
+```
+
+### Dikkat edilecekler
+- `RootStackParamList` ile route parametrelerini TypeScript'te tiplemek; React Navigation 7'nin static API'si tip çıkarımını kolaylaştırır.
+- Parametre olarak büyük objeler yerine **id** göndermek; veri ekranda store/cache'ten okunmalıdır (deep link ve state persistence ile uyum için).
+- Ekran odaklandığında veri yenilemek için `useFocusEffect` kullanmak; tab'lar mount kaldığı için `useEffect` sadece bir kez çalışır.
+- Çift tıklamayla aynı ekranın iki kez açılmasını engellemek (`navigate` aynı route'a tekrar push etmez, `push` eder).$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-stil-verme-web-deki-css-ten-nasil-farklidir-flexbox-taki-varsayi$md$, $md$React Native'de stil verme web'deki CSS'ten nasıl farklıdır? Flexbox'taki varsayılan farklar nelerdir?$md$, $md$React Native'de CSS dosyası, cascade veya selector yoktur. Stiller JavaScript objeleri olarak verilir (`StyleSheet.create` veya inline) ve her bileşene doğrudan uygulanır. Layout'u **Yoga** motoru, Flexbox'ın bir alt kümesiyle hesaplar.
+
+### Web'den temel farklar
+| Konu | Web | React Native |
+| --- | --- | --- |
+| `flexDirection` varsayılanı | `row` | `column` |
+| `flexShrink` varsayılanı | `1` | `0` |
+| `alignContent` varsayılanı | `stretch` (normal) | `flex-start` |
+| `flex` | Kısa yazım (`1 1 0%` vb.) | Tek sayı; `flex: 1` kalan alanı doldurur |
+| Birim | px, rem, em, vh | Birimsiz sayılar (density-independent pixel) veya yüzde |
+| Kalıtım | Font stilleri çocuklara geçer | Sadece iç içe `Text` bileşenleri arasında geçer |
+| Metin | Herhangi bir elemanın içinde | Metin mutlaka `Text` içinde olmalıdır |
+| Varsayılan display | block/inline | Her şey flex container'dır |
+
+```tsx
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  avatar: { width: 40, height: 40, borderRadius: 20 },
+  title: { flex: 1, fontSize: 16, fontWeight: '600' },
+});
+
+<View style={styles.row}>
+  <Image source={{ uri }} style={styles.avatar} />
+  <Text style={[styles.title, isActive && { color: 'tomato' }]} numberOfLines={1}>
+    {name}
+  </Text>
+</View>
+```
+
+### Ek notlar
+- Stil dizileri (`style={[a, b]}`) ile koşullu birleştirme yapılır; sonraki stil öncekini ezer.
+- Ekran boyutu için `useWindowDimensions` hook'u kullanılır; media query yoktur.
+- 0.76 ile `boxShadow` ve `filter` gibi web'e yakın stil özellikleri geldi (New Architecture gerektirir). Eskiden gölgeler iOS'ta `shadow*`, Android'de `elevation` ile ayrı verilirdi.
+- Tailwind benzeri yaklaşım isteyen ekipler NativeWind kullanır.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-platforma-ozel-kodu-nasil-yazarsiniz-platform-os-platform-select$md$, $md$React Native'de platforma özel kodu nasıl yazarsınız? Platform.OS, Platform.select ve .ios/.android dosya uzantıları ne zaman kullanılır?$md$, $md$React Native üç yol sunar. Küçük farklar için **`Platform.OS`** veya **`Platform.select`**, bir bileşenin iki platformda tamamen farklı olduğu durumlar için **platforma özel dosya uzantıları** kullanılır.
+
+### Platform.OS ve Platform.select
+```tsx
+import { Platform, StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  card: {
+    padding: 16,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8 },
+      android: { elevation: 3 },
+      default: {}, // web vb.
+    }),
+  },
+});
+
+if (Platform.OS === 'android' && Platform.Version >= 33) {
+  // Android 13+ bildirim izni iste
+}
+```
+
+`Platform.Version` Android'de API seviyesini (sayı), iOS'ta sürüm string'ini döndürür.
+
+### Dosya uzantıları
+```text
+DatePicker.ios.tsx
+DatePicker.android.tsx
+DatePicker.native.tsx   // iOS ve Android ortak, web hariç
+DatePicker.tsx          // web veya varsayılan
+```
+
+```tsx
+import DatePicker from './DatePicker'; // Metro bundler doğru dosyayı seçer
+```
+
+İki dosyanın **aynı prop arayüzünü** sunması gerekir; bunun için ortak bir `DatePicker.types.ts` tanımlamak iyi pratiktir. Seçim build zamanında yapıldığı için diğer platformun kodu bundle'a girmez.
+
+### Hangisini ne zaman?
+- Birkaç stil veya değer farkı: `Platform.select`.
+- Tek bir davranış dalı: `Platform.OS` kontrolü.
+- Bileşenin yarısından fazlası farklıysa: ayrı dosyalar. Kodun içine onlarca `if (Platform.OS)` serpmek okunabilirliği bozar.
+
+Platform farklarına örnekler: Android geri tuşu (`BackHandler`), klavye davranışı (`KeyboardAvoidingView` iOS'ta `padding`, Android'de genelde gereksiz), safe area ve izin akışları.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-animated-api-ile-reanimated-arasindaki-fark-nedir-usenativedrive$md$, $md$React Native'de Animated API ile Reanimated arasındaki fark nedir? useNativeDriver ne işe yarar ve sınırları nelerdir?$md$, $md$Klasik **Animated API**'de animasyon değerleri varsayılan olarak **JS thread'de** hesaplanır ve her frame native tarafa iletilir; JS thread meşgulse animasyon takılır. **`useNativeDriver: true`** animasyonun tanımını başlangıçta native tarafa gönderir ve animasyon **UI thread'de** çalışır. **Reanimated** ise **worklet** adı verilen küçük JS fonksiyonlarını doğrudan UI thread'de çalıştırarak jest (gesture) ile etkileşimli, karmaşık animasyonları JS thread'den bağımsız hale getirir.
+
+### useNativeDriver'ın sınırları
+- Sadece **layout dışı** özellikler desteklenir: `transform`, `opacity`. `width`, `height`, `top`, `margin` gibi layout özellikleri native driver ile anime edilemez.
+- Animasyon başladıktan sonra JS'ten değer okuyup koşullu mantık uygulamak zordur.
+
+```tsx
+// Animated + native driver
+const opacity = useRef(new Animated.Value(0)).current;
+useEffect(() => {
+  Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+}, []);
+```
+
+### Reanimated
+```tsx
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
+function DraggableCard() {
+  const x = useSharedValue(0);
+  const pan = Gesture.Pan()
+    .onChange((e) => { x.value += e.changeX; })   // UI thread'de çalışır
+    .onEnd(() => { x.value = withSpring(0); });
+  const style = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+  return (
+    <GestureDetector gesture={pan}>
+      <Animated.View style={[styles.card, style]} />
+    </GestureDetector>
+  );
+}
+```
+
+| | Animated (JS) | Animated + native driver | Reanimated |
+| --- | --- | --- | --- |
+| Çalıştığı yer | JS thread | UI thread | UI thread (worklet) |
+| Layout özellikleri | Evet | Hayır | Evet |
+| Jestle senkron takip | Zayıf | Sınırlı | Çok iyi |
+
+Reanimated 4 New Architecture gerektirir, CSS benzeri deklaratif animasyonlar ekler ve worklet altyapısını `react-native-worklets` paketine ayırır. Shared value'yu render sırasında okumak veya worklet içinden sık sık `runOnJS` çağırmak avantajı yok eder.$md$, $md$Klasik takip sorusu: 'Bir bottom sheet'i parmakla sürükleyip bırakınca yerine oturtmak için ne kullanırsınız?' Beklenen cevap Reanimated + Gesture Handler'dır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-veri-saklama-icin-asyncstorage-mmkv-secure-storage-ve-sqlite-ara$md$, $md$React Native'de veri saklama için AsyncStorage, MMKV, secure storage ve SQLite arasında nasıl seçim yaparsınız? Token'ı nerede saklarsınız?$md$, $md$Seçim verinin **hassasiyetine, boyutuna ve erişim şekline** göre yapılır. Token gibi hassas veriler **Keychain/Keystore tabanlı secure storage**'da, küçük tercihler **MMKV/AsyncStorage**'da, büyük ve sorgulanabilir veriler **SQLite**'ta tutulur.
+
+| Çözüm | Özellik | Uygun olduğu veri |
+| --- | --- | --- |
+| AsyncStorage | Asenkron key-value, şifresiz, görece yavaş | Basit ayarlar, eski projeler |
+| MMKV (`react-native-mmkv`) | JSI ile senkron, çok hızlı, opsiyonel şifreleme | Ayarlar, feature flag, state persistence (Zustand/Redux persist) |
+| `expo-secure-store` / `react-native-keychain` | iOS Keychain ve Android Keystore ile donanım destekli şifreleme | Refresh token, API anahtarı, biyometrik korumalı veri |
+| SQLite (`expo-sqlite`, op-sqlite) veya WatermelonDB | İlişkisel sorgu, transaction, büyük veri | Offline-first veri, mesajlar, katalog cache |
+
+### Token saklama
+```ts
+import * as SecureStore from 'expo-secure-store';
+
+await SecureStore.setItemAsync('refreshToken', token, {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+});
+const token = await SecureStore.getItemAsync('refreshToken');
+```
+
+- Access token mümkünse sadece bellekte tutulur, refresh token secure storage'da.
+- AsyncStorage veya şifresiz MMKV'ye token yazmak, rootlu/jailbreak'li cihazda veya yedeklerde düz metin olarak okunabilir.
+- Secure storage büyük veri için tasarlanmamıştır (bazı platformlarda boyut sınırı vardır) ve yavaştır.
+
+### MMKV örneği
+```ts
+import { createMMKV } from 'react-native-mmkv';
+const storage = createMMKV(); // v4 API; v3'te `new MMKV()`
+storage.set('onboardingDone', true);
+const done = storage.getBoolean('onboardingDone'); // senkron, await yok
+```
+
+### Dikkat
+- iOS'ta Keychain verisi **uygulama silinse bile** kalabilir; ilk açılışta temizleme mantığı gerekebilir.
+- Saklanan verinin şema değişikliklerinde migration (sürüm anahtarı) planlanmalıdır.
+- Çok büyük JSON'u tek key'de saklayıp her değişiklikte tamamını yazmak performans sorunudur.$md$, $md$Güvenlik odaklı şirketlerde (fintech, banka) 'token'ı AsyncStorage'da tutarım' cevabı doğrudan eleme sebebi olabilir. Keychain/Keystore farkını bilin.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-de-ota-over-the-air-guncelleme-nedir-eas-update-veya-codepush-ile-n$md$, $md$React Native'de OTA (over-the-air) güncelleme nedir? EAS Update veya CodePush ile neler güncellenebilir, App Store/Google Play kuralları ve riskleri nelerdir?$md$, $md$OTA güncelleme, uygulamanın **JS bundle'ını ve asset'lerini** mağaza incelemesine girmeden kullanıcılara dağıtmaktır. Uygulama açıldığında güncelleme sunucusunu kontrol eder, yeni bundle'ı indirir ve genellikle bir sonraki açılışta uygular. Native kod (yeni native modül, izin, SDK sürümü, `Info.plist`) **OTA ile değiştirilemez**; bunlar için mağaza sürümü gerekir.
+
+### Araçlar (2025-2026)
+- **EAS Update (Expo):** Channel/branch modeli, kademeli rollout, anında rollback. Bare RN projelerinde de `expo-updates` ile kullanılabilir.
+- **CodePush:** Microsoft App Center **31 Mart 2025'te kapatıldı**; CodePush'un self-host edilebilen açık kaynak sunucusu kaldı. Yeni projelerde genellikle EAS Update veya self-hosted alternatifler tercih ediliyor.
+
+### En kritik konu: native uyumluluk
+Yeni JS, eski native binary'de olmayan bir modülü çağırırsa uygulama açılışta çöker. Bunu önlemek için **`runtimeVersion`** kullanılır; güncelleme sadece aynı runtime sürümüne sahip binary'lere gider.
+
+```json
+{
+  "expo": {
+    "runtimeVersion": { "policy": "fingerprint" },
+    "updates": { "url": "https://u.expo.dev/<project-id>" }
+  }
+}
+```
+
+`fingerprint` politikası native bağımlılıklar değiştiğinde runtime sürümünü otomatik değiştirir.
+
+```bash
+eas update --channel production --message "Sepet hesaplama düzeltmesi"
+```
+
+### Mağaza kuralları
+- Apple, yorumlanan kodun (JS) indirilmesine izin verir, ancak güncelleme uygulamanın **ana amacını değiştirmemeli**, incelemeye sunulandan farklı yeni özellik eklememeli ve imzalama/güvenlik mekanizmalarını atlatmamalıdır.
+- Google Play de benzer şekilde JS gibi yorumlanan kodlara izin verir; ama yanıltıcı davranış değişiklikleri politika ihlalidir.
+- Pratik kural: OTA'yı **bug fix, metin ve küçük UI düzeltmeleri** için kullanın; büyük özellikleri mağaza sürümüyle çıkarın.
+
+### Riskler ve önlemler
+- Hatalı bundle tüm kullanıcılara anında gider: önce staging channel'ında test, sonra yüzde 5-10 rollout, crash oranı izleme ve hızlı rollback.
+- Güncelleme indirme stratejisi (açılışta bloklayarak mı, arka planda mı) kullanıcı deneyimini etkiler.
+- Source map'leri her OTA sürümü için hata izleme aracına yüklemek gerekir.$md$, $md$Mülakatta 'OTA ile yeni bir native kamera kütüphanesi ekleyebilir misiniz?' tuzak sorusu gelebilir. Cevap hayır; runtimeVersion uyumsuzluğu ve crash riskini açıklayın.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-uygulamasini-nasil-debug-edersiniz-flipper-in-yerini-ne-aldi-ve-rea$md$, $md$React Native uygulamasını nasıl debug edersiniz? Flipper'ın yerini ne aldı ve React Native DevTools ile neler yapılabilir?$md$, $md$**Flipper**, 0.73'te deprecated edildi ve 0.74 ile yeni proje şablonundan çıkarıldı. Yerine 0.76 ile gelen **React Native DevTools** resmi debug aracıdır. Chrome DevTools arayüzünü Hermes'e doğrudan bağlar ve eski "Remote JS Debugging" yönteminin (kodu Chrome'da çalıştırıp gerçek motordan farklı davranan yaklaşım) yerini almıştır.
+
+### React Native DevTools ile
+- **Console** ve **Sources:** breakpoint, adım adım çalıştırma, değişken izleme. Kod cihazdaki Hermes'te çalışır.
+- **React Components** ve **Profiler:** bileşen ağacı, props/state inceleme ve hangi bileşenin neden render olduğunu görme.
+- **Memory:** heap snapshot alıp bellek sızıntısı arama.
+- Son sürümlerde **Network** ve **Performance** panelleri eklendi.
+- Metro terminalinde `j` tuşu veya Dev Menu'den "Open DevTools" ile açılır.
+
+### Diğer araçlar
+| Araç | Ne için |
+| --- | --- |
+| Dev Menu, Perf Monitor | JS ve UI FPS'ini canlı izlemek |
+| LogBox | Uygulama içi uyarı ve hata ekranı |
+| Reactotron | State (Redux/MobX), API istekleri, özel log'lar |
+| Android Studio Logcat, Profiler | Native crash, bellek, CPU, ANR |
+| Xcode console, Instruments | iOS native log, Time Profiler, Leaks |
+| Sentry / Crashlytics | Production crash ve hata takibi, breadcrumb, source map |
+
+### Pratik yaklaşım
+1. Hatanın JS mi native mi olduğunu ayırırım: kırmızı ekran ve JS stack trace mı, yoksa uygulama sessizce mi kapanıyor (native crash, Logcat/Xcode'a bak)?
+2. Hatayı tekrarlanabilir hale getirir, breakpoint koyarım.
+3. Sadece release'te görülen hatalar için release build'i yerelde çalıştırırım (`npx expo run:android --variant release` veya Xcode Release scheme). Minification (R8/ProGuard), `__DEV__` farkları ve Hermes bytecode kaynaklı sorunlar ancak böyle görülür.
+4. Production'da source map yüklü crash raporlarına ve kullanıcı yolculuğu breadcrumb'larına bakarım.
+
+Release build'de `console.log` bırakmak JS thread'ini yavaşlatabilir; Babel plugin'iyle temizlemek iyi pratiktir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$production-daki-react-native-uygulamaniz-dusuk-seviye-android-cihazlarda-takiliy$md$, $md$Production'daki React Native uygulamanız düşük seviye Android cihazlarda takılıyor. Sorunu nasıl teşhis eder ve çözersiniz?$md$, $md$Tahminle değil **ölçümle** başlarım: önce sorunun **JS thread**'de mi, **UI thread**'de mi, yoksa açılış süresinde mi olduğunu ayırırım. Ölçümleri her zaman **release build ve gerçek düşük seviye cihazda** yaparım; debug build ve emulator yanıltıcıdır.
+
+### 1. Sorunu konumlandırma
+- **Perf Monitor:** JS FPS düşüyor, UI FPS 60 ise sorun JS tarafında (render, iş mantığı). UI FPS düşüyorsa native çizim, ağır view hiyerarşisi veya büyük görseller.
+- **Production verisi:** Sentry/Firebase Performance ile yavaş ekranlar, frozen frame oranı, ANR raporları ve TTI.
+- **Araçlar:** React DevTools Profiler (gereksiz re-render), Hermes sampling profiler, Android Studio CPU Profiler ve Perfetto/systrace (UI thread), heap snapshot (bellek).
+
+### 2. Sık rastlanan sebepler ve çözümler
+| Belirti | Olası sebep | Çözüm |
+| --- | --- | --- |
+| Liste kaydırırken takılma | Index key, memo'suz satırlar, ağır renderItem | `keyExtractor`, `memo`, FlashList, `getItemLayout` |
+| Her tuşa basışta tüm ekran render | Global context/store'a geniş abonelik | Selector ile dar abonelik (Zustand/Redux), state'i bölmek |
+| Animasyon takılması | JS-driven animasyon | Reanimated veya `useNativeDriver` |
+| Bellek artışı, crash | Büyük görselleri orijinal boyutta yüklemek, temizlenmeyen listener | Boyutlandırılmış görsel ve cache (`expo-image`), cleanup |
+| Yavaş açılış | Büyük bundle, açılışta senkron iş, çok sayıda modülün erken yüklenmesi | Lazy ekranlar, işleri `InteractionManager` veya sonraya ertelemek, gereksiz bağımlılıkları kaldırmak |
+| Release'te yavaşlık | Çok sayıda `console.log`, JSON parse | Log temizleme, ağır işi native/arka plana almak |
+
+### 3. Örnek: gereksiz re-render
+```tsx
+// Kötü: tüm store'a abone, sepet değişince ürün listesi de render olur
+const state = useStore();
+// İyi: sadece ihtiyaç duyulan alan
+const count = useStore((s) => s.cart.items.length);
+```
+
+### 4. Doğrulama ve önleme
+- Değişiklik öncesi ve sonrası aynı senaryoda ölçüm (frame süreleri, TTI).
+- Kademeli rollout ile production metriklerini izlemek.
+- CI'da bundle boyutu takibi ve düşük seviye cihazda düzenli performans testi.
+
+New Architecture ve Hermes zemini iyileştirir; ama gereksiz render ve ağır JS işini kodda düzeltmek gerekir.$md$, $md$Bu soru davranışsal-senaryo sorusudur. 'Önce ölçerim, release build'de gerçek cihazda, JS FPS ile UI FPS'i ayırırım' cümlesiyle başlamak ve somut bir geçmiş vakadan bahsetmek en güçlü cevaptır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$react-native-uygulamasinda-deep-linking-i-nasil-kurarsiniz-custom-scheme-univers$md$, $md$React Native uygulamasında deep linking'i nasıl kurarsınız? Custom scheme, Universal Links ve Android App Links farkı nedir ve güvenlik açısından nelere dikkat edersiniz?$md$, $md$Deep link, bir URL ile uygulamanın belirli bir ekranını açmaktır. Üç yol vardır: **custom scheme** (`myapp://product/42`), iOS **Universal Links** ve Android **App Links** (`https://shop.example.com/product/42`). Universal/App Links, domain sahipliği doğrulandığı için daha güvenlidir ve uygulama yüklü değilse aynı link web sitesini açar.
+
+| | Custom scheme | Universal / App Links |
+| --- | --- | --- |
+| URL | `myapp://...` | `https://domain/...` |
+| Doğrulama | Yok; başka uygulama aynı scheme'i alabilir | Domain'de dosya ile doğrulanır |
+| Uygulama yoksa | Hata | Web sayfası açılır |
+| Kurulum | Kolay | iOS'ta `apple-app-site-association` + Associated Domains, Android'de `assetlinks.json` + `autoVerify` |
+
+### React Navigation ile eşleme
+```tsx
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['myapp://', 'https://shop.example.com'],
+  config: {
+    screens: {
+      Home: { screens: { Feed: 'feed', Profile: 'me' } },
+      Product: 'product/:id',
+      NotFound: '*',
+    },
+  },
+};
+
+<NavigationContainer linking={linking} fallback={<Splash />}>
+  <RootNavigator />
+</NavigationContainer>
+```
+
+Expo Router kullanılıyorsa dosya yapısı (`app/product/[id].tsx`) zaten URL'dir ve ek eşleme gerekmez.
+
+### Cold start ve warm start
+- **Cold start:** Uygulama kapalıyken link açılır; ilk URL `Linking.getInitialURL()` ile alınır.
+- **Warm start:** Uygulama arka plandayken; `Linking.addEventListener('url', ...)` ile dinlenir.
+React Navigation ikisini de yönetir, ama auth gerektiren bir link geldiğinde önce login'e gidip sonra hedef ekrana yönlendirmek için hedef URL'yi saklamak gerekir.
+
+### Güvenlik
+- Link parametreleri **güvenilmez girdidir**: `id`'yi doğrulamak, link ile ödeme onayı veya hesap işlemi gibi kritik aksiyonları doğrudan tetiklememek.
+- Hassas akışlarda custom scheme yerine doğrulanmış Universal/App Links kullanmak; OAuth dönüşlerinde PKCE kullanmak.
+- Linkle açılan ekranın, kullanıcı oturumu olmadan veri göstermemesi.
+
+Test için: `npx uri-scheme open "myapp://product/42" --ios` veya `adb shell am start -a android.intent.action.VIEW -d "https://shop.example.com/product/42"`.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$react-native$md$),
+  ($md$ekran-donduruldugunde-configuration-change-activity-ye-ne-olur-hangi-lifecycle-m$md$, $md$Ekran döndürüldüğünde (configuration change) Activity'ye ne olur? Hangi lifecycle metotları hangi sırayla çağrılır?$md$, $md$Varsayılan olarak Activity **yok edilip yeniden oluşturulur**. Eski instance `onPause → onStop → onDestroy` görür, yenisi `onCreate → onStart → onResume` ile gelir. Bu sırada `onSaveInstanceState` ile küçük UI state'i Bundle'a yazılır ve yeni instance'ta geri verilir.
+
+### Sıra (API 28+)
+1. `onPause()`
+2. `onStop()`
+3. `onSaveInstanceState(outState)` (API 28 öncesinde onStop'tan önce çağrılırdı)
+4. `onDestroy()` (`isChangingConfigurations == true`)
+5. Yeni instance: `onCreate(savedInstanceState)` → `onStart()` → `onRestoreInstanceState()` → `onResume()`
+
+### Neler korunur, neler kaybolur?
+- Activity'nin alanları, `remember` ile tutulan Compose state'i kaybolur.
+- **ViewModel** hayatta kalır (ViewModelStore yeni instance'a devredilir).
+- `onSaveInstanceState` / `rememberSaveable` ile yazılan Bundle verisi geri gelir.
+- Arka planda süren bir iş Activity'ye referans tutuyorsa eski instance sızdırılır (memory leak).
+
+### configChanges ile engellemek
+```xml
+<activity android:name=".PlayerActivity"
+    android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+```
+Bu durumda Activity yeniden yaratılmaz, `onConfigurationChanged()` çağrılır. Ancak dil, tema (dark mode) gibi diğer değişiklikler yine recreate tetikler; bu yüzden genelde "state'i doğru yönet" yaklaşımı tercih edilir. Ayrıca Android 16 (API 36) hedefleyen uygulamalarda büyük ekranlarda (sw600dp+) `screenOrientation`, `resizeableActivity` ve aspect ratio kısıtları yok sayılır (Android 16'da geçici bir opt-out vardı, API 37 hedefleyince kalkıyor; oyunlar muaf). Yani "sadece portrait" ile kaçmak artık çözüm değil.$md$, $md$Mülakatçı genelde ardından 'ViewModel neden hayatta kalıyor ama process death'te kalmıyor?' diye sorar. ViewModel ile onSaveInstanceState farkını hazır tutun.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$kotlin-de-lateinit-ile-by-lazy-arasindaki-fark-nedir-hangisini-ne-zaman-kullanir$md$, $md$Kotlin'de lateinit ile by lazy arasındaki fark nedir? Hangisini ne zaman kullanırsınız?$md$, $md$İkisi de "değeri sonra ver" demenin yoludur ama `lateinit` **dışarıdan sonradan atanan `var`** içindir, `by lazy` ise **ilk erişimde bir kez hesaplanan `val`** içindir.
+
+| | lateinit | by lazy |
+| --- | --- | --- |
+| Tür | `var` | `val` |
+| Değer kim atar? | Siz, herhangi bir zamanda | Lambda, ilk erişimde |
+| Primitive tipler | Kullanılamaz (`Int`, `Boolean`) | Kullanılabilir |
+| Nullable tip | Kullanılamaz | Kullanılabilir |
+| Başlatılmadan erişim | `UninitializedPropertyAccessException` | Olmaz, lambda çalışır |
+| Thread safety | Yok | Varsayılan `SYNCHRONIZED` |
+
+```kotlin
+class ProfileFragment : Fragment() {
+    // DI veya onViewCreated'da atanır
+    @Inject lateinit var analytics: Analytics
+
+    // İlk kullanımda bir kez hesaplanır
+    private val dateFormatter by lazy { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
+
+    fun track() {
+        if (::analytics.isInitialized) analytics.log("profile_open")
+    }
+}
+```
+
+### Pratik kurallar
+- Hilt field injection, test `@Before` kurulumu → `lateinit`.
+- Maliyetli ve belki hiç kullanılmayacak nesne (formatter, regex, büyük config) → `lazy`.
+- Tek thread'den erişiliyorsa `lazy(LazyThreadSafetyMode.NONE)` senkronizasyon maliyetini kaldırır.
+- Fragment'ta View referansını `lazy` ile tutmak tehlikelidir: view yeniden oluşunca eski view'a referans kalır.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$kotlin-scope-function-lari-let-run-with-apply-also-arasindaki-fark-nedir-asagida$md$, $md$Kotlin scope function'ları (let, run, with, apply, also) arasındaki fark nedir? Aşağıdaki kodun çıktısı nedir?$md$, $md$Farkı iki soru belirler: blok içinde nesneye **`this` mi `it` mi** ile erişiliyor ve fonksiyon **nesnenin kendisini mi lambda sonucunu mu** döndürüyor.
+
+| Fonksiyon | Erişim | Döndürür | Tipik kullanım |
+| --- | --- | --- | --- |
+| `let` | `it` | lambda sonucu | null check (`?.let`), dönüşüm |
+| `run` | `this` | lambda sonucu | nesne üzerinde hesaplama |
+| `with(x)` | `this` | lambda sonucu | extension değil, bir nesneyle birden çok çağrı |
+| `apply` | `this` | nesnenin kendisi | builder / konfigürasyon |
+| `also` | `it` | nesnenin kendisi | yan etki: log, doğrulama |
+
+```kotlin
+val result = StringBuilder("a")
+    .apply { append("b") }      // StringBuilder "ab" döner
+    .also { it.append("c") }    // StringBuilder "abc" döner
+    .let { it.length }          // Int döner
+println(result)
+
+val name: String? = null
+val len = name?.let { it.length } ?: 0
+println(len)
+```
+
+Çıktı:
+```text
+3
+0
+```
+
+`apply` ve `also` zincirde nesneyi geri verdiği için devam edilebilir; `let` son halkada sonucu `Int`'e çevirir. `name` null olduğundan `?.let` çalışmaz ve Elvis `0` döndürür.
+
+Okunabilirlik için iç içe scope function zincirlerinden kaçının; `it` iki seviye iç içe girince kimin `it`'i olduğu belirsizleşir.$md$, $md$Sık görülen hata: ?.let { } ?: run { } kalıbında let bloğu null döndürürse run bloğu da çalışır. Bunu bilmek ekstra puan getirir.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$kotlin-de-data-class-ve-sealed-class-nedir-bir-ekranin-ui-state-ini-sealed-inter$md$, $md$Kotlin'de data class ve sealed class nedir? Bir ekranın UI state'ini sealed interface ile nasıl modellersiniz?$md$, $md$**data class**, veri taşıyan sınıflar için derleyicinin `equals`, `hashCode`, `toString`, `copy` ve `componentN` fonksiyonlarını üretmesini sağlar. **sealed class/interface** ise alt tiplerinin derleme zamanında bilindiği kapalı bir hiyerarşidir; `when` ifadesi `else` olmadan **exhaustive** olur.
+
+```kotlin
+sealed interface ProductUiState {
+    data object Loading : ProductUiState
+    data class Success(val products: List<Product>) : ProductUiState
+    data class Error(val message: String, val canRetry: Boolean) : ProductUiState
+}
+
+@Composable
+fun ProductScreen(state: ProductUiState, onRetry: () -> Unit) {
+    when (state) {                       // else gerekmez
+        ProductUiState.Loading -> CircularProgressIndicator()
+        is ProductUiState.Success -> ProductList(state.products)
+        is ProductUiState.Error -> ErrorView(state.message, onRetry)
+    }
+}
+```
+
+### Neden önemli?
+- Yeni bir durum (`Empty`) eklendiğinde derleyici tüm `when`'lerde hata verir; unutulan dal kalmaz.
+- `isLoading`, `error`, `data` gibi üç ayrı boolean/nullable alan yerine "imkansız kombinasyonlar" (hem loading hem error) temsil edilemez.
+- `data object` (Kotlin 1.9+) düzgün `toString` verir.
+
+### data class dikkat noktaları
+- `equals` yalnızca primary constructor'daki alanları kullanır; gövdede tanımlı property'ler karşılaştırmaya girmez.
+- `copy` sığ (shallow) kopyadır; içindeki `MutableList` paylaşılır.
+- data class `open` veya `abstract` olamaz.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$kotlin-null-safety-nasil-calisir-ve-platform-type-lar-hakkinda-asagidaki-kodun-c$md$, $md$Kotlin null safety nasıl çalışır? ?., ?:, !! ve platform type'lar hakkında aşağıdaki kodun çıktısı nedir?$md$, $md$Kotlin'de tipler varsayılan olarak **non-null**'dır; `String?` yazmadıkça null atanamaz. Nullable bir değere erişmek için derleyici sizi güvenli operatörlere zorlar.
+
+- `?.` safe call: nesne null ise ifade null döner.
+- `?:` Elvis: soldaki null ise sağdakini kullanır (`return`/`throw` da olabilir).
+- `!!`: "null değil, eminim" der; null ise `NullPointerException` fırlatır.
+- `as?` safe cast: cast başarısızsa null.
+- Smart cast: `if (x != null)` sonrası `x` non-null kabul edilir (yalnızca `val` veya local değişkende).
+
+```kotlin
+fun main() {
+    val s: String? = null
+    println(s?.length)
+    println(s?.length ?: -1)
+    println(s.isNullOrEmpty())
+    val t = s ?: "default"
+    println(t.length)
+    println(s!!.length)
+}
+```
+
+Çıktı:
+```text
+null
+-1
+true
+7
+Exception in thread "main" java.lang.NullPointerException
+```
+
+`isNullOrEmpty` nullable receiver'lı bir extension function olduğu için `s.` ile doğrudan çağrılabilir.
+
+### Platform type
+Java'dan gelen ve nullability annotation'ı olmayan değerler `String!` olarak görünür; derleyici kontrol etmez. Android SDK'da `@Nullable/@NonNull` annotation'ları olsa da, `intent.getStringExtra("id")` gibi değerleri her zaman nullable kabul edin. Production'da `!!` görmek code review'da kırmızı bayraktır; yerine `requireNotNull(x) { "açıklama" }` veya Elvis ile erken `return` tercih edilir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$viewmodel-configuration-change-de-nasil-hayatta-kalir-process-death-te-ne-olur-v$md$, $md$ViewModel configuration change'de nasıl hayatta kalır? Process death'te ne olur ve SavedStateHandle bunu nasıl çözer?$md$, $md$ViewModel, Activity/Fragment'ın `ViewModelStore`'unda tutulur. Configuration change sırasında sistem bu store'u eski instance'tan yeni instance'a aktarır (`NonConfigurationInstances`), bu yüzden ViewModel aynı kalır. Owner kalıcı olarak bittiğinde (`finish`, back) `onCleared()` çağrılır ve `viewModelScope` iptal edilir.
+
+Ancak **process death**'te (uygulama arka plandayken sistem belleği geri alırsa) ViewModel de bellekle birlikte yok olur. Kullanıcı geri döndüğünde Activity yeniden yaratılır ama ViewModel sıfırdan oluşur. Burada `SavedStateHandle` devreye girer: içine yazdığınız değerler `onSaveInstanceState` Bundle'ına kaydedilir ve geri yüklenir.
+
+```kotlin
+@HiltViewModel
+class SearchViewModel @Inject constructor(
+    private val savedState: SavedStateHandle,
+    private val repo: SearchRepository
+) : ViewModel() {
+
+    // Navigation argümanı da buradan okunur
+    private val categoryId: String = checkNotNull(savedState["categoryId"])
+
+    // Process death'ten sonra da geri gelir
+    val query: StateFlow<String> = savedState.getStateFlow("query", "")
+
+    fun onQueryChange(q: String) { savedState["query"] = q }
+
+    val results = query
+        .debounce(300)
+        .flatMapLatest { repo.search(categoryId, it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+```
+
+### Ne saklanmalı?
+- Küçük, yeniden oluşturulması zor şeyler: arama metni, seçili sekme, ID'ler.
+- Büyük listeler veya bitmap'ler değil (Bundle limiti ~1MB, `TransactionTooLargeException`). Bunlar ID'den repository/Room üzerinden yeniden yüklenir.
+
+### Test etme
+Uygulamayı arka plana alıp `adb shell am kill com.example.app` çalıştırın, sonra Recents'tan geri dönün. "Don't keep activities" geliştirici seçeneği Activity'yi yok eder ama process'i öldürmez; ikisi aynı şey değildir.$md$, $md$Çoğu aday process death'i bilmez. 'Kullanıcı formu yarıda bıraktı, telefon belleği boşalttı, geri döndü; ne kaybolur?' senaryosunu kendi cümlenizle anlatabilmek fark yaratır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$jetpack-compose-da-recomposition-nedir-state-hoisting-neden-onerilir-stateless-c$md$, $md$Jetpack Compose'da recomposition nedir? State hoisting neden önerilir, stateless composable nasıl yazılır?$md$, $md$**Recomposition**, bir composable'ın okuduğu `State` değiştiğinde Compose'un o composable'ı (ve etkilenen alt ağacı) yeniden çalıştırarak UI'ı güncellemesidir. Compose sadece değişen state'i okuyan kısımları yeniden çalıştırmaya çalışır; parametreleri değişmeyen composable'lar **skip** edilebilir.
+
+Bilinmesi gerekenler:
+- Composable fonksiyonlar herhangi bir sırada, sık sık ve paralel çalışabilir; içlerinde yan etki (network çağrısı, sayaç artırma) olmamalıdır.
+- Recomposition iyimserdir, yeni state gelirse yarıda iptal edilebilir.
+
+### State hoisting
+State'i composable'ın içinden çıkarıp çağırana taşımaktır: composable **değeri** ve **olay callback'ini** parametre olarak alır. Böylece tek bir doğruluk kaynağı (single source of truth) olur, composable tekrar kullanılabilir ve test edilebilir hale gelir.
+
+```kotlin
+// Stateless: state dışarıdan gelir
+@Composable
+fun QuantitySelector(
+    quantity: Int,
+    onQuantityChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier) {
+        IconButton(onClick = { onQuantityChange(quantity - 1) }, enabled = quantity > 1) {
+            Icon(Icons.Default.Remove, contentDescription = "Azalt")
+        }
+        Text("$quantity")
+        IconButton(onClick = { onQuantityChange(quantity + 1) }) {
+            Icon(Icons.Default.Add, contentDescription = "Artır")
+        }
+    }
+}
+
+// Stateful sarmalayıcı (veya state ViewModel'de)
+@Composable
+fun CartItemRow(viewModel: CartViewModel) {
+    val qty by viewModel.quantity.collectAsStateWithLifecycle()
+    QuantitySelector(quantity = qty, onQuantityChange = viewModel::setQuantity)
+}
+```
+
+### Ne kadar yukarı?
+State'i, onu okuyan ve değiştiren tüm composable'ların **en düşük ortak atasına** kadar çıkarın. İş kuralı içeren state (sepet adedi) ViewModel'e, saf UI state'i (bir dropdown açık mı) composable içinde `remember` ile kalabilir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$compose-da-remember-ile-remembersaveable-arasindaki-fark-nedir-hangi-durumda-han$md$, $md$Compose'da remember ile rememberSaveable arasındaki fark nedir? Hangi durumda hangisi state'i kaybeder?$md$, $md$`remember`, değeri **composition boyunca** saklar: recomposition'da korunur ama composable composition'dan çıkınca, configuration change'de ve process death'te kaybolur. `rememberSaveable` değeri ayrıca **saved instance state** mekanizmasına (Bundle) yazar; rotation ve process death'ten sonra da geri gelir.
+
+| Senaryo | remember | rememberSaveable | ViewModel |
+| --- | --- | --- | --- |
+| Recomposition | korunur | korunur | korunur |
+| Rotation / dark mode | kaybolur | korunur | korunur |
+| Process death | kaybolur | korunur | kaybolur (SavedStateHandle hariç) |
+| Composable ağaçtan çıkınca | kaybolur | kaybolur (Navigation back stack hariç) | owner'a bağlı |
+
+```kotlin
+@Composable
+fun SearchBar() {
+    // Rotation'dan sonra yazılan metin korunur
+    var query by rememberSaveable { mutableStateOf("") }
+    // Pahalı ama yeniden hesaplanabilir nesne: remember yeter
+    val focusRequester = remember { FocusRequester() }
+    // key değişince yeniden hesaplanır
+    val regex = remember(query) { Regex(Regex.escape(query), RegexOption.IGNORE_CASE) }
+    TextField(value = query, onValueChange = { query = it },
+        modifier = Modifier.focusRequester(focusRequester))
+}
+```
+
+### Kısıtlar
+- `rememberSaveable` yalnızca Bundle'a yazılabilen tipleri saklar (primitive, String, `Parcelable`). Özel tipler için `@Parcelize` veya `Saver`/`listSaver`/`mapSaver` gerekir.
+- Büyük veri koymayın; Bundle boyut sınırı vardır.
+- `remember(key)` kullanırken key'i unutmak "eski değerle kalma" hatasına yol açar.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$compose-side-effect-api-leri-launchedeffect-disposableeffect-remembercoroutinesc$md$, $md$Compose side effect API'leri: LaunchedEffect, DisposableEffect, rememberCoroutineScope ve rememberUpdatedState ne zaman kullanılır?$md$, $md$Composable'lar yan etkisiz olmalıdır; yan etkiler composition yaşam döngüsüne bağlı effect API'leriyle yapılır.
+
+| API | Ne yapar | Örnek |
+| --- | --- | --- |
+| `LaunchedEffect(key)` | Composition'a girince coroutine başlatır, key değişince iptal edip yeniden başlatır, çıkınca iptal eder | Snackbar göstermek, tek seferlik event toplamak |
+| `DisposableEffect(key)` | Kurulum yapar, `onDispose` ile temizlik zorunlu | Listener, BroadcastReceiver, lifecycle observer kaydı |
+| `rememberCoroutineScope()` | Composition'a bağlı scope verir; callback içinden coroutine başlatmak için | Butona basınca `drawerState.open()` |
+| `rememberUpdatedState(v)` | Uzun süren effect'i yeniden başlatmadan en güncel değeri okumak | Timeout sonrası en son `onTimeout` callback'i |
+| `SideEffect` | Her başarılı recomposition sonrası çalışır | Compose dışı bir nesneye state yazmak |
+
+```kotlin
+@Composable
+fun LifecycleLogger(onEvent: (Lifecycle.Event) -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val currentOnEvent by rememberUpdatedState(onEvent)
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event -> currentOnEvent(event) }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+}
+
+@Composable
+fun SplashScreen(onTimeout: () -> Unit) {
+    val currentOnTimeout by rememberUpdatedState(onTimeout)
+    LaunchedEffect(Unit) {          // bir kez başlar, onTimeout değişince yeniden başlamaz
+        delay(2_000)
+        currentOnTimeout()
+    }
+}
+```
+
+### Sık yapılan hatalar
+- `LaunchedEffect(Unit)` içinde değişen bir parametreyi doğrudan kullanmak: eski değer yakalanır (stale capture). Çözüm: key'e eklemek veya `rememberUpdatedState`.
+- Composable gövdesinde doğrudan `scope.launch { }` çağırmak: her recomposition'da yeni coroutine başlar.
+- `DisposableEffect` içinde `onDispose`'u boş bırakmak: kayıt sızar.$md$, $md$Mülakatçılar sık sık 'LaunchedEffect'in key'i değişince ne olur?' diye sorar. Cevap: önceki coroutine iptal edilir, yenisi başlar.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$flow-stateflow-sharedflow-ve-livedata-arasindaki-farklar-nelerdir-viewmodel-den$md$, $md$Flow, StateFlow, SharedFlow ve LiveData arasındaki farklar nelerdir? ViewModel'den UI'a state ve tek seferlik event'leri nasıl taşırsınız?$md$, $md$Kısaca: **Flow** soğuk (cold) bir akıştır, her collector için baştan çalışır. **StateFlow** ve **SharedFlow** sıcak (hot) akışlardır, collector olmasa da var olurlar. **LiveData** lifecycle-aware ama Android'e bağlı ve operatörleri zayıf eski bir çözümdür.
+
+| | Flow | StateFlow | SharedFlow | LiveData |
+| --- | --- | --- | --- | --- |
+| Cold/Hot | Cold | Hot | Hot | Hot |
+| Başlangıç değeri | Yok | Zorunlu | Yok | Opsiyonel |
+| Yeni collector'a | Baştan çalışır | Son değeri verir | `replay` kadar | Son değeri verir |
+| Aynı değeri tekrar yayar mı? | Evet | Hayır (`equals` ile conflate) | Evet | Evet |
+| Lifecycle-aware | Hayır | Hayır | Hayır | Evet |
+| Platform | Saf Kotlin (KMP) | Saf Kotlin | Saf Kotlin | Android |
+
+### Önerilen kalıp
+```kotlin
+class CheckoutViewModel(repo: CartRepository) : ViewModel() {
+    // UI state: StateFlow
+    val uiState: StateFlow<CheckoutUiState> = repo.observeCart()
+        .map { CheckoutUiState.Ready(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CheckoutUiState.Loading)
+
+    // Tek seferlik event: Channel (buffer'lı, kaybolmaz)
+    private val _events = Channel<CheckoutEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
+    fun pay() = viewModelScope.launch {
+        _events.send(CheckoutEvent.NavigateToSuccess)
+    }
+}
+```
+
+- `WhileSubscribed(5_000)`: son collector gidince 5 saniye bekler; rotation sırasında upstream iptal olmaz ama uygulama arka planda kalırsa durur.
+- Event'i StateFlow'a koymak tekrar tüketim sorununa, `MutableSharedFlow(replay = 0)` kullanmak ise collector yokken event kaybına yol açar. Channel tek collector için yaygın çözümdür. Google'ın güncel önerisi ise mümkünse event'leri de state'e çevirmek ve UI tükettiğinde ViewModel'e bildirmektir.
+
+### LiveData'nın yeri
+Yeni kodda genellikle StateFlow tercih edilir (coroutine operatörleri, KMP, test kolaylığı). Mevcut LiveData kodu `asFlow()`/`asLiveData()` ile köprülenebilir.$md$, $md$Getir mülakat raporlarında 'coroutines/Flow neden eski API'lerden (RxJava, callback, AsyncTask) iyi?' sorusu geçiyor. Structured concurrency ve otomatik iptal üzerinden cevaplayın.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$launch-ile-async-arasindaki-fark-nedir-dispatchers-main-io-ve-default-ne-zaman-k$md$, $md$launch ile async arasındaki fark nedir? Dispatchers.Main, IO ve Default ne zaman kullanılır? Aşağıdaki kodun çıktısı nedir?$md$, $md$`launch` sonuç döndürmeyen bir iş başlatır ve `Job` verir ("ateşle ve unut", ama scope'a bağlı). `async` bir değer üretir ve `Deferred<T>` verir; sonuç `await()` ile alınır. Paralel iki isteği birleştirmek tipik `async` kullanımıdır.
+
+```kotlin
+fun main() = runBlocking {
+    launch { delay(100); println("A") }
+    val d = async { delay(50); println("B"); 42 }
+    println("C")
+    println(d.await())
+    println("D")
+}
+```
+
+Çıktı:
+```text
+C
+B
+42
+D
+A
+```
+
+`launch` ve `async` hemen askıya alınmadan geri döner, bu yüzden önce `C` basılır. 50 ms'de `B` ve sonuç `42`, ardından `D`; 100 ms'de `A`. `runBlocking` tüm çocuklar bitene kadar bekler.
+
+### Dispatcher'lar
+| Dispatcher | Thread havuzu | Kullanım |
+| --- | --- | --- |
+| `Dispatchers.Main` | UI thread | UI güncellemesi, hafif işler |
+| `Dispatchers.IO` | Büyük, esnek havuz (64+ thread) | Disk, ağ, Room, dosya |
+| `Dispatchers.Default` | CPU çekirdek sayısı kadar | JSON parse, sıralama, görüntü işleme |
+
+### Paralel istek örneği
+```kotlin
+suspend fun loadHome(): Home = coroutineScope {
+    val banners = async { api.banners() }
+    val products = async { api.products() }
+    Home(banners.await(), products.await())   // biri hata verirse diğeri iptal edilir
+}
+```
+
+İyi pratik: repository/data source fonksiyonları kendi içinde `withContext(Dispatchers.IO)` kullanarak **main-safe** olmalı; ViewModel'den çağıran taraf dispatcher düşünmek zorunda kalmamalı. Dispatcher'ları test için constructor'dan inject edin.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$kotlin-de-inline-noinline-crossinline-ve-reified-ne-ise-yarar-reified-ile-tipe-g$md$, $md$Kotlin'de inline, noinline, crossinline ve reified ne işe yarar? reified ile tipe göre Activity başlatan bir extension yazın.$md$, $md$`inline` bir higher-order fonksiyonun gövdesini ve aldığı lambda'ları **çağrı yerine kopyalar**. Böylece lambda için nesne oluşturulmaz (performans) ve lambda içinden dış fonksiyondan `return` (non-local return) yapılabilir.
+
+- `noinline`: inline fonksiyonun belirli bir lambda parametresini inline etme (saklanacak veya başka fonksiyona geçilecekse).
+- `crossinline`: lambda inline edilir ama içinde non-local `return` yasaklanır; lambda başka bir context'te (ör. `Runnable` içinde) çağrılıyorsa gerekir.
+- `reified`: JVM'de generic tipler runtime'da silinir (type erasure). `inline` fonksiyonda `reified T` kullanınca tip çağrı yerine gömülür ve `T::class`, `is T` kullanılabilir.
+
+```kotlin
+inline fun <reified T : Activity> Context.launchActivity(
+    vararg extras: Pair<String, Any?>
+) {
+    val intent = Intent(this, T::class.java).apply {
+        putExtras(bundleOf(*extras))
+    }
+    startActivity(intent)
+}
+
+// Kullanım
+context.launchActivity<ProductDetailActivity>("productId" to "123")
+
+// reified olmadan aynı şey:
+// context.launchActivity(ProductDetailActivity::class.java, ...)
+```
+
+Başka bir yaygın örnek:
+```kotlin
+inline fun <reified T> Gson.fromJson(json: String): T =
+    fromJson(json, object : TypeToken<T>() {}.type)
+```
+
+### Ne zaman inline etmemeli?
+Lambda almayan büyük fonksiyonları inline etmek kod boyutunu şişirir; derleyici de uyarı verir. `inline` en çok küçük, lambda alan yardımcılar (`measureTime`, `synchronized`, `forEach`) için anlamlıdır.$md$, $md$Kotlin stdlib'den örnek verin: filter, map, let hep inline'dır. Bu yüzden forEach içinden return yazmak tüm fonksiyondan çıkar, return@forEach ise sadece o iterasyondan.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$arka-planda-is-yapmak-icin-service-foreground-service-ve-workmanager-arasinda-na$md$, $md$Arka planda iş yapmak için Service, Foreground Service ve WorkManager arasında nasıl seçim yaparsınız? Modern Android'in arka plan kısıtları nelerdir?$md$, $md$Seçim işin **ne zaman bitmesi gerektiğine** ve **uygulama kapansa bile garanti edilmesi gerekip gerekmediğine** bağlıdır.
+
+| İhtiyaç | Çözüm |
+| --- | --- |
+| Ekran açıkken, kullanıcı beklerken kısa iş | Coroutine (`viewModelScope`) |
+| Ertelenebilir ama mutlaka yapılması gereken iş (log upload, senkronizasyon) | **WorkManager** |
+| Kullanıcının fark ettiği, hemen başlayan ve süren iş (müzik, navigasyon, arama) | **Foreground Service** + bildirim |
+| Kısa, hemen başlaması gereken önemli iş | WorkManager expedited work |
+| Belirli saatte alarm | `AlarmManager` (exact alarm izni gerekebilir) |
+
+### WorkManager
+Uygulama kapansa veya cihaz yeniden başlasa bile işi çalıştırır, constraint (ağ, şarj) ve retry/backoff destekler, zincirleme ve unique work sağlar.
+
+```kotlin
+val request = OneTimeWorkRequestBuilder<UploadWorker>()
+    .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+    .build()
+
+WorkManager.getInstance(context)
+    .enqueueUniqueWork("upload-logs", ExistingWorkPolicy.KEEP, request)
+
+class UploadWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
+    override suspend fun doWork(): Result =
+        try { api.upload(); Result.success() } catch (e: IOException) { Result.retry() }
+}
+```
+
+### Kısıtlar (kronolojik)
+- Android 6: Doze ve App Standby; ekran kapalıyken ağ ve alarmlar ertelenir.
+- Android 8: Arka planda `startService` yasak; arka plan servisleri kısa sürede durdurulur.
+- Android 12: Arka plandan foreground service başlatma büyük ölçüde yasak.
+- Android 13: Bildirim için `POST_NOTIFICATIONS` runtime izni.
+- Android 14: Her foreground service için `foregroundServiceType` beyanı ve ilgili izin zorunlu.
+- Android 15: `dataSync` ve `mediaProcessing` tipleri için zaman limiti (24 saatte ~6 saat).
+
+Ayrıca bazı üreticiler (Xiaomi, Huawei vb.) agresif pil optimizasyonu yapar; kritik işleri sadece servise güvenerek değil WorkManager ile tasarlamak gerekir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$android-de-en-sik-gorulen-memory-leak-nedenleri-nelerdir-context-leak-i-nasil-ol$md$, $md$Android'de en sık görülen memory leak nedenleri nelerdir? Context leak'i nasıl oluşur ve LeakCanary ile nasıl tespit edersiniz?$md$, $md$Memory leak, yaşam döngüsü bitmiş bir nesnenin (genelde Activity, Fragment view'ı) daha uzun yaşayan bir nesne tarafından referanslanması ve GC tarafından toplanamamasıdır. Activity leak'i tüm view ağacını ve bitmap'leri de tuttuğu için pahalıdır.
+
+### Sık nedenler
+- Singleton veya `companion object` içinde Activity `Context`'i saklamak.
+- ViewModel'e Activity, View veya Activity Context'i vermek (ViewModel Activity'den uzun yaşar).
+- Fragment'ta `binding`'i `onDestroyView`'da null'lamamak (Fragment back stack'te yaşarken view yok edilmiştir).
+- Kayıt olunup kaldırılmayan listener/callback (sensor, location, BroadcastReceiver).
+- `GlobalScope` veya iptal edilmeyen coroutine/thread'in Activity'yi yakalaması.
+- Anonim inner class veya `Handler.postDelayed` içinde dış sınıfa örtük referans.
+
+```kotlin
+// Hatalı
+object ImageCache {
+    lateinit var context: Context      // Activity verilirse sızar
+}
+
+// Doğru
+object ImageCache {
+    lateinit var appContext: Context
+    fun init(context: Context) { appContext = context.applicationContext }
+}
+
+// Fragment ViewBinding
+private var _binding: FragmentHomeBinding? = null
+private val binding get() = _binding!!
+override fun onDestroyView() { super.onDestroyView(); _binding = null }
+```
+
+### Tespit
+- **LeakCanary**: `debugImplementation("com.squareup.leakcanary:leakcanary-android:2.x")` eklemek yeterli. Destroy edilen Activity, Fragment, Fragment view, ViewModel ve Service'leri izler; 5 saniye sonra hâlâ yaşıyorlarsa heap dump alıp **leak trace** gösterir (GC root'tan sızan nesneye kadar referans zinciri).
+- Android Studio Memory Profiler ile heap dump alıp "Leaked Activities" filtresi.
+
+Context seçim kuralı: UI ile ilgili (tema, inflater, dialog) işlerde Activity context; uzun yaşayan nesnelerde `applicationContext`.$md$, $md$Leak trace'i okuyabildiğinizi göstermek önemli: hangi referansın 'sızan' olduğunu ve neden o noktada kesilmesi gerektiğini anlatın.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$hilt-ile-dependency-injection-nasil-kurulur-provides-ile-binds-farki-nedir-ve-sc$md$, $md$Hilt ile dependency injection nasıl kurulur? @Provides ile @Binds farkı nedir ve scope'lar (@Singleton, @ViewModelScoped) nasıl seçilir?$md$, $md$Hilt, Dagger üzerine kurulu, Android bileşenleri için hazır component'ler sunan bir DI kütüphanesidir. Temel kurulum: `Application` sınıfına `@HiltAndroidApp`, Activity/Fragment'a `@AndroidEntryPoint`, ViewModel'e `@HiltViewModel` ve sınıflara `@Inject constructor`.
+
+```kotlin
+@HiltAndroidApp
+class App : Application()
+
+interface ProductRepository { suspend fun getProducts(): List<Product> }
+class ProductRepositoryImpl @Inject constructor(
+    private val api: ProductApi,
+    private val dao: ProductDao
+) : ProductRepository { /* ... */ }
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+    @Binds @Singleton
+    abstract fun bindProductRepo(impl: ProductRepositoryImpl): ProductRepository
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+    @Provides @Singleton
+    fun provideRetrofit(): Retrofit = Retrofit.Builder()
+        .baseUrl("https://api.example.com/")
+        .addConverterFactory(MoshiConverterFactory.create())
+        .build()
+
+    @Provides
+    fun provideProductApi(retrofit: Retrofit): ProductApi = retrofit.create()
+}
+
+@HiltViewModel
+class ProductViewModel @Inject constructor(
+    private val repo: ProductRepository,
+    private val savedState: SavedStateHandle
+) : ViewModel()
+```
+
+### @Provides vs @Binds
+- `@Binds`: interface'i implementasyona bağlar; abstract fonksiyondur, ek kod üretmez, daha verimlidir. Implementasyonun `@Inject constructor`'ı olmalıdır.
+- `@Provides`: nesneyi siz oluşturursunuz; constructor'ına erişemediğiniz üçüncü parti sınıflar (Retrofit, OkHttp, Room) için.
+
+### Scope'lar
+| Annotation | Component | Ömür |
+| --- | --- | --- |
+| `@Singleton` | SingletonComponent | Uygulama |
+| `@ActivityRetainedScoped` | ActivityRetainedComponent | Rotation'da korunur |
+| `@ViewModelScoped` | ViewModelComponent | Tek ViewModel |
+| `@ActivityScoped` | ActivityComponent | Activity instance |
+
+Scope'suz binding her enjeksiyonda yeni instance üretir. Her şeyi `@Singleton` yapmak bellek tüketir ve state paylaşım hatalarına yol açar; sadece gerçekten paylaşılması gereken (OkHttpClient, Database) nesneleri scope'layın. Hilt artık KSP ile de çalışır (kapt'tan daha hızlı build).$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$gradle-da-build-type-product-flavor-ve-build-variant-nedir-r8-proguard-ne-yapar$md$, $md$Gradle'da build type, product flavor ve build variant nedir? R8/ProGuard ne yapar ve release'de reflection kullanan kod neden çöker?$md$, $md$**Build type** nasıl derlendiğini (debug/release: imzalama, minify, debuggable), **product flavor** uygulamanın hangi sürümü olduğunu (free/paid, dev/prod ortamı) belirler. **Build variant** ikisinin çarpımıdır: `devDebug`, `prodRelease` gibi.
+
+```kotlin
+android {
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            buildConfigField("String", "BASE_URL", "\"https://dev-api.example.com\"")
+        }
+        create("prod") {
+            dimension = "env"
+            buildConfigField("String", "BASE_URL", "\"https://api.example.com\"")
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    buildFeatures { buildConfig = true }
+}
+```
+Flavor'a özel kod ve kaynaklar `src/dev/`, `src/prod/` source set'lerine konur.
+
+### R8
+R8, AGP'nin varsayılan derleyicisidir ve dört iş yapar:
+1. **Shrinking**: kullanılmayan sınıf/metotları siler.
+2. **Optimization**: inline etme, ölü kod temizleme.
+3. **Obfuscation**: isimleri `a`, `b` gibi kısaltır.
+4. **Resource shrinking**: kullanılmayan kaynakları siler.
+
+AGP 8'den itibaren R8 **full mode** varsayılandır ve daha agresiftir.
+
+### Neden release'de çöker?
+R8 statik analizle "kullanılmıyor" dediği şeyi siler. Reflection ile erişilen kod (Gson ile parse edilen model alanları, `Class.forName`, JNI) analizde görünmez; alan isimleri obfuscate edilir veya sınıf silinir. Sonuç: debug'da çalışan JSON parse release'de null alanlar veya `ClassNotFoundException`.
+
+Çözümler:
+- Model sınıflarına `@Keep` veya `@SerializedName`, ya da keep kuralı: `-keep class com.example.data.model.** { *; }`
+- Reflection yerine codegen kullanan kütüphaneler (kotlinx.serialization, Moshi codegen).
+- Release build'i QA'da mutlaka test etmek; çökme raporlarını `mapping.txt` ile retrace etmek (Play Console ve Crashlytics'e yüklenir).$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$coroutine-lerde-structured-concurrency-ve-cancellation-nasil-calisir-asagidaki-k$md$, $md$Coroutine'lerde structured concurrency ve cancellation nasıl çalışır? Aşağıdaki kodda iptal neden işe yaramıyor ve exception'lar nasıl yayılır?$md$, $md$**Structured concurrency**: her coroutine bir scope'a ve parent `Job`'a bağlıdır. Parent, tüm çocukları bitmeden tamamlanmaz; parent iptal edilirse çocuklar da iptal edilir; bir çocuk hata verirse (normal `Job`'da) parent ve kardeşler iptal edilir. `viewModelScope` ViewModel temizlenince, `lifecycleScope` lifecycle DESTROYED olunca iptal edilir.
+
+İptal **kooperatiftir**: coroutine sadece askıya alma noktalarında (`delay`, `withContext`, `yield`) veya `isActive` kontrolünde durur.
+
+```kotlin
+val job = scope.launch(Dispatchers.Default) {
+    var i = 0
+    while (i < 1_000_000_000) {     // askıya alma noktası yok
+        i++
+    }
+}
+job.cancel()                         // döngü sonuna kadar çalışmaya devam eder
+```
+Çözüm: döngüde `ensureActive()` veya `yield()` çağırmak.
+
+### İkinci tuzak: CancellationException'ı yutmak
+```kotlin
+viewModelScope.launch {
+    try {
+        repo.sync()                  // suspend
+    } catch (e: Exception) {         // CancellationException'ı da yakalar
+        log(e)                       // coroutine iptal edilmiş olsa da devam eder
+    }
+    updateUi()                       // ekran kapanmış olsa bile çalışabilir
+}
+```
+Doğrusu: `catch (e: CancellationException) { throw e }` önce gelmeli veya sadece beklenen tipleri (`IOException`) yakalamak. `runCatching` da aynı sorunu taşır.
+
+### Exception yayılımı
+- `launch` içindeki yakalanmamış exception parent'a yayılır ve scope'u iptal eder. `CoroutineExceptionHandler` sadece **root** coroutine'de (doğrudan scope üzerindeki `launch`) işe yarar.
+- `async` exception'ı `await()`'te fırlatır; ama normal bir scope içindeyse parent'ı da hemen iptal eder (await çağrılmasa bile).
+- `SupervisorJob` / `supervisorScope`: bir çocuğun hatası kardeşleri iptal etmez. `viewModelScope` zaten `SupervisorJob + Dispatchers.Main.immediate` kullanır.
+
+```kotlin
+suspend fun loadDashboard() = supervisorScope {
+    val news = async { api.news() }
+    val weather = async { api.weather() }
+    Dashboard(
+        news = runCatching { news.await() }.getOrNull(),
+        weather = runCatching { weather.await() }.getOrNull()
+    )
+}
+```
+
+### finally içinde suspend
+İptal edilmiş coroutine'de `finally` içinde suspend fonksiyon çağrılırsa hemen `CancellationException` alır. Temizlikte suspend gerekiyorsa `withContext(NonCancellable) { ... }` kullanılır.$md$, $md$Bu soru senior seviyede neredeyse her zaman gelir. Kod örneğinde catch(e: Exception) gördüğünüzde CancellationException'ı söylemeniz mülakatçının aradığı cevaptır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$compose-da-stability-nedir-bir-composable-neden-gereksiz-recompose-oluyor-nasil$md$, $md$Compose'da stability nedir? Bir composable neden gereksiz recompose oluyor, nasıl teşhis edip düzeltirsiniz (strong skipping dahil)?$md$, $md$Compose compiler her composable parametresinin tipine **stable** veya **unstable** der. Stable tip: `equals` tutarlıdır ve değiştiğinde Compose'a haber verir (primitive'ler, `String`, `val`'leri stable olan data class'lar, `@Immutable`/`@Stable` işaretli tipler, `State<T>`). Parent recompose olduğunda, tüm parametreleri stable ve eşit olan composable **skip** edilir.
+
+### Klasik unstable kaynaklar
+- `List<T>`, `Map`, `Set`: interface oldukları için compiler içinin mutable olup olmadığını bilemez.
+- `var` property içeren sınıflar.
+- Başka modülden gelen (Compose compiler'ın görmediği) sınıflar, ör. domain modülündeki model.
+- Her recomposition'da yeniden oluşturulan lambda veya nesne.
+
+### Strong skipping mode
+Kotlin 2.0.20 ile gelen Compose compiler plugin'inde **varsayılan olarak açıktır**. Etkileri:
+- Unstable parametreli composable'lar da skip edilebilir; unstable parametreler **instance eşitliği** (`===`), stable olanlar `equals` ile karşılaştırılır.
+- Lambda'lar otomatik `remember`'lanır.
+
+Yani artık sorun çoğunlukla "her seferinde yeni instance üretmek"tir:
+```kotlin
+@Composable
+fun CartScreen(viewModel: CartViewModel) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    // Her recomposition'da yeni List instance'ı: === false, ProductList hep recompose
+    ProductList(items = state.items.filter { it.inStock })
+}
+
+// Düzeltme: türetilmiş veriyi ViewModel'de veya remember ile hesaplamak
+val inStock = remember(state.items) { state.items.filter { it.inStock } }
+ProductList(items = inStock)
+```
+
+### Teşhis
+1. Layout Inspector'da **recomposition count** ve skip sayılarını açmak.
+2. Compose compiler raporları: `composeCompiler { reportsDestination = layout.buildDirectory.dir("compose_reports") }`; `*-composables.txt` içinde `restartable skippable` ve `unstable` parametreler görülür.
+3. Composition tracing ile Perfetto/System Trace.
+
+### Düzeltme araçları
+- UI modellerini `val` ve immutable yapmak; `kotlinx.collections.immutable` (`ImmutableList`).
+- Dış modül tipleri için **stability configuration file** (`stabilityConfigurationFiles`).
+- Sık değişen değeri okumayı ertelemek: `Modifier.offset { }` lambda versiyonu, `derivedStateOf` (ör. scroll pozisyonundan "yukarı butonu göster" boolean'ı).
+
+Önce ölçün: her recomposition sorun değildir; yalnızca jank yaratan sıcak noktaları optimize edin.$md$, $md$Strong skipping'in Kotlin 2.0.20'den beri varsayılan olduğunu bilmek, güncel kalıp kalmadığınızın sinyalidir. 'List unstable'dır' diyip bırakmayın, strong skipping ile neyin değiştiğini de söyleyin.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$ui-katmaninda-flow-u-lifecycle-aware-toplamanin-dogru-yolu-nedir-lifecyclescope$md$, $md$UI katmanında Flow'u lifecycle-aware toplamanın doğru yolu nedir? lifecycleScope.launch { flow.collect {} } neden yanlıştır?$md$, $md$`lifecycleScope.launch { flow.collect { } }` coroutine'i Activity **DESTROYED** olana kadar yaşatır. Uygulama arka plandayken (STOPPED) de toplamaya devam eder: konum güncellemesi, Room sorgusu veya websocket arka planda boşuna çalışır, pil ve kaynak harcar, hatta görünmeyen view'ı güncellemeye çalışır. Eski `launchWhenStarted` ise coroutine'i sadece askıya alıyordu, upstream'i durdurmuyordu ve deprecated oldu.
+
+### Doğru yöntemler
+View sisteminde `repeatOnLifecycle`:
+```kotlin
+// Fragment
+viewLifecycleOwner.lifecycleScope.launch {
+    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        launch { viewModel.uiState.collect { render(it) } }
+        launch { viewModel.events.collect { handle(it) } }
+    }
+}
+```
+STARTED'a girince blok başlar, STOPPED'a inince **iptal edilir**, tekrar STARTED olunca yeniden başlar. Fragment'ta `this` değil `viewLifecycleOwner` kullanılmalı.
+
+Compose'da:
+```kotlin
+val state by viewModel.uiState.collectAsStateWithLifecycle()
+```
+(`androidx.lifecycle:lifecycle-runtime-compose`). Düz `collectAsState()` lifecycle'ı bilmez.
+
+### Upstream tarafı: stateIn + WhileSubscribed
+```kotlin
+val uiState = locationRepo.locations()        // cold, pahalı
+    .map(::toUi)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState.Loading)
+```
+UI collector'ı STOPPED'da iptal edince subscriber sayısı 0'a düşer; 5 saniye içinde geri gelmezse (rotation değilse) upstream iptal edilir. `SharingStarted.Eagerly` veya `Lazily` ise upstream'i ViewModel ölene kadar çalıştırır.
+
+### Neden ikisi birlikte?
+Sadece `repeatOnLifecycle` kullanıp ViewModel'de `Eagerly` derseniz kaynak yine arka planda çalışır. Sadece `WhileSubscribed` kullanıp UI'da düz `collect` yaparsanız subscriber hiç düşmez. Zincir uçtan uca lifecycle-aware olmalıdır.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$production-da-anr-oraniniz-play-console-da-esigi-asti-anr-nin-nedenleri-nelerdir$md$, $md$Production'da ANR oranınız Play Console'da eşiği aştı. ANR'nin nedenleri nelerdir, nasıl araştırır ve düzeltirsiniz?$md$, $md$ANR (Application Not Responding), main thread'in belirli süre boyunca bloke kalmasıdır. Tipik eşikler: input event'e ~5 saniyede yanıt verilmemesi, foreground'da `BroadcastReceiver.onReceive`'in ~10 saniyeyi aşması, servis lifecycle metotlarının zamanında bitmemesi ve `startForegroundService` sonrası `startForeground`'un süre içinde çağrılmaması. Google Play, kullanıcıların ~%0.47'sinden fazlasında görülen ANR oranını "bad behavior" eşiği sayar ve görünürlüğü düşürebilir.
+
+### Yaygın nedenler
+- Main thread'de disk/ağ I/O: `SharedPreferences.commit()`, büyük JSON okuma, Room'u main'de çağırma.
+- `runBlocking` veya `Future.get()` ile main thread'i bekletmek.
+- Lock contention: main thread, arka plandaki bir thread'in tuttuğu `synchronized` kilidi bekliyor; deadlock.
+- `Application.onCreate`'te ağır SDK init'leri (cold start ANR'leri).
+- `onReceive` içinde uzun iş (`goAsync()` veya WorkManager kullanılmalı).
+- Binder çağrısının (system service) uzun sürmesi.
+
+### Araştırma adımları
+1. Play Console'da **Android vitals → ANRs**: cihaz, Android sürümü, uygulama sürümüne göre kümeleme; main thread stack trace'i.
+2. Stack'te `BLOCKED` / `waiting to lock` görüyorsanız kilidi tutan thread'i bulun.
+3. Lokalde `StrictMode` ile main thread disk/ağ ihlallerini yakalayın:
+```kotlin
+if (BuildConfig.DEBUG) {
+    StrictMode.setThreadPolicy(
+        StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites()
+            .detectNetwork().penaltyLog().build()
+    )
+}
+```
+4. Perfetto / Android Studio CPU Profiler ile system trace alıp main thread'deki uzun dilimleri inceleyin.
+5. Startup'ta ANR varsa `App Startup` / lazy init ile SDK'ları erteleyin, Baseline Profile ekleyin.
+
+### Düzeltme ve önleme
+- I/O'yu `Dispatchers.IO`'ya taşıyın; SharedPreferences yerine DataStore.
+- Kilitli bölümleri küçültün, main thread'de kilit beklemeyin.
+- Düzeltmeyi kademeli rollout ile yayıp vitals metriğini sürüm bazında takip edin.$md$, $md$Mülakatçı burada sistematik yaklaşım arar: veri (vitals) → hipotez (stack trace) → lokal tekrar (StrictMode, trace) → düzeltme → ölçüm. Rakam ezberinden çok süreç önemli.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$android-kotlin$md$),
+  ($md$swift-te-struct-ile-class-arasindaki-fark-nedir-asagidaki-kodun-ciktisi-nedir-ve$md$, $md$Swift'te struct ile class arasındaki fark nedir? Aşağıdaki kodun çıktısı nedir ve Apple neden varsayılan olarak struct önerir?$md$, $md$`struct` bir **value type**'tır: atandığında veya fonksiyona geçirildiğinde kopyalanır. `class` bir **reference type**'tır: kopyalanan şey referanstır, iki değişken aynı nesneyi gösterir.
+
+```swift
+struct PointS { var x = 0 }
+class PointC { var x = 0 }
+
+var a = PointS()
+var b = a
+b.x = 5
+print(a.x)
+
+let c = PointC()
+let d = c
+d.x = 5
+print(c.x)
+```
+
+Çıktı:
+```text
+0
+5
+```
+
+`let c` olmasına rağmen `d.x = 5` derlenir: `let` referansı sabitler, nesnenin içini değil. Struct'ta ise `let` tüm değeri sabitler; `let a = PointS(); a.x = 1` derlenmez.
+
+| | struct | class |
+| --- | --- | --- |
+| Semantik | Value | Reference |
+| Kalıtım | Yok (protocol ile) | Var |
+| Bellek | Genelde stack/inline | Heap + ARC |
+| deinit | Yok | Var |
+| Identity (`===`) | Yok | Var |
+| Thread safety | Kopya olduğu için paylaşım yok | Paylaşılan mutable state riski |
+| Mutasyon | `mutating` metot gerekir | Serbest |
+
+### Neden struct?
+Value semantics yerel akıl yürütmeyi kolaylaştırır: bir değeri değiştirdiğinizde başka yerde sürpriz değişiklik olmaz. ARC maliyeti yoktur ve concurrency'de `Sendable` olmaya daha yakındır. SwiftUI view'ları da struct'tır.
+
+### Ne zaman class?
+Identity gerektiğinde (paylaşılan cache, bağlantı yöneticisi), kalıtım/Objective-C uyumluluğu gerektiğinde (UIViewController alt sınıfları), `deinit`'te kaynak temizliği gerektiğinde ve `@Observable` model nesnelerinde.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swift-te-optional-nedir-if-let-guard-let-nil-coalescing-optional-chaining-ve-for$md$, $md$Swift'te optional nedir? if let, guard let, nil-coalescing, optional chaining ve force unwrap arasındaki farklar nelerdir?$md$, $md$Optional (`T?`), değerin **olabileceğini veya `nil` olabileceğini** tip sisteminde ifade eder. Arka planda `enum Optional<T> { case none; case some(T) }`'dir. Derleyici, optional'ı açmadan (unwrap) içindeki değeri kullanmanıza izin vermez.
+
+```swift
+func greet(_ name: String?) -> String {
+    // guard let: erken çıkış, sonrası için değişken kapsamda kalır
+    guard let name, !name.isEmpty else { return "Merhaba, misafir" }
+    return "Merhaba, \(name)"
+}
+
+let user: User? = fetchUser()
+
+if let email = user?.email {          // optional chaining + optional binding
+    print(email)
+}
+
+let city = user?.address?.city ?? "Bilinmiyor"   // nil-coalescing
+
+let count = user?.orders.count        // tipi Int? olur
+
+let url = URL(string: "https://example.com")!    // force unwrap: nil ise crash
+```
+
+| Yöntem | Ne zaman |
+| --- | --- |
+| `if let x` | Değer varsa bir blokta kullanmak |
+| `guard let x else { return }` | Ön koşul; fonksiyonun geri kalanında kullanmak |
+| `??` | Varsayılan değer |
+| `?.` | Zincirde nil olabilecek adımlar; sonuç da optional olur |
+| `!` | Sadece programcı hatası olmadıkça nil olamayacağı kesin durumlar (sabit URL literal'i, IBOutlet) |
+| `switch` / `case let x?` | Pattern matching |
+
+Swift 5.7'den beri `if let name` / `guard let name` kısa yazımı (`= name` olmadan) geçerlidir.
+
+Implicitly unwrapped optional (`String!`) ise her erişimde otomatik force unwrap yapar; esas olarak `@IBOutlet` ve iki aşamalı init senaryoları içindir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$uiviewcontroller-lifecycle-metotlari-nelerdir-ve-hangi-isi-hangi-metotta-yaparsi$md$, $md$UIViewController lifecycle metotları nelerdir ve hangi işi hangi metotta yaparsınız?$md$, $md$Bir view controller'ın view'ı tembel (lazy) yüklenir; ilk erişimde `loadView` ve `viewDidLoad` çalışır. Sonra ekrana her gelişinde ve gidişinde appearance metotları çağrılır.
+
+| Metot | Ne zaman | Ne yapılır |
+| --- | --- | --- |
+| `init` | Nesne oluşturulurken | Dependency'leri almak |
+| `loadView()` | View ilk kez gerekince | Storyboard yoksa kök view'ı programatik atamak (`view = CustomView()`) |
+| `viewDidLoad()` | View belleğe yüklenince, **bir kez** | Subview, constraint, binding kurulumu, ilk veri isteği |
+| `viewWillAppear(_:)` | Her görünmeden önce | Veriyi tazelemek, navigation bar ayarı |
+| `viewIsAppearing(_:)` | iOS 17+ (iOS 13'e back-deploy) | Trait ve geometri belli olduktan sonra UI güncellemesi |
+| `viewWillLayoutSubviews` / `viewDidLayoutSubviews` | Her layout geçişinde, birden çok kez | Frame'e bağlı ayarlar (ağır iş yapmayın) |
+| `viewDidAppear(_:)` | Ekranda görünür olunca | Animasyon başlatmak, analytics ekran event'i |
+| `viewWillDisappear(_:)` | Ekrandan çıkmadan önce | Klavyeyi kapatmak, değişiklik kaydetmek |
+| `viewDidDisappear(_:)` | Ekrandan çıkınca | Timer, observer, video durdurmak |
+| `deinit` | Bellekten silinince | Hiç çağrılmıyorsa retain cycle vardır |
+
+```swift
+final class ProductListViewController: UIViewController {
+    private let viewModel: ProductListViewModel
+    init(viewModel: ProductListViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupTableView()
+        Task { await viewModel.load() }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
+    deinit { print("ProductListViewController deinit") }
+}
+```
+
+Dikkat: `viewDidLoad`'da view'ın frame'i henüz kesin değildir; frame'e dayalı hesaplamalar layout metotlarına veya Auto Layout'a bırakılmalıdır. Ayrıca `super` çağrısını unutmamak gerekir.$md$, $md$Sık gelen takip sorusu: 'Bir modal sheet kapandığında altındaki VC'nin viewWillAppear'ı çağrılır mı?' iOS 13+ pageSheet stilinde çağrılmaz, fullScreen'de çağrılır.$md$, $md$easy$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swiftui-da-state-ve-binding-nedir-parent-ve-child-view-arasinda-veri-nasil-payla$md$, $md$SwiftUI'da @State ve @Binding nedir? Parent ve child view arasında veri nasıl paylaşılır?$md$, $md$`@State`, bir view'ın **sahip olduğu** küçük, yerel değer state'idir. SwiftUI bu değeri view struct'ının dışında saklar; struct yeniden oluşturulsa da değer korunur ve değiştiğinde `body` yeniden hesaplanır. `@Binding` ise başkasına ait bir state'e **okuma-yazma referansı**dır; child view, parent'ın state'ini kopyalamadan değiştirebilir.
+
+```swift
+struct FilterScreen: View {
+    @State private var showOnlyDiscounted = false     // sahibi bu view
+    @State private var priceLimit: Double = 500
+
+    var body: some View {
+        VStack {
+            DiscountToggle(isOn: $showOnlyDiscounted)  // $ ile Binding geçilir
+            Slider(value: $priceLimit, in: 0...2000)
+            Text(showOnlyDiscounted ? "İndirimli ürünler" : "Tüm ürünler")
+        }
+    }
+}
+
+struct DiscountToggle: View {
+    @Binding var isOn: Bool                           // sahibi değil
+
+    var body: some View {
+        Toggle("Sadece indirimdekiler", isOn: $isOn)
+    }
+}
+
+#Preview {
+    DiscountToggle(isOn: .constant(true))
+}
+```
+
+### Kurallar
+- `@State`'i `private` yapın; dışarıdan init ile vermek beklenmedik davranışa yol açar (yalnızca ilk değer olarak kullanılır).
+- Child yalnızca okuyacaksa düz `let` property yeter; yazacaksa `@Binding`.
+- `@State` value type'lar içindir. iOS 17+ `@Observable` sınıflar da `@State` ile sahiplenilebilir.
+- `.constant(...)` önizleme ve testlerde sabit binding sağlar.
+
+Bu, SwiftUI'ın tek doğruluk kaynağı (single source of truth) ilkesinin temelidir: bir veri parçasının tek sahibi olur, diğerleri binding veya değer olarak alır.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$codable-nedir-snake-case-json-u-eksik-alanlari-ve-tarih-formatini-nasil-decode-e$md$, $md$Codable nedir? snake_case JSON'u, eksik alanları ve tarih formatını nasıl decode edersiniz? Kod yazın.$md$, $md$`Codable`, `Encodable & Decodable` protokollerinin birleşimidir. Property'leri Codable olan struct/enum'lar için derleyici encode/decode kodunu otomatik üretir; `JSONDecoder`/`JSONEncoder` ile JSON'a dönüştürülür.
+
+```swift
+let json = """
+{
+  "id": 42,
+  "product_name": "Kulaklık",
+  "price": 1299.9,
+  "discount_rate": null,
+  "created_at": "2025-11-02T10:15:00Z",
+  "status": "in_stock"
+}
+""".data(using: .utf8)!
+
+struct Product: Codable, Identifiable {
+    let id: Int
+    let productName: String
+    let price: Decimal
+    let discountRate: Double?          // null veya eksikse nil
+    let createdAt: Date
+    let status: Status
+
+    enum Status: String, Codable {
+        case inStock = "in_stock"
+        case outOfStock = "out_of_stock"
+        case unknown
+        init(from decoder: Decoder) throws {
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            self = Status(rawValue: raw) ?? .unknown   // bilinmeyen değer crash etmesin
+        }
+    }
+}
+
+let decoder = JSONDecoder()
+decoder.keyDecodingStrategy = .convertFromSnakeCase
+decoder.dateDecodingStrategy = .iso8601
+
+do {
+    let product = try decoder.decode(Product.self, from: json)
+    print(product.productName)          // Kulaklık
+} catch let DecodingError.keyNotFound(key, context) {
+    print("Eksik alan: \(key.stringValue) - \(context.debugDescription)")
+} catch {
+    print(error)
+}
+```
+
+### Notlar
+- Alan adı JSON'dan farklıysa `CodingKeys` enum'u ile eşlenir: `case productName = "name"`.
+- Optional olmayan bir alan JSON'da yoksa `keyNotFound` fırlatılır; tüm parse başarısız olur. API'ye güvenmiyorsanız alanları optional yapın veya `decodeIfPresent` ile özel `init(from:)` yazın.
+- Para için `Double` yerine `Decimal` tercih edilir.
+- Backend yeni bir enum değeri eklediğinde uygulamanın çökmemesi için yukarıdaki gibi `unknown` fallback'i yaygın bir pratiktir.$md$, null, $md$easy$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$arc-nasil-calisir-strong-weak-ve-unowned-farki-nedir-closure-larda-retain-cycle$md$, $md$ARC nasıl çalışır? strong, weak ve unowned farkı nedir? Closure'larda retain cycle nasıl oluşur ve nasıl kırılır?$md$, $md$**ARC (Automatic Reference Counting)**, class instance'larının strong referans sayısını derleme zamanında eklenen retain/release çağrılarıyla takip eder; sayı sıfıra düşünce `deinit` çağrılır ve bellek serbest bırakılır. Garbage collector yoktur, bu yüzden iki nesne birbirini strong tutarsa (retain cycle) asla serbest kalmaz.
+
+| | strong | weak | unowned |
+| --- | --- | --- | --- |
+| Sayacı artırır mı | Evet | Hayır | Hayır |
+| Tip | Normal | Optional `var` | Non-optional |
+| Nesne silinince | Silinmez | Otomatik `nil` | Erişimde crash |
+| Kullanım | Sahiplik | Delegate, opsiyonel geri referans | Referansın her zaman daha uzun yaşayacağı kesinse |
+
+### Closure retain cycle
+Closure'lar referans tipidir ve kullandıkları `self`'i varsayılan olarak strong yakalar. Nesne closure'ı saklıyorsa döngü oluşur:
+
+```swift
+final class SearchViewModel {
+    var onResults: (([Item]) -> Void)?
+    private var timer: Timer?
+    private var items: [Item] = []
+
+    func start() {
+        // self -> timer -> closure -> self  (retain cycle)
+        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { _ in
+            self.refresh()
+        }
+    }
+
+    func startFixed() {
+        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.refresh()
+        }
+    }
+
+    func refresh() { onResults?(items) }
+    deinit { timer?.invalidate(); print("deinit") }
+}
+```
+Not: `Timer` run loop tarafından da strong tutulur; `[weak self]` döngüyü kırsa da timer'ı `invalidate` etmek gerekir.
+
+### Diğer tipik döngüler
+- `delegate`'i `weak var` yapmamak (protocol `AnyObject` olmalı).
+- `NotificationCenter.addObserver(forName:...)` block API'sinde self yakalamak.
+- Combine `sink { self... }` ve `store(in: &cancellables)`.
+- Parent ↔ child nesnelerde iki yönlü strong referans.
+
+Her closure'a `[weak self]` gerekmez: `UIView.animate`, `DispatchQueue.main.async` gibi saklanmayan veya kısa ömürlü closure'lar döngü yaratmaz (sadece nesnenin ömrünü kısa süre uzatır). Tespit için Xcode **Debug Memory Graph** ve Instruments **Leaks** kullanılır; `deinit` içine log koymak en basit kontroldür.$md$, $md$unowned'ı sadece 'weak'in optional olmayanı' diye anlatmayın: nesne silindikten sonra erişim crash'tir. Emin değilseniz weak tercih edilir demek beklenen olgunluktur.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swiftui-da-stateobject-ile-observedobject-farki-nedir-ios-17-deki-observable-mac$md$, $md$SwiftUI'da @StateObject ile @ObservedObject farkı nedir? iOS 17'deki @Observable macro'su neyi değiştirdi?$md$, $md$İkisi de `ObservableObject` sınıfını izler; fark **sahipliktir**. `@StateObject` nesneyi view'ın kimliğine bağlı olarak **bir kez oluşturur ve yaşatır**. `@ObservedObject` nesneye sahip değildir; dışarıdan verilen nesneyi izler. View struct'ı her yeniden oluşturulduğunda `@ObservedObject var vm = ViewModel()` yazarsanız nesne de yeniden oluşturulur ve state kaybolur.
+
+```swift
+// iOS 13-16 (Combine tabanlı)
+final class CartViewModel: ObservableObject {
+    @Published var items: [CartItem] = []
+    @Published var couponCode = ""
+}
+
+struct CartScreen: View {
+    @StateObject private var vm = CartViewModel()       // sahibi
+    var body: some View { CartList(vm: vm) }
+}
+
+struct CartList: View {
+    @ObservedObject var vm: CartViewModel                // sahibi değil
+    var body: some View { List(vm.items) { Text($0.name) } }
+}
+```
+`ObservableObject`'te herhangi bir `@Published` değişince `objectWillChange` yayılır ve nesneyi izleyen **tüm** view'lar yeniden değerlendirilir; `couponCode` değişince sadece `items` okuyan liste de yenilenir.
+
+### @Observable (iOS 17+, Observation framework)
+```swift
+@Observable
+final class CartModel {
+    var items: [CartItem] = []
+    var couponCode = ""
+    @ObservationIgnored var analytics = Analytics()
+}
+
+struct CartScreen: View {
+    @State private var model = CartModel()             // sahiplik için @State
+    var body: some View {
+        CartList(model: model)
+            .environment(model)
+    }
+}
+
+struct CartList: View {
+    let model: CartModel                               // düz property yeter
+    var body: some View { List(model.items) { Text($0.name) } }
+}
+
+struct CouponField: View {
+    @Environment(CartModel.self) private var model
+    var body: some View {
+        @Bindable var model = model                    // binding gerekirse
+        TextField("Kupon", text: $model.couponCode)
+    }
+}
+```
+
+Değişenler:
+- **Property bazında takip**: view sadece `body`'de gerçekten okuduğu property değişince yenilenir; performans artar.
+- `@Published`, `ObservableObject`, `@StateObject`, `@ObservedObject`, `@EnvironmentObject` gerekmez; yerine `@State`, düz property, `@Bindable`, `@Environment(Type.self)` kullanılır.
+- Optional ve iç içe nesnelerde de takip çalışır.
+
+Dikkat: `@State private var model = CartModel()` ile `init` her view init'inde çalışabilir (değer sadece ilk sefer saklanır); ağır işi init'e koymayın, `.task` içinde yapın.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$protocol-oriented-programming-nedir-protocol-extension-daki-default-implementasy$md$, $md$Protocol-oriented programming nedir? Protocol extension'daki default implementasyonlarda static ve dynamic dispatch farkı ile aşağıdaki kodun çıktısı nedir?$md$, $md$Protocol-oriented programming, davranışı kalıtım hiyerarşileri yerine **protocol'ler ve protocol extension'ları** ile tanımlamaktır. Struct ve enum'lar da protocol'e uyabildiği için value type'larla birlikte kompozisyon yapılır; extension'lar default implementasyon sağlar, böylece birden fazla "mixin" birleştirilebilir.
+
+Kritik detay: protocol **gereksinimi** (requirement) olan metotlar dinamik dispatch (witness table) ile çağrılır. Sadece extension'da tanımlı, gereksinim olmayan metotlar ise **static dispatch** ile, değişkenin derleme zamanındaki tipine göre çağrılır.
+
+```swift
+protocol Greeter {
+    func hello()                    // gereksinim
+}
+
+extension Greeter {
+    func hello() { print("ext hello") }
+    func bye() { print("ext bye") }   // gereksinim değil
+}
+
+struct Person: Greeter {
+    func hello() { print("person hello") }
+    func bye() { print("person bye") }
+}
+
+let p: Greeter = Person()
+p.hello()
+p.bye()
+
+let q = Person()
+q.bye()
+```
+
+Çıktı:
+```text
+person hello
+ext bye
+person bye
+```
+
+`p`'nin statik tipi `Greeter` (existential) olduğu için `bye()` gereksinim olmadığından extension versiyonu çağrılır. `q`'nun tipi `Person` olduğu için kendi metodu çağrılır. Çözüm: override edilmesi beklenen metodu protocol gövdesine gereksinim olarak eklemek.
+
+### Pratik POP örneği
+```swift
+protocol Reusable { static var reuseIdentifier: String { get } }
+extension Reusable {
+    static var reuseIdentifier: String { String(describing: Self.self) }
+}
+extension UITableViewCell: Reusable {}
+
+extension UITableView {
+    func dequeue<T: UITableViewCell>(_ type: T.Type, for indexPath: IndexPath) -> T {
+        dequeueReusableCell(withIdentifier: T.reuseIdentifier, for: indexPath) as! T
+    }
+}
+```
+Protocol'ler ayrıca test için dependency soyutlamanın temelidir: `protocol ProductService` tanımlayıp gerçek ve mock implementasyon vermek.$md$, $md$Bu çıktı sorusu iOS mülakatlarında klasik bir tuzaktır. 'Neden?' sorusuna witness table ve static dispatch kavramlarıyla cevap verin.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swift-te-some-ile-any-arasindaki-fark-nedir-associated-type-iceren-bir-protocol$md$, $md$Swift'te some ile any arasındaki fark nedir? Associated type içeren bir protocol'ü neden doğrudan tip olarak kullanamazdınız?$md$, $md$`some Protocol` bir **opaque type**'tır: arkada tek, somut ve derleyicinin bildiği bir tip vardır ama çağırandan gizlenir. `any Protocol` ise bir **existential**'dır: herhangi bir uyan tipi tutabilen bir kutu; tip runtime'da değişebilir.
+
+| | some P | any P |
+| --- | --- | --- |
+| Somut tip | Tek ve sabit (derleyici bilir) | Runtime'da herhangi biri |
+| Dispatch | Static, optimize edilebilir | Dinamik, existential container |
+| Heterojen koleksiyon | Hayır | Evet (`[any Shape]`) |
+| Associated type erişimi | Tam | Kısıtlı |
+| Performans | Daha iyi | Boxing ve indirection maliyeti |
+
+```swift
+protocol Shape { func area() -> Double }
+struct Circle: Shape { let r: Double; func area() -> Double { .pi * r * r } }
+struct Square: Shape { let a: Double; func area() -> Double { a * a } }
+
+func makeShape() -> some Shape { Circle(r: 1) }   // her zaman Circle
+// func bad(flag: Bool) -> some Shape { flag ? Circle(r: 1) : Square(a: 1) }  // hata: farklı tipler
+
+let shapes: [any Shape] = [Circle(r: 1), Square(a: 2)]  // heterojen
+
+// Parametrede some = generic'in kısa yazımı (Swift 5.7+)
+func printArea(_ s: some Shape) { print(s.area()) }
+// eşdeğeri: func printArea<S: Shape>(_ s: S)
+```
+
+### Associated type sorunu
+`Collection`, `Equatable`, `Identifiable` gibi associated type veya `Self` gereksinimi olan protocol'ler eskiden "can only be used as a generic constraint" hatası verirdi, çünkü `Element` tipi bilinmeden kutuya konamaz. Swift 5.7 ile:
+- `any Collection` gibi existential'lar kullanılabilir oldu (associated type'lı üyeler kısıtlı).
+- **Primary associated types** geldi: `some Collection<Int>`, `any Sequence<String>`.
+- `any` keyword'ü associated type'lı protocol existential'ları için zorunlu. Tüm existential'larda zorunlu kılmak (`ExistentialAny`) bir upcoming feature olarak açılabilir.
+
+SwiftUI'daki `var body: some View` bu yüzden `some`'dır: her view'ın body'si karmaşık ama tek bir somut tiptir ve SwiftUI bu tip bilgisini diffing için kullanır. Kural: varsayılan olarak `some` kullanın, gerçekten farklı tipleri bir arada tutmanız gerekiyorsa `any`'ye geçin.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$escaping-closure-nedir-escaping-ve-non-escaping-closure-arasindaki-fark-ve-self$md$, $md$@escaping closure nedir? Escaping ve non-escaping closure arasındaki fark ve self yakalama kuralları nelerdir?$md$, $md$Bir closure parametresi fonksiyon **döndükten sonra** çağrılabiliyorsa (bir property'de saklanıyorsa veya asenkron bir işte sonra çalışıyorsa) "kaçar" (escapes) ve `@escaping` ile işaretlenmesi gerekir. Swift 3'ten beri closure parametreleri varsayılan olarak **non-escaping**'dir.
+
+```swift
+final class ImageLoader {
+    private var completions: [(UIImage?) -> Void] = []
+
+    // Saklandığı için escaping
+    func load(url: URL, completion: @escaping (UIImage?) -> Void) {
+        completions.append(completion)
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            let image = data.flatMap(UIImage.init(data:))
+            DispatchQueue.main.async { completion(image) }
+        }.resume()
+    }
+
+    // Fonksiyon bitmeden çağrıldığı için non-escaping
+    func transform(_ values: [Int], using f: (Int) -> Int) -> [Int] {
+        values.map(f)
+    }
+}
+```
+
+### Farklar
+| | non-escaping | @escaping |
+| --- | --- | --- |
+| Ne zaman çalışır | Fonksiyon dönmeden | Sonra da çalışabilir |
+| Saklanabilir mi | Hayır | Evet |
+| `self` yazımı (class içinde) | Örtük olabilir | Açıkça `self.` veya `[self]` gerekir |
+| Retain cycle riski | Yok | Var |
+| Optimizasyon | Stack'te tutulabilir | Heap'e kopyalanır |
+
+### self kuralları
+Escaping closure içinde class üyesine erişirken derleyici `self.` yazmanızı ister; amaç strong yakalamayı görünür kılmaktır. Swift 5.3'ten itibaren `[self]` capture list'i yazarak örtük kullanım açılabilir ve struct gibi value type'larda bu zorunluluk yoktur (döngü riski olmadığı için).
+
+### Notlar
+- Optional closure parametresi (`((Int) -> Void)?`) otomatik olarak escaping kabul edilir.
+- Modern kodda completion handler yerine `async` fonksiyonlar tercih edilir; eski API'leri sarmak için `withCheckedContinuation` / `withCheckedThrowingContinuation` kullanılır. Continuation tam olarak bir kez resume edilmelidir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$gcd-de-serial-ve-concurrent-queue-sync-ve-async-arasindaki-fark-nedir-asagidaki$md$, $md$GCD'de serial ve concurrent queue, sync ve async arasındaki fark nedir? Aşağıdaki kod main thread'de çalışırsa ne yazdırır ve DispatchQueue.main.sync neden tehlikelidir?$md$, $md$**Queue tipi** işlerin birbirine göre nasıl çalıştığını, **sync/async** ise çağıranın bekleyip beklemediğini belirler.
+
+- Serial queue: işler sırayla, bir seferde bir tane. `DispatchQueue.main` serial'dır.
+- Concurrent queue: işler aynı anda birden fazla thread'de çalışabilir (`DispatchQueue.global()`).
+- `async`: işi kuyruğa atar ve hemen döner.
+- `sync`: iş bitene kadar çağıran thread'i bloklar.
+
+```swift
+// Main thread'de
+print("1")
+DispatchQueue.main.async { print("2") }
+DispatchQueue.global().sync { print("3") }
+print("4")
+```
+
+Çıktı:
+```text
+1
+3
+4
+2
+```
+`2` main queue'ya asenkron eklendiği için mevcut iş (bu kod bloğu) bitince çalışır. `global().sync` main thread'i bekletir, `3` hemen basılır (GCD optimizasyon olarak işi genellikle çağıran thread'de çalıştırır).
+
+### Deadlock
+```swift
+// Main thread'de
+DispatchQueue.main.sync { print("asla") }
+```
+Main thread, main queue'daki işin bitmesini bekler; o iş de main thread'in boşalmasını bekler. Sonuç deadlock ve crash (`EXC_BREAKPOINT`). Aynı şey herhangi bir serial queue'nun içinden kendisine `sync` yapınca olur.
+
+### Diğer araçlar
+- `DispatchGroup`: birden fazla asenkron işi bekleyip `notify` ile sonuç almak.
+- Concurrent queue + `.barrier`: okuyucu-yazıcı kilidi (çok okuma, tekil yazma).
+- `OperationQueue`: GCD üzerine nesne tabanlı katman; **bağımlılıklar** (`addDependency`), **iptal** (`cancel`), `maxConcurrentOperationCount` ve KVO ile durum takibi sunar.
+
+```swift
+final class ThreadSafeCache<K: Hashable, V> {
+    private var storage: [K: V] = [:]
+    private let queue = DispatchQueue(label: "cache", attributes: .concurrent)
+    func value(for key: K) -> V? { queue.sync { storage[key] } }
+    func set(_ v: V, for key: K) { queue.async(flags: .barrier) { self.storage[key] = v } }
+}
+```
+Yeni kodda bu tür paylaşılan state için `actor` tercih edilir; ama mevcut kod tabanlarının çoğunda GCD olduğu için mülakatlarda hâlâ sorulur.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swift-te-async-await-nasil-calisir-task-task-detached-async-let-ve-taskgroup-ara$md$, $md$Swift'te async/await nasıl çalışır? Task, Task.detached, async let ve TaskGroup arasındaki farklar nelerdir?$md$, $md$`async` fonksiyonlar `await` noktalarında **askıya alınabilir**; askıdayken thread'i bloklamaz, thread başka işe geçer ve devam (continuation) daha sonra (muhtemelen farklı bir thread'de) çalışır. GCD'den farkı: callback piramidi yok, hata `throws` ile akar, iptal ve öncelik yapısal olarak yayılır, derleyici data race'leri kontrol edebilir.
+
+```swift
+func loadHome() async throws -> Home {
+    async let banners = api.fetchBanners()       // ikisi paralel başlar
+    async let products = api.fetchProducts()
+    return try await Home(banners: banners, products: products)
+}
+
+func loadThumbnails(ids: [String]) async -> [String: UIImage] {
+    await withTaskGroup(of: (String, UIImage?).self) { group in
+        for id in ids {
+            group.addTask { (id, try? await api.thumbnail(id)) }
+        }
+        var result: [String: UIImage] = [:]
+        for await (id, image) in group { result[id] = image }
+        return result
+    }
+}
+```
+
+| Yapı | Structured mı | Ne miras alır | Kullanım |
+| --- | --- | --- | --- |
+| `async let` | Evet | Parent'ın task'ı | Sabit sayıda paralel iş |
+| `TaskGroup` | Evet | Parent'ın task'ı | Dinamik sayıda paralel iş |
+| `Task { }` | Hayır | Actor izolasyonu, öncelik, task-local'lar | Senkron koddan async başlatmak (buton aksiyonu) |
+| `Task.detached { }` | Hayır | Hiçbir şey | Nadiren; bağımsız arka plan işi |
+
+### İptal
+Structured task'larda parent iptal edilince çocuklar da iptal edilir. Scope'tan çıkılırken `async let` ile başlatılıp await edilmemiş işler otomatik iptal edilip beklenir; TaskGroup'ta kalan çocuklar ise örtük olarak beklenir (iptal için `group.cancelAll()`). `Task { }` ise unstructured'dır: referansını saklayıp `task.cancel()` çağırmazsanız iptal olmaz. İptal kooperatiftir: `try Task.checkCancellation()` veya `Task.isCancelled` kontrol edilmelidir.
+
+SwiftUI'da `.task { }` modifier'ı view kaybolunca task'ı otomatik iptal eder; `.task(id: query)` id değişince yeniden başlatır. `onAppear` içinde `Task { }` başlatmaktan daha güvenlidir.
+
+```swift
+struct SearchView: View {
+    @State private var query = ""
+    @State private var results: [Item] = []
+    var body: some View {
+        List(results) { Text($0.title) }
+            .searchable(text: $query)
+            .task(id: query) {
+                try? await Task.sleep(for: .milliseconds(300))   // debounce
+                guard !Task.isCancelled else { return }
+                results = (try? await api.search(query)) ?? []
+            }
+    }
+}
+```$md$, $md$Task { } içinde self'in strong yakalanması bir retain cycle değildir ama uzun süren bir işte nesnenin ömrünü uzatır. Bunu ve .task modifier'ının otomatik iptalini söylemek iyi izlenim bırakır.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$ios-uygulama-yasam-dongusu-nedir-appdelegate-ile-scenedelegate-in-sorumluluklari$md$, $md$iOS uygulama yaşam döngüsü nedir? AppDelegate ile SceneDelegate'in sorumlulukları nelerdir ve SwiftUI App yaşam döngüsünde bunları nasıl karşılarsınız?$md$, $md$Uygulama şu durumlar arasında geçiş yapar: **Not running → Inactive → Active**, arka plana gidince **Background**, kısa süre sonra **Suspended** (bellekte ama kod çalışmaz). Sistem bellek gerektiğinde suspended uygulamayı haber vermeden sonlandırabilir; bu yüzden kalıcı olması gereken veri arka plana geçerken kaydedilmelidir.
+
+### AppDelegate vs SceneDelegate (iOS 13+)
+- **AppDelegate**: process seviyesi olaylar. `didFinishLaunchingWithOptions` (SDK kurulumu), push notification kaydı (`didRegisterForRemoteNotificationsWithDeviceToken`), background fetch/URL session olayları, scene konfigürasyonu.
+- **SceneDelegate**: UI seviyesi, her pencere (scene) için ayrı. `scene(_:willConnectTo:options:)` (window kurulumu, cold start deep link), `sceneDidBecomeActive`, `sceneWillResignActive`, `sceneDidEnterBackground`, `scene(_:openURLContexts:)` (warm deep link). iPad'de birden fazla pencere = birden fazla scene.
+
+Apple, iOS 26 döneminde (TN3187) UIScene yaşam döngüsünün bir sonraki major SDK'da zorunlu olacağını duyurdu; iOS 27 SDK ile derlenen ve scene tabanlı yaşam döngüsünü benimsemeyen UIKit uygulamaları açılmıyor. Eski `window` property'si AppDelegate'te olan projelerin scene tabanlı yapıya taşınması gerekiyor.
+
+### SwiftUI App
+```swift
+@main
+struct ShopApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .onOpenURL { url in DeepLinkRouter.shared.handle(url) }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active: Analytics.sessionStart()
+            case .inactive: break
+            case .background: CartStore.shared.persist()
+            @unknown default: break
+            }
+        }
+    }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        return true
+    }
+}
+```
+
+### Sık sorulan detaylar
+- Kontrol merkezini çekmek veya gelen arama uygulamayı **inactive** yapar, background yapmaz.
+- Arka planda kısa iş bitirmek için `beginBackgroundTask`; periyodik iş için `BGTaskScheduler` (BGAppRefreshTask, BGProcessingTask). Kesin zamanlama garantisi yoktur.
+- `didFinishLaunching`'i hafif tutun; launch süresi uzun olursa watchdog uygulamayı öldürebilir.$md$, null, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$token-veya-sifre-gibi-hassas-veriyi-ios-ta-nerede-saklarsiniz-userdefaults-ile-k$md$, $md$Token veya şifre gibi hassas veriyi iOS'ta nerede saklarsınız? UserDefaults ile Keychain farkı nedir, Keychain'e nasıl yazarsınız?$md$, $md$Hassas veri (access/refresh token, şifre, kişisel anahtar) **Keychain**'de saklanmalıdır. `UserDefaults` uygulama sandbox'ındaki düz bir plist dosyasıdır; şifrelenmez, yedeklerde ve jailbreak'li cihazlarda okunabilir. Ayarlar, onboarding görüldü bayrağı gibi hassas olmayan küçük veriler içindir.
+
+| | UserDefaults | Keychain |
+| --- | --- | --- |
+| Şifreleme | Yok (sadece genel Data Protection) | Sistem tarafından şifreli, Secure Enclave destekli |
+| API | Basit | C tabanlı `SecItem*` |
+| Uygulama silinince | Silinir | Kalabilir (yeniden kurulumda okunabilir) |
+| Paylaşım | App Group | Keychain Access Group |
+| Uygun veri | Tercihler | Token, şifre, sertifika |
+
+```swift
+enum KeychainError: Error { case unhandled(OSStatus) }
+
+struct TokenStore {
+    private let service = "com.example.shop.auth"
+
+    func save(_ token: String, account: String) throws {
+        let data = Data(token.utf8)
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        SecItemDelete(query as CFDictionary)              // varsa eskiyi sil
+        var attributes = query
+        attributes[kSecValueData as String] = data
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        let status = SecItemAdd(attributes as CFDictionary, nil)
+        guard status == errSecSuccess else { throw KeychainError.unhandled(status) }
+    }
+
+    func read(account: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var item: CFTypeRef?
+        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+              let data = item as? Data else { return nil }
+        return String(decoding: data, as: UTF8.self)
+    }
+}
+```
+
+### Önemli noktalar
+- **Accessibility** seçimi: `WhenUnlocked` cihaz kilitliyken okunamaz; arka planda token yenilemek gerekiyorsa `AfterFirstUnlock` gerekir. `ThisDeviceOnly` yedekle başka cihaza taşınmayı engeller.
+- Keychain verisi uygulama silinince kalabildiği için, ilk açılışta UserDefaults'taki bir "first launch" bayrağına bakıp eski token'ları temizlemek yaygın bir pratiktir.
+- Biyometrik koruma için `SecAccessControlCreateWithFlags` ile `.biometryCurrentSet`.$md$, $md$Fintech mülakatlarında bu soru sertifika pinning ve jailbreak tespiti gibi takip sorularıyla genişleyebilir; temel düzeyde bilgi sahibi olun.$md$, $md$medium$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$bir-ekrani-acip-kapattikca-bellek-kullanimi-artiyor-ios-ta-memory-leak-i-nasil-b$md$, $md$Bir ekranı açıp kapattıkça bellek kullanımı artıyor. iOS'ta memory leak'i nasıl bulur ve düzeltirsiniz?$md$, $md$Önce leak'i doğrularım, sonra referans zincirini bulup kırarım. Ekran kapandığında view controller'ın (veya view model'in) `deinit`'i çağrılmıyorsa büyük ihtimalle bir retain cycle vardır.
+
+### Adımlar
+1. **Hızlı kontrol**: Şüpheli sınıflara `deinit { print("\(Self.self) deinit") }` eklemek. Ekranı açıp kapatınca log gelmiyorsa nesne yaşıyordur.
+2. **Xcode Debug Memory Graph**: Ekranı birkaç kez açıp kapattıktan sonra memory graph butonuna basmak. Aynı VC'den birden fazla instance görülür; seçince onu tutan referans zinciri gösterilir. Mor ünlem işaretleri tespit edilen leak'lerdir. Scheme'de "Malloc Stack Logging" açarsanız nesnenin nerede oluşturulduğu da görünür.
+3. **Instruments**: Leaks şablonu döngüleri, Allocations şablonundaki "Mark Generation" ise döngü olmayan ama büyüyen bellek (abandoned memory, sınırsız cache) için kullanılır.
+4. **Otomatik test**: UI veya unit testte nesnenin serbest kaldığını doğrulamak.
+
+```swift
+extension XCTestCase {
+    func assertNoMemoryLeak(_ instance: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
+        addTeardownBlock { [weak instance] in
+            XCTAssertNil(instance, "Memory leak tespit edildi", file: file, line: line)
+        }
+    }
+}
+
+// XCTestCase alt sınıfı içinde
+func test_checkoutViewModel_isDeallocated() {
+    let sut = CheckoutViewModel(service: MockPaymentService())
+    assertNoMemoryLeak(sut)
+}
+```
+
+### Sık bulunan nedenler
+- Escaping closure'da `self`'in strong yakalanması (network callback'i property'de saklamak, Combine `sink`).
+- `delegate`'in `weak` olmaması.
+- `Timer` veya `CADisplayLink`'in target olarak self'i tutması ve `invalidate` edilmemesi.
+- Singleton bir servisin listener dizisine VC eklenip çıkarılmaması.
+- `NotificationCenter` block observer'ının token'ının saklanıp kaldırılmaması.
+- Child coordinator'ın parent'tan çıkarılmaması (Coordinator pattern).
+
+Leak olmayan ama büyüyen bellek için: `NSCache` yerine sınırsız `Dictionary` cache, büyük görselleri ekran boyutuna küçültmeden (downsampling) tutmak.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$actor-nedir-data-race-i-nasil-onler-actor-reentrancy-nedir-ve-asagidaki-cache-ko$md$, $md$Actor nedir, data race'i nasıl önler? Actor reentrancy nedir ve aşağıdaki cache kodunda neden aynı görsel iki kez indirilir?$md$, $md$**Actor**, kendi mutable state'ini izole eden bir reference type'tır. Actor'ın izole state'ine aynı anda yalnızca bir task erişir; dışarıdan erişim `await` gerektirir. Böylece kilit (lock) yazmadan data race derleme zamanında engellenir.
+
+Ancak actor'lar **reentrant**'tır: actor içindeki bir metot `await` ile askıya alındığında actor kilitli kalmaz, başka bir çağrı içeri girip state'i değiştirebilir. Yani `await`'ten önce kontrol ettiğiniz bir varsayım `await`'ten sonra geçersiz olabilir.
+
+```swift
+actor ImageCache {
+    private var cache: [URL: UIImage] = [:]
+
+    func image(for url: URL) async throws -> UIImage {
+        if let cached = cache[url] { return cached }
+        let image = try await download(url)     // askı noktası: başka çağrı girebilir
+        cache[url] = image
+        return image
+    }
+}
+```
+Aynı URL için iki çağrı neredeyse aynı anda gelirse, ikisi de `cache[url]`'yi boş görür ve ikisi de indirme başlatır. Data race yoktur (state tutarlı), ama mantık hatası (gereksiz iş) vardır.
+
+### Düzeltme: devam eden işi de saklamak
+```swift
+actor ImageCache {
+    private enum Entry { case inProgress(Task<UIImage, Error>), ready(UIImage) }
+    private var entries: [URL: Entry] = [:]
+
+    func image(for url: URL) async throws -> UIImage {
+        switch entries[url] {
+        case .ready(let image): return image
+        case .inProgress(let task): return try await task.value
+        case nil: break
+        }
+        let task = Task { try await download(url) }
+        entries[url] = .inProgress(task)        // await'ten önce state'i güncelle
+        do {
+            let image = try await task.value
+            entries[url] = .ready(image)
+            return image
+        } catch {
+            entries[url] = nil
+            throw error
+        }
+    }
+    private func download(_ url: URL) async throws -> UIImage {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let image = UIImage(data: data) else { throw URLError(.cannotDecodeContentData) }
+        return image
+    }
+}
+```
+
+### Kurallar
+- State değişikliklerini `await`'ten önce senkron olarak yapın; `await` sonrası varsayımları yeniden kontrol edin.
+- Actor metotları içinde uzun senkron iş yapmayın; actor'ı meşgul eder.
+- `nonisolated` ile izole state'e dokunmayan metotları await'siz çağrılabilir yapabilirsiniz.
+- `@MainActor` bir **global actor**'dır; UI kodunu main thread'e izole eder.$md$, $md$Reentrancy, actor'ı 'kilitli bir sınıf' sanan adayları ayırt etmek için sorulur. 'Actor data race'i önler, mantıksal race condition'ı önlemez' cümlesi tam aranan cevaptır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$swift-6-strict-concurrency-nedir-sendable-mainactor-ve-approachable-concurrency$md$, $md$Swift 6 strict concurrency nedir? Sendable, @MainActor ve 'Approachable Concurrency' (Swift 6.2) mevcut bir projeyi taşırken neleri değiştirir?$md$, $md$Swift 6 dil modunda **data race'ler derleme zamanında hata** olur. Derleyici, farklı concurrency domain'leri (actor'lar, task'lar) arasında geçen her değerin güvenli olduğunu ispat etmek ister. Bunun temeli `Sendable`'dır.
+
+### Sendable
+Bir tipin concurrency sınırlarını güvenle geçebileceğini belirtir.
+- Sendable property'li struct/enum'lar otomatik (module içi, non-public ise çıkarımla) Sendable'dır.
+- Class'lar ancak `final` ve tüm property'leri `let` + Sendable ise Sendable olabilir.
+- Actor'lar her zaman Sendable'dır.
+- `@unchecked Sendable`: kendi kilidinizle güvenliği siz garanti ediyorsunuz; derleyici kontrolü kapanır, son çare olmalıdır.
+- `@Sendable` closure: yakaladığı değerlerin Sendable olmasını zorunlu kılar.
+
+```swift
+final class ProductListViewModel {          // Sendable değil, mutable state var
+    var products: [Product] = []
+    func load() {
+        Task.detached {
+            let items = try await API.fetch()
+            self.products = items             // Swift 6: hata, non-Sendable self başka domain'de değiştiriliyor
+        }
+    }
+}
+
+@MainActor
+@Observable
+final class FixedViewModel {               // tüm state main actor'a izole
+    var products: [Product] = []
+    func load() async {
+        do { products = try await API.fetch() }   // fetch nonisolated async, sonuç main'e döner
+        catch { /* hata state'i */ }
+    }
+}
+```
+
+### Swift 6.2 ve Approachable Concurrency (2025)
+Swift 6'ya geçiş çok sayıda uyarı ürettiği için Swift 6.2 ile kolaylaştırıcı ayarlar geldi:
+- **Default actor isolation = MainActor**: bir modüldeki her şey açıkça belirtilmedikçe `@MainActor` kabul edilir. UI ağırlıklı uygulama hedefleri için mantıklıdır; Xcode 26 ile oluşturulan yeni uygulama projelerinde açık gelir.
+- **nonisolated async fonksiyonlar çağıranın actor'ında çalışır** (`NonisolatedNonsendingByDefault` upcoming feature'ı; Xcode'daki "Approachable Concurrency" ayarı bunu ve birkaç benzer özelliği açar). Eskiden otomatik olarak global executor'a geçerlerdi ve gereksiz Sendable hataları üretirlerdi.
+- Gerçekten arka planda çalışması gereken iş için `@concurrent` attribute'u.
+
+### Taşıma stratejisi
+1. Swift 5 modunda kalarak `SWIFT_STRICT_CONCURRENCY = complete` ile uyarıları görmek.
+2. Önce yaprak modülleri (model, networking) taşımak; model tiplerini Sendable struct yapmak.
+3. UI katmanını `@MainActor` ile işaretlemek veya default isolation'ı kullanmak.
+4. Paylaşılan mutable singleton'ları actor'a çevirmek.
+5. Concurrency annotation'ı olmayan üçüncü parti modüller için geçici `@preconcurrency import`.
+6. Modül bazında Swift 6 dil moduna geçmek.$md$, $md$Bu konu 2025-2026 senior iOS mülakatlarının en popüler başlığı. Kendi projenizde hangi hatayla karşılaştığınızı ve nasıl çözdüğünüzü somut anlatabilirseniz çok güçlü bir cevap olur.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$copy-on-write-nedir-swift-array-i-bunu-nasil-yapar-ve-kendi-value-type-iniz-icin$md$, $md$Copy-on-write nedir? Swift Array'i bunu nasıl yapar ve kendi value type'ınız için copy-on-write'ı nasıl uygularsınız?$md$, $md$Copy-on-write (CoW), value semantics'i korurken gereksiz kopyalamayı önleyen bir optimizasyondur: bir değer atandığında altta yatan depolama **paylaşılır**; kopya ancak paylaşılan değerlerden biri **değiştirilmek istendiğinde** yapılır. `Array`, `Dictionary`, `Set` ve `String` standart kütüphanede CoW kullanır.
+
+```swift
+var a = [1, 2, 3]
+var b = a                  // kopya yok, aynı buffer
+b.append(4)                // b'nin buffer'ı paylaşımlı olduğu için şimdi kopyalanır
+print(a, b)                // [1, 2, 3] [1, 2, 3, 4]
+```
+
+CoW otomatik değildir; kendi struct'ınız içindeki bir **class** referansı için siz uygulamalısınız. Yoksa struct kopyalandığında içteki class paylaşılır ve value semantics bozulur.
+
+```swift
+final class Storage {
+    var items: [String]
+    init(items: [String]) { self.items = items }
+}
+
+struct PlayList {
+    private var storage = Storage(items: [])
+
+    var items: [String] { storage.items }
+
+    mutating func add(_ song: String) {
+        if !isKnownUniquelyReferenced(&storage) {
+            storage = Storage(items: storage.items)   // paylaşılıyorsa önce kopyala
+        }
+        storage.items.append(song)
+    }
+}
+
+var p1 = PlayList()
+p1.add("A")
+var p2 = p1          // storage paylaşılıyor
+p2.add("B")          // p2 kendi kopyasını alır
+print(p1.items)      // ["A"]
+print(p2.items)      // ["A", "B"]
+```
+
+`isKnownUniquelyReferenced(&ref)` referans sayısı 1 ise `true` döner; bu durumda kopyalamadan yerinde değiştirmek güvenlidir.
+
+### Performans tuzakları
+- Bir array'i değiştirirken başka bir değişkende kopyası yaşıyorsa her değişiklik tam kopya maliyeti getirebilir; örneğin döngüde `var copy = self.items` tutup `self.items`'ı değiştirmek.
+- `Dictionary` içindeki bir array'i `dict[key]?.append(x)` ile yerinde değiştirmek, `var arr = dict[key]!; arr.append(x); dict[key] = arr` yazmaktan daha verimlidir; ikincisinde iki referans olduğu için kopya oluşur.
+- Büyük struct'lar CoW olmadan her atamada tüm alanları kopyalar; büyük veri taşıyan value type'larda CoW bilinçli olarak uygulanır.$md$, $md$Takip sorusu genelde 'isKnownUniquelyReferenced neden class için çalışır da struct için çalışmaz?' olur: referans sayısı sadece heap'teki class instance'larında vardır.$md$, $md$hard$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
+  ($md$core-data-veya-swiftdata-yi-arka-plan-thread-lerinde-guvenle-nasil-kullanirsiniz$md$, $md$Core Data veya SwiftData'yı arka plan thread'lerinde güvenle nasıl kullanırsınız? Hangi hatalar crash veya veri tutarsızlığına yol açar?$md$, $md$Temel kural: **managed object'ler ve context'ler thread'ler (veya actor'lar) arasında paylaşılmaz.** Her context kendi kuyruğuna/actor'ına bağlıdır; başka thread'e geçirilecek şey nesnenin kendisi değil, **kimliğidir** (`NSManagedObjectID` veya SwiftData'da `PersistentIdentifier`).
+
+### Core Data
+- `viewContext` main queue'ya bağlıdır; UI için kullanılır.
+- Ağır yazma/import işleri `container.newBackgroundContext()` veya `container.performBackgroundTask` ile yapılır.
+- Context'e her erişim `perform` / `performAndWait` (veya async `perform`) içinde olmalıdır.
+- Arka plan değişikliklerinin UI'a yansıması için `viewContext.automaticallyMergesChangesFromParent = true`.
+
+```swift
+func importProducts(_ dtos: [ProductDTO]) async throws {
+    let context = container.newBackgroundContext()
+    context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+    try await context.perform {
+        for dto in dtos {
+            let product = Product(context: context)
+            product.id = dto.id
+            product.name = dto.name
+        }
+        try context.save()
+    }
+}
+```
+Toplu işlemler için `NSBatchInsertRequest` / `NSBatchDeleteRequest` belleğe nesne yüklemeden doğrudan store'da çalışır (ama context'leri otomatik güncellemez, değişiklikler merge edilmelidir).
+
+### SwiftData (iOS 17+)
+`ModelContext` Sendable değildir; `@Query` ve view'daki context main actor'dadır. Arka plan işi için `@ModelActor` kullanılır:
+
+```swift
+@ModelActor
+actor ProductImporter {
+    func importAll(_ dtos: [ProductDTO]) throws {
+        for dto in dtos { modelContext.insert(ProductModel(id: dto.id, name: dto.name)) }
+        try modelContext.save()
+    }
+}
+
+let importer = ProductImporter(modelContainer: container)
+try await importer.importAll(dtos)
+```
+
+### Tipik hatalar
+- Arka planda fetch edilen nesneyi main thread'de okumak: rastgele crash ve bozuk veri. Geliştirmede `-com.apple.CoreData.ConcurrencyDebug 1` launch argümanı bu ihlalleri anında crash ile yakalar.
+- Main context'te binlerce nesne import etmek: UI donması.
+- Merge policy belirlemeden iki context'te aynı nesneyi değiştirmek: save sırasında conflict hatası.
+- Model değişikliği sonrası migration planlamamak: güncellemeden sonra açılışta crash. Hafif değişiklikler için lightweight migration, karmaşık olanlar için `SchemaMigrationPlan` (SwiftData) veya mapping model.$md$, null, $md$hard$md$, $md$mobile-developer$md$, $md$ios-swift$md$),
   ($md$arp-nedir-ve-bir-cihaz-ayni-agdaki-baska-bir-cihazin-mac-adresini-nasil-ogrenir$md$, $md$ARP nedir ve bir cihaz aynı ağdaki başka bir cihazın MAC adresini nasıl öğrenir?$md$, $md$**ARP (Address Resolution Protocol)**, bilinen bir IPv4 adresine karşılık gelen MAC adresini bulmak için kullanılır. Ethernet çerçevesi gönderebilmek için hedef MAC adresi gerekir; IP adresi tek başına yetmez.
 
 ### Akış

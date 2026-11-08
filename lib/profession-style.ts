@@ -6,6 +6,7 @@ const STYLES: Record<string, { code: string; color: string }> = {
   "frontend-developer": { code: "FE", color: "#2563c9" },
   "backend-developer": { code: "BE", color: "#c2410c" },
   "full-stack-developer": { code: "FS", color: "#0f766e" },
+  "mobile-developer": { code: "MO", color: "#c81e4b" },
   "yazilim-muhendisi": { code: "YM", color: "#6d4fd6" },
   "game-developer": { code: "GD", color: "#be3a78" },
   "network-engineer": { code: "NW", color: "#15803d" },
